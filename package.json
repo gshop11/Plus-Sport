@@ -4,7 +4,7 @@
   "description": "Plantilla de tienda deportiva reutilizable con panel admin",
   "scripts": {
     "dev": "next dev",
-        "build": "payload migrate && next build",
+            "build": "next build",
     "start": "next start",
     "dev:win": "powershell -ExecutionPolicy Bypass -File ./scripts/next-workflow.ps1 dev",
     "build:win": "powershell -ExecutionPolicy Bypass -File ./scripts/next-workflow.ps1 build",
