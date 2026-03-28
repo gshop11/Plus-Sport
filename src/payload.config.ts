@@ -29,7 +29,8 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const sqlitePath = path.resolve(dirname, '../dev.db').replace(/\\/g, '/')
 
-const databaseUri = process.env.DATABASE_URI || process.env.DATABASE_URL
+// Priorizar conexión directa (unpooled) para compatibilidad con Drizzle ORM
+const databaseUri = process.env.DATABASE_URI || process.env.DATABASE_URL_UNPOOLED || process.env.POSTGRES_URL_NON_POOLING || process.env.DATABASE_URL
 const payloadSecret = process.env.PAYLOAD_SECRET || 'fallback-secret-key'
 
 if (!databaseUri) {
