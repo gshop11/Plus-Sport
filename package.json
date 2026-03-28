@@ -4,7 +4,7 @@
   "description": "Plantilla de tienda deportiva reutilizable con panel admin",
   "scripts": {
     "dev": "next dev",
-            "build": "next build",
+    "build": "next build",
     "start": "next start",
     "dev:win": "powershell -ExecutionPolicy Bypass -File ./scripts/next-workflow.ps1 dev",
     "build:win": "powershell -ExecutionPolicy Bypass -File ./scripts/next-workflow.ps1 build",
@@ -22,6 +22,7 @@
     "@payloadcms/db-sqlite": "^3.79.1",
     "@payloadcms/next": "^3.79.1",
     "@payloadcms/richtext-lexical": "^3.79.1",
+    "@payloadcms/storage-vercel-blob": "^3.80.0",
     "graphql": "^16.13.1",
     "next": "^15.4.11",
     "payload": "^3.79.1",
