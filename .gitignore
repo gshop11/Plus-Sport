@@ -1,0 +1,39 @@
+.env
+.env.local
+.env.*.local
+
+node_modules/
+.next/
+dist/
+out/
+
+# Logs
+*.log
+*.err
+*.out
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Databases and local backups
+*.db
+*.db-*
+*.db.bak_*
+*.sqlite
+*.sqlite3
+
+# Temporary files
+.tmp-*
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local tooling folders
+.claude/
