@@ -53,8 +53,8 @@ const mapProductoToCard = (doc: any): ProductoCard => ({
   precio: doc.precio ?? 0,
   precioAnterior: doc.precioAnterior ?? undefined,
   imagenUrl:
-    typeof doc.imagenPrincipal === 'object' && doc.imagenPrincipal?.filename
-      ? `/media/${doc.imagenPrincipal.filename}`
+    typeof doc.imagenPrincipal === 'object' && doc.imagenPrincipal
+      ? doc.imagenPrincipal.url || (doc.imagenPrincipal.filename ? `/media/${doc.imagenPrincipal.filename}` : null)
       : null,
   tallas: Array.isArray(doc.tallas) ? doc.tallas.map((t: any) => t.talla) : [],
   etiqueta: (doc.etiqueta as ProductoCard['etiqueta']) ?? '',
