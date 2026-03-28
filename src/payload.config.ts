@@ -65,8 +65,8 @@ export default buildConfig({
   sharp,
 
   // Base de datos: SQLite en local, PostgreSQL en producción
-  db: process.env.DATABASE_URI
-    ? postgresAdapter({ pool: { connectionString: process.env.DATABASE_URI } })
+  db: (process.env.DATABASE_URI || process.env.DATABASE_URL)
+    ? postgresAdapter({ pool: { connectionString: process.env.DATABASE_URI || process.env.DATABASE_URL } })
     : sqliteAdapter({ client: { url: `file:${sqlitePath}` } }),
 
   // Clave secreta
