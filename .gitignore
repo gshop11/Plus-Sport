@@ -37,3 +37,13 @@ Thumbs.db
 
 # Local tooling folders
 .claude/
+
+# Local-only assets and tooling (not for public repo)
+skills/
+catalogo-a-imagenes/
+ESCOLAR/
+JOMA/
+imagenes/
+yolov8n.pt
+CATÁLOGO ESCOLAR (1).pdf
+CATÁLOGO JOMA 01.26.pdf
