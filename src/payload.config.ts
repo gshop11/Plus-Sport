@@ -73,7 +73,7 @@ export default buildConfig({
 
   // Base de datos: SQLite en local, PostgreSQL en producción
   db: databaseUri
-    ? postgresAdapter({ pool: { connectionString: databaseUri } })
+    ? postgresAdapter({ pool: { connectionString: databaseUri }, push: true })
     : sqliteAdapter({ client: { url: `file:${sqlitePath}` } }),
 
   // Clave secreta
