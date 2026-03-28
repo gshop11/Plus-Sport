@@ -22,7 +22,7 @@
     "@payloadcms/db-sqlite": "^3.79.1",
     "@payloadcms/next": "^3.79.1",
     "@payloadcms/richtext-lexical": "^3.79.1",
-    "@payloadcms/storage-vercel-blob": "^3.80.0",
+    "@payloadcms/storage-vercel-blob": "^3.79.1",
     "graphql": "^16.13.1",
     "next": "^15.4.11",
     "payload": "^3.79.1",
