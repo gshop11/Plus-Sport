@@ -28,6 +28,13 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const sqlitePath = path.resolve(dirname, '../dev.db').replace(/\\/g, '/')
 
+const databaseUri = process.env.DATABASE_URI || process.env.DATABASE_URL
+const payloadSecret = process.env.PAYLOAD_SECRET || 'fallback-secret-key'
+
+if (!databaseUri) {
+  console.warn('⚠️  ADVERTENCIA: DATABASE_URI o DATABASE_URL no están definidas. Payload usará SQLite temporalmente.')
+}
+
 export default buildConfig({
   admin: {
     user: Usuarios.slug,
@@ -65,12 +72,12 @@ export default buildConfig({
   sharp,
 
   // Base de datos: SQLite en local, PostgreSQL en producción
-  db: (process.env.DATABASE_URI || process.env.DATABASE_URL)
-    ? postgresAdapter({ pool: { connectionString: process.env.DATABASE_URI || process.env.DATABASE_URL } })
+  db: databaseUri
+    ? postgresAdapter({ pool: { connectionString: databaseUri } })
     : sqliteAdapter({ client: { url: `file:${sqlitePath}` } }),
 
   // Clave secreta
-  secret: process.env.PAYLOAD_SECRET || 'fallback-secret-key',
+  secret: payloadSecret,
 
   // TypeScript
   typescript: {
