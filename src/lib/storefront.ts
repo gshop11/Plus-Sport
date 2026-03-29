@@ -46,16 +46,25 @@ const getPayloadClient = async () => {
   return payloadClientPromise
 }
 
+const BLOB_BASE = 'https://6nu9xv9pttjecmvj.public.blob.vercel-storage.com'
+
+const resolveImagenUrl = (imagenPrincipal: any): string | null => {
+  if (!imagenPrincipal || typeof imagenPrincipal !== 'object') return null
+  const { url, filename } = imagenPrincipal
+  // Si la URL ya apunta a Vercel Blob, usarla directamente
+  if (url && url.includes('blob.vercel-storage.com')) return url
+  // Si el filename existe, construir la URL de Blob directamente
+  if (filename) return `${BLOB_BASE}/${filename}`
+  return null
+}
+
 const mapProductoToCard = (doc: any): ProductoCard => ({
   id: String(doc.id),
   nombre: doc.nombre ?? '',
   marca: typeof doc.marca === 'object' && doc.marca ? doc.marca.nombre ?? '' : '',
   precio: doc.precio ?? 0,
   precioAnterior: doc.precioAnterior ?? undefined,
-  imagenUrl:
-    typeof doc.imagenPrincipal === 'object' && doc.imagenPrincipal
-      ? doc.imagenPrincipal.url || (doc.imagenPrincipal.filename ? `/media/${doc.imagenPrincipal.filename}` : null)
-      : null,
+  imagenUrl: resolveImagenUrl(doc.imagenPrincipal),
   tallas: Array.isArray(doc.tallas) ? doc.tallas.map((t: any) => t.talla) : [],
   etiqueta: (doc.etiqueta as ProductoCard['etiqueta']) ?? '',
 })
