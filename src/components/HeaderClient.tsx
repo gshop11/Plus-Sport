@@ -7,12 +7,19 @@ import CartCountBadge from './CartCountBadge'
 import type { StoreIdentity } from '@/lib/storefront'
 
 const categoryItems = [
-  { label: 'CALZADO', url: '/productos?coleccion=calzado', key: 'calzado' },
+  { label: 'TODO', url: '/productos', key: 'todos' },
   { label: 'MUJER', url: '/productos?segmento=mujer', key: 'mujer' },
   { label: 'HOMBRE', url: '/productos?segmento=hombre', key: 'hombre' },
   { label: 'NINOS', url: '/productos?segmento=ninos', key: 'ninos' },
-  { label: 'DEPORTE', url: '/categorias', key: 'categorias' },
   { label: 'MARCAS', url: '/marcas', key: 'marcas' },
+]
+
+const deporteItems = [
+  { label: '⚽ Fútbol Sala', url: '/categoria/futbol-sala' },
+  { label: '🏟️ Fútbol Césped', url: '/categoria/futbol-cesped' },
+  { label: '🏀 Basketball', url: '/categoria/basketball' },
+  { label: '👟 Running', url: '/categoria/running' },
+  { label: '🎯 Multideporte', url: '/categoria/multideporte' },
 ]
 
 const utilityItems = [
@@ -64,6 +71,7 @@ function CartIcon() {
 export default function HeaderClient({ brand }: HeaderClientProps) {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [deporteOpen, setDeporteOpen] = useState(false)
   const [segmentoActual, setSegmentoActual] = useState<string | null>(null)
   const [coleccionActual, setColeccionActual] = useState<string | null>(null)
   const [marcaActual, setMarcaActual] = useState<string | null>(null)
@@ -86,16 +94,16 @@ export default function HeaderClient({ brand }: HeaderClientProps) {
 
   const isCategoryActive = (key: string) => {
     if (pathname === '/productos') {
-      if (key === 'calzado') return coleccionActual === 'calzado'
+      if (key === 'todos') return !segmentoActual && !coleccionActual
       if (key === 'mujer') return segmentoActual === 'mujer'
       if (key === 'hombre') return segmentoActual === 'hombre'
       if (key === 'ninos') return segmentoActual === 'ninos'
     }
-
-    if (key === 'categorias') return pathname === '/categorias'
     if (key === 'marcas') return pathname === '/marcas'
     return false
   }
+
+  const isDeporteActive = deporteItems.some((d) => pathname === d.url)
 
   const isUtilityActive = (key: string) => {
     if (key === 'productos') return pathname === '/productos'
@@ -164,45 +172,45 @@ export default function HeaderClient({ brand }: HeaderClientProps) {
       <nav className="hidden border-b border-primary bg-primary sm:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4">
           <div className="flex items-center overflow-x-auto">
+            {/* Dropdown DEPORTES */}
+            <div className="relative" onMouseEnter={() => setDeporteOpen(true)} onMouseLeave={() => setDeporteOpen(false)}>
+              <button
+                className="flex items-center gap-1 whitespace-nowrap px-5 py-4 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                style={{ backgroundColor: isDeporteActive ? '#ff6f00' : 'transparent' }}
+              >
+                DEPORTES <span className="text-xs opacity-75">▾</span>
+              </button>
+              {deporteOpen && (
+                <div className="absolute left-0 top-full z-50 min-w-[200px] rounded-b-xl bg-white py-2 shadow-xl">
+                  {deporteItems.map((d) => (
+                    <Link
+                      key={d.url}
+                      href={d.url}
+                      onClick={() => setDeporteOpen(false)}
+                      className="block px-5 py-2.5 text-sm font-medium text-gray-800 hover:bg-orange-50 hover:text-accent"
+                    >
+                      {d.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {categoryItems.map((item) => {
               const active = isCategoryActive(item.key)
-
               return (
                 <Link
                   key={item.label}
                   href={item.url}
                   onClick={() => {
-                    if (item.key === 'calzado') {
-                      setColeccionActual('calzado')
-                      setSegmentoActual(null)
-                      setMarcaActual(null)
-                    }
-                    if (item.key === 'mujer') {
-                      setSegmentoActual('mujer')
-                      setColeccionActual(null)
-                      setMarcaActual(null)
-                    }
-                    if (item.key === 'hombre') {
-                      setSegmentoActual('hombre')
-                      setColeccionActual(null)
-                      setMarcaActual(null)
-                    }
-                    if (item.key === 'ninos') {
-                      setSegmentoActual('ninos')
-                      setColeccionActual(null)
-                      setMarcaActual(null)
-                    }
-                    if (item.key === 'categorias' || item.key === 'marcas') {
-                      setSegmentoActual(null)
-                      setColeccionActual(null)
-                      setMarcaActual(null)
-                    }
+                    if (item.key === 'todos') { setSegmentoActual(null); setColeccionActual(null); setMarcaActual(null) }
+                    if (item.key === 'mujer') { setSegmentoActual('mujer'); setColeccionActual(null); setMarcaActual(null) }
+                    if (item.key === 'hombre') { setSegmentoActual('hombre'); setColeccionActual(null); setMarcaActual(null) }
+                    if (item.key === 'ninos') { setSegmentoActual('ninos'); setColeccionActual(null); setMarcaActual(null) }
+                    if (item.key === 'marcas') { setSegmentoActual(null); setColeccionActual(null); setMarcaActual(null) }
                   }}
                   className="whitespace-nowrap px-5 py-4 text-sm font-medium transition-colors hover:bg-white/10"
-                  style={{
-                    backgroundColor: active ? '#ff6f00' : 'transparent',
-                    color: '#ffffff',
-                  }}
+                  style={{ backgroundColor: active ? '#ff6f00' : 'transparent', color: '#ffffff' }}
                 >
                   {item.label}
                 </Link>
@@ -213,23 +221,13 @@ export default function HeaderClient({ brand }: HeaderClientProps) {
           <div className="hidden items-center lg:flex">
             {utilityItems.map((item) => {
               const active = isUtilityActive(item.key)
-
               return (
                 <Link
                   key={item.label}
                   href={item.url}
-                  onClick={() => {
-                    if (item.key === 'productos') {
-                      setSegmentoActual(null)
-                      setColeccionActual(null)
-                      setMarcaActual(null)
-                    }
-                  }}
+                  onClick={() => { if (item.key === 'productos') { setSegmentoActual(null); setColeccionActual(null); setMarcaActual(null) } }}
                   className="whitespace-nowrap px-5 py-4 text-sm font-bold transition-colors hover:bg-white/10"
-                  style={{
-                    backgroundColor: active ? '#ff6f00' : 'transparent',
-                    color: '#ffffff',
-                  }}
+                  style={{ backgroundColor: active ? '#ff6f00' : 'transparent', color: '#ffffff' }}
                 >
                   {item.label}
                 </Link>
@@ -241,6 +239,18 @@ export default function HeaderClient({ brand }: HeaderClientProps) {
 
       {menuOpen && (
         <div className="border-t bg-white sm:hidden">
+          <p className="px-4 pt-3 text-xs font-bold uppercase tracking-widest text-gray-400">Deportes</p>
+          {deporteItems.map((item) => (
+            <Link
+              key={item.url}
+              href={item.url}
+              className="block border-b px-4 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+              onClick={() => setMenuOpen(false)}
+            >
+              {item.label}
+            </Link>
+          ))}
+          <p className="px-4 pt-3 text-xs font-bold uppercase tracking-widest text-gray-400">Segmento</p>
           {[...categoryItems, ...utilityItems].map((item) => (
             <Link
               key={`${item.label}-${item.url}`}
