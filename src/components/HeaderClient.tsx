@@ -7,7 +7,7 @@ import CartCountBadge from './CartCountBadge'
 import type { StoreIdentity } from '@/lib/storefront'
 
 const categoryItems = [
-  { label: 'TODO', url: '/productos', key: 'todos' },
+  { label: 'CATÁLOGO', url: '/productos', key: 'todos' },
   { label: 'MUJER', url: '/productos?segmento=mujer', key: 'mujer' },
   { label: 'HOMBRE', url: '/productos?segmento=hombre', key: 'hombre' },
   { label: 'NINOS', url: '/productos?segmento=ninos', key: 'ninos' },
@@ -23,7 +23,6 @@ const deporteItems = [
 ]
 
 const utilityItems = [
-  { label: 'PRODUCTOS', url: '/productos', key: 'productos' },
   { label: 'OFERTAS', url: '/ofertas', key: 'ofertas' },
 ]
 

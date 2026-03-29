@@ -44,7 +44,7 @@ export default async function CategoriaPage({ params, searchParams }: CategoriaP
     <>
       <Header />
       <main>
-        <section className="bg-gradient-to-r from-primary to-primary/80 py-12 text-white">
+        <section className="bg-gradient-to-r from-accent to-accent/80 py-12 text-white">
           <div className="mx-auto max-w-7xl px-4">
             <div className="mb-4 flex items-center gap-4">
               <span className="text-5xl">{categoria.icono}</span>
