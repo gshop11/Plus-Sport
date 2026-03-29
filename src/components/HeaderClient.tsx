@@ -170,10 +170,13 @@ export default function HeaderClient({ brand }: HeaderClientProps) {
       </div>
 
       <nav className="hidden border-b border-primary bg-primary sm:block">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4">
-          <div className="flex items-center overflow-x-auto">
-            {/* Dropdown DEPORTES */}
-            <div className="relative" onMouseEnter={() => setDeporteOpen(true)} onMouseLeave={() => setDeporteOpen(false)}>
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4">
+
+          {/* Izquierda: DEPORTES (fuera del overflow-x-auto para que el dropdown no se clipee) + resto de links */}
+          <div className="flex min-w-0 items-center">
+
+            {/* Dropdown DEPORTES — sibling del contenedor scrollable */}
+            <div className="relative flex-shrink-0" onMouseEnter={() => setDeporteOpen(true)} onMouseLeave={() => setDeporteOpen(false)}>
               <button
                 className="flex items-center gap-1 whitespace-nowrap px-5 py-4 text-sm font-medium text-white transition-colors hover:bg-white/10"
                 style={{ backgroundColor: isDeporteActive ? '#ff6f00' : 'transparent' }}
@@ -181,13 +184,13 @@ export default function HeaderClient({ brand }: HeaderClientProps) {
                 DEPORTES <span className="text-xs opacity-75">▾</span>
               </button>
               {deporteOpen && (
-                <div className="absolute left-0 top-full z-50 min-w-[200px] rounded-b-xl bg-white py-2 shadow-xl">
+                <div className="absolute left-0 top-full z-50 min-w-[210px] overflow-hidden rounded-b-xl bg-white shadow-xl">
                   {deporteItems.map((d) => (
                     <Link
                       key={d.url}
                       href={d.url}
                       onClick={() => setDeporteOpen(false)}
-                      className="block px-5 py-2.5 text-sm font-medium text-gray-800 hover:bg-orange-50 hover:text-accent"
+                      className="block px-5 py-3 text-sm font-medium text-gray-800 transition-colors hover:bg-orange-50 hover:text-accent"
                     >
                       {d.label}
                     </Link>
@@ -196,29 +199,33 @@ export default function HeaderClient({ brand }: HeaderClientProps) {
               )}
             </div>
 
-            {categoryItems.map((item) => {
-              const active = isCategoryActive(item.key)
-              return (
-                <Link
-                  key={item.label}
-                  href={item.url}
-                  onClick={() => {
-                    if (item.key === 'todos') { setSegmentoActual(null); setColeccionActual(null); setMarcaActual(null) }
-                    if (item.key === 'mujer') { setSegmentoActual('mujer'); setColeccionActual(null); setMarcaActual(null) }
-                    if (item.key === 'hombre') { setSegmentoActual('hombre'); setColeccionActual(null); setMarcaActual(null) }
-                    if (item.key === 'ninos') { setSegmentoActual('ninos'); setColeccionActual(null); setMarcaActual(null) }
-                    if (item.key === 'marcas') { setSegmentoActual(null); setColeccionActual(null); setMarcaActual(null) }
-                  }}
-                  className="whitespace-nowrap px-5 py-4 text-sm font-medium transition-colors hover:bg-white/10"
-                  style={{ backgroundColor: active ? '#ff6f00' : 'transparent', color: '#ffffff' }}
-                >
-                  {item.label}
-                </Link>
-              )
-            })}
+            {/* Links restantes con scroll horizontal si la pantalla es pequeña */}
+            <div className="flex items-center overflow-x-auto">
+              {categoryItems.map((item) => {
+                const active = isCategoryActive(item.key)
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.url}
+                    onClick={() => {
+                      if (item.key === 'todos') { setSegmentoActual(null); setColeccionActual(null); setMarcaActual(null) }
+                      if (item.key === 'mujer') { setSegmentoActual('mujer'); setColeccionActual(null); setMarcaActual(null) }
+                      if (item.key === 'hombre') { setSegmentoActual('hombre'); setColeccionActual(null); setMarcaActual(null) }
+                      if (item.key === 'ninos') { setSegmentoActual('ninos'); setColeccionActual(null); setMarcaActual(null) }
+                      if (item.key === 'marcas') { setSegmentoActual(null); setColeccionActual(null); setMarcaActual(null) }
+                    }}
+                    className="whitespace-nowrap px-5 py-4 text-sm font-medium transition-colors hover:bg-white/10"
+                    style={{ backgroundColor: active ? '#ff6f00' : 'transparent', color: '#ffffff' }}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
           </div>
 
-          <div className="hidden items-center lg:flex">
+          {/* Derecha: PRODUCTOS / OFERTAS */}
+          <div className="hidden flex-shrink-0 items-center lg:flex">
             {utilityItems.map((item) => {
               const active = isUtilityActive(item.key)
               return (
@@ -234,6 +241,7 @@ export default function HeaderClient({ brand }: HeaderClientProps) {
               )
             })}
           </div>
+
         </div>
       </nav>
 
