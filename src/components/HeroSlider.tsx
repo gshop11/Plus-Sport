@@ -138,14 +138,15 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
 
       {/* Dots de navegación */}
       {data.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2">
+        <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-1">
           {data.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === current ? 'w-8 bg-accent' : 'w-2 bg-white/40 hover:bg-white/70'
+              className={`rounded-full transition-all duration-300 ${
+                i === current ? 'h-3 w-10 bg-accent' : 'h-3 w-3 bg-white/40 hover:bg-white/70'
               }`}
+              style={{ minWidth: '12px', minHeight: '12px' }}
               aria-label={`Ver slide ${i + 1}`}
             />
           ))}
@@ -157,14 +158,14 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
         <>
           <button
             onClick={() => setCurrent((prev) => (prev - 1 + data.length) % data.length)}
-            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm transition hover:bg-white/40"
+            className="absolute left-3 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-xl text-white backdrop-blur-sm transition hover:bg-white/40 active:bg-white/50"
             aria-label="Anterior"
           >
             ‹
           </button>
           <button
             onClick={() => setCurrent((prev) => (prev + 1) % data.length)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm transition hover:bg-white/40"
+            className="absolute right-3 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-xl text-white backdrop-blur-sm transition hover:bg-white/40 active:bg-white/50"
             aria-label="Siguiente"
           >
             ›

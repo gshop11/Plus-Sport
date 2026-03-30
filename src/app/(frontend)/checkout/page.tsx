@@ -228,6 +228,7 @@ export default function CheckoutPage() {
           nombreCliente: datosPersonales.nombre,
           telefono: datosPersonales.telefono,
           items: items.map((item) => ({
+            productoId: item.id,
             nombreProducto: item.nombre,
             talla: item.talla,
             cantidad: item.cantidad,
@@ -235,6 +236,7 @@ export default function CheckoutPage() {
           })),
           subtotal,
           descuento,
+          cuponCodigo: cuponAplicado?.codigo || null,
           costoEnvio: costoEnvioFinal,
           total,
           direccionEnvio: datosEnvio,

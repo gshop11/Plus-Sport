@@ -36,6 +36,7 @@ interface ProductosPageProps {
     coleccion?: string
     marca?: string
     page?: string
+    search?: string
   }>
 }
 
@@ -54,10 +55,11 @@ const buildHref = (params: URLSearchParams, page: number) => {
 }
 
 export default async function ProductosPage({ searchParams }: ProductosPageProps) {
-  const { segmento, coleccion, marca, page } = await searchParams
+  const { segmento, coleccion, marca, page, search } = await searchParams
   const currentPage = parsePage(page)
   const normalizedSegmento = segmento && segmento in segmentMeta ? (segmento as SegmentKey) : undefined
   const categoriaCalzado = coleccion === 'calzado' ? await getCategoriaBySlug('calzado') : null
+  const searchTerm = search?.trim() || undefined
 
   const { productos, totalDocs, totalPages, hasPrevPage, hasNextPage } = await getProductList({
     page: currentPage,
@@ -65,26 +67,34 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
     segmento: normalizedSegmento,
     marcaSlug: marca,
     categoriaId: categoriaCalzado ? String(categoriaCalzado.id) : undefined,
+    search: searchTerm,
   })
 
-  const heroContent = normalizedSegmento
-    ? segmentMeta[normalizedSegmento]
-    : coleccion === 'calzado'
-      ? {
-          titleLead: 'Coleccion',
-          titleAccent: 'Calzado',
-          description: 'Modelos deportivos para cada ritmo y entrenamiento.',
-        }
-      : {
-          titleLead: 'Todos Nuestros',
-          titleAccent: 'Productos',
-          description: 'Explora nuestra coleccion completa de equipamiento deportivo.',
-        }
+  const heroContent = searchTerm
+    ? {
+        titleLead: 'Resultados para',
+        titleAccent: `"${searchTerm}"`,
+        description: `${totalDocs} producto${totalDocs !== 1 ? 's' : ''} encontrado${totalDocs !== 1 ? 's' : ''}.`,
+      }
+    : normalizedSegmento
+      ? segmentMeta[normalizedSegmento]
+      : coleccion === 'calzado'
+        ? {
+            titleLead: 'Coleccion',
+            titleAccent: 'Calzado',
+            description: 'Modelos deportivos para cada ritmo y entrenamiento.',
+          }
+        : {
+            titleLead: 'Todos Nuestros',
+            titleAccent: 'Productos',
+            description: 'Explora nuestra coleccion completa de equipamiento deportivo.',
+          }
 
   const query = new URLSearchParams()
   if (segmento) query.set('segmento', segmento)
   if (coleccion) query.set('coleccion', coleccion)
   if (marca) query.set('marca', marca)
+  if (searchTerm) query.set('search', searchTerm)
 
   return (
     <>
@@ -110,12 +120,12 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
                 <p className="text-gray-600">
                   Mostrando <span className="font-bold">{productos.length}</span> de <span className="font-bold">{totalDocs}</span> productos
                 </p>
-                {(normalizedSegmento || coleccion || marca) && (
+                {(normalizedSegmento || coleccion || marca || searchTerm) && (
                   <a
                     href="/productos"
                     className="rounded-full border border-primary px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
                   >
-                    Ver todo el catalogo
+                    {searchTerm ? '✕ Limpiar búsqueda' : 'Ver todo el catalogo'}
                   </a>
                 )}
               </div>

@@ -262,6 +262,7 @@ export type ProductListInput = {
   marcaSlug?: string
   categoriaId?: string
   onlyOffers?: boolean
+  search?: string
 }
 
 export const getProductList = async ({
@@ -271,6 +272,7 @@ export const getProductList = async ({
   marcaSlug,
   categoriaId,
   onlyOffers,
+  search,
 }: ProductListInput) => {
   const payload = await getPayloadClient()
 
@@ -296,6 +298,13 @@ export const getProductList = async ({
     if (marca) {
       where.marca = { equals: marca.id }
     }
+  }
+
+  if (search && search.trim()) {
+    where.or = [
+      { nombre: { contains: search.trim() } },
+      { slug: { contains: search.trim() } },
+    ]
   }
 
   const res = await payload
