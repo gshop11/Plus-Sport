@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { getStorefrontConfig } from '@/lib/storefront'
 
 type ValidarBody = {
   codigo?: string
@@ -14,6 +15,8 @@ export async function POST(req: Request) {
     const codigo = (body.codigo || '').trim().toUpperCase()
     const subtotal = Number(body.subtotal || 0)
     const costoEnvio = Number(body.costoEnvio || 0)
+    const storeConfig = await getStorefrontConfig()
+    const currencySymbol = storeConfig.moneda.simbolo || 'S/'
 
     if (!codigo) {
       return NextResponse.json({ ok: false, message: 'Ingresa un codigo de cupon.' }, { status: 400 })
@@ -42,7 +45,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           ok: false,
-          message: `Este cupon requiere una compra minima de S/ ${Number(cupon.minimoCompra).toFixed(2)}.`,
+          message: `Este cupon requiere una compra minima de ${currencySymbol} ${Number(cupon.minimoCompra).toFixed(2)}.`,
         },
         { status: 400 },
       )
@@ -83,4 +86,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, message: 'No se pudo validar el cupon.' }, { status: 500 })
   }
 }
-

@@ -2,6 +2,8 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { getStorefrontConfig } from '@/lib/storefront'
+import { formatMoney } from '@/lib/money'
 
 const fallbackMetodos: Record<string, { label: string; instruccion: string }> = {
   yape: { label: 'Yape', instruccion: 'Yapea a PLUS SPORT SAC y envia el comprobante por WhatsApp.' },
@@ -28,7 +30,8 @@ export default async function ConfirmacionPage({
 }) {
   const params = await searchParams
   const numeroPedido = params.numeroPedido || 'PS-XXXXX'
-  const total = params.total ? `S/ ${parseFloat(params.total).toFixed(2)}` : ''
+  const storefront = await getStorefrontConfig()
+  const total = params.total ? formatMoney(parseFloat(params.total), storefront.moneda.simbolo) : ''
   const metodo = params.metodo || 'whatsapp'
 
   let pagosConfig: any = null

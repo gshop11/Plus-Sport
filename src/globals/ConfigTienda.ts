@@ -73,6 +73,32 @@ export const ConfigTienda: GlobalConfig = {
       ],
     },
     {
+      name: 'moneda',
+      type: 'group',
+      label: 'Moneda',
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'simbolo',
+              type: 'text',
+              label: 'Simbolo',
+              defaultValue: 'S/',
+              admin: { width: '50%' },
+            },
+            {
+              name: 'codigoISO',
+              type: 'text',
+              label: 'Codigo ISO',
+              defaultValue: 'PEN',
+              admin: { width: '50%' },
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'header',
       type: 'group',
       label: 'Header',
@@ -130,6 +156,89 @@ export const ConfigTienda: GlobalConfig = {
               label: 'Resaltar',
               defaultValue: false,
             },
+            {
+              name: 'subItems',
+              type: 'array',
+              label: 'Submenu',
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'etiqueta',
+                      type: 'text',
+                      label: 'Etiqueta',
+                      required: true,
+                      admin: { width: '50%' },
+                    },
+                    {
+                      name: 'url',
+                      type: 'text',
+                      label: 'URL',
+                      required: true,
+                      admin: { width: '50%' },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'home',
+      type: 'group',
+      label: 'Home',
+      fields: [
+        {
+          name: 'secciones',
+          type: 'array',
+          label: 'Secciones del Home',
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'key',
+                  type: 'select',
+                  label: 'Seccion',
+                  required: true,
+                  options: [
+                    { label: 'Categorias', value: 'categorias' },
+                    { label: 'Marcas', value: 'marcas' },
+                    { label: 'Productos destacados', value: 'destacados' },
+                    { label: 'Suscripcion', value: 'suscripcion' },
+                  ],
+                  admin: { width: '40%' },
+                },
+                {
+                  name: 'orden',
+                  type: 'number',
+                  label: 'Orden',
+                  defaultValue: 1,
+                  admin: { width: '20%' },
+                },
+                {
+                  name: 'mostrar',
+                  type: 'checkbox',
+                  label: 'Mostrar',
+                  defaultValue: true,
+                  admin: { width: '20%' },
+                },
+              ],
+            },
+            {
+              name: 'titulo',
+              type: 'text',
+              label: 'Titulo',
+              required: true,
+            },
+            {
+              name: 'subtitulo',
+              type: 'text',
+              label: 'Subtitulo',
+            },
           ],
         },
       ],
@@ -176,6 +285,32 @@ export const ConfigTienda: GlobalConfig = {
             { name: 'instagram', type: 'text', label: 'Instagram URL' },
             { name: 'tiktok', type: 'text', label: 'TikTok URL' },
             { name: 'youtube', type: 'text', label: 'YouTube URL' },
+          ],
+        },
+        {
+          name: 'linksRapidos',
+          type: 'array',
+          label: 'Links rapidos',
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'etiqueta',
+                  type: 'text',
+                  label: 'Etiqueta',
+                  required: true,
+                  admin: { width: '50%' },
+                },
+                {
+                  name: 'url',
+                  type: 'text',
+                  label: 'URL',
+                  required: true,
+                  admin: { width: '50%' },
+                },
+              ],
+            },
           ],
         },
         {

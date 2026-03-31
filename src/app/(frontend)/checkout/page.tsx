@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import HeaderClient from '@/components/HeaderClient'
 import Footer from '@/components/Footer'
+import { useCurrencySymbol } from '@/hooks/useCurrencySymbol'
+import { formatMoney } from '@/lib/money'
 
 interface CarritoItem {
   id: string
@@ -45,6 +47,7 @@ const labelCls = 'mb-1 block text-sm font-semibold text-gray-700'
 
 export default function CheckoutPage() {
   const router = useRouter()
+  const currencySymbol = useCurrencySymbol()
   const allowNavigationRef = useRef(false)
   const [paso, setPaso] = useState(2)
   const [items, setItems] = useState<CarritoItem[]>([])
@@ -281,7 +284,7 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <HeaderClient brand={{ name: 'PlusSport', tagline: 'Performance Athletic Wear', logoUrl: null, logoAlt: 'PlusSport' }} />
+      <HeaderClient />
       <main className="min-h-screen bg-gray-50 py-8">
         <div className="mx-auto max-w-6xl px-4">
 
@@ -701,7 +704,7 @@ export default function CheckoutPage() {
                         {/* — Detalle Plin — */}
                         {metodoPago === 'plin' && (
                           <div className="mt-4 rounded-xl border-2 border-[#00b4d8]/20 bg-cyan-50 p-5">
-                            <p className="mb-3 text-center text-base font-black text-[#00b4d8]">Paga S/ {total.toFixed(2)} con Plin</p>
+                            <p className="mb-3 text-center text-base font-black text-[#00b4d8]">Paga {formatMoney(total, currencySymbol)} con Plin</p>
                             {pagosConfig.plin.qr && (
                               <div className="mb-4 flex justify-center">
                                 <img src={pagosConfig.plin.qr} alt="QR Plin" className="h-40 w-40 rounded-xl object-contain shadow" />
@@ -767,7 +770,7 @@ export default function CheckoutPage() {
                           <div className="mt-4 rounded-xl border-2 border-gray-300 bg-gray-50 p-5 text-sm text-gray-700">
                             <p className="font-semibold text-gray-800">Pago al recibir tu pedido</p>
                             <p className="mt-1 text-gray-500">
-                              {pagosConfig.efectivo.instruccion ?? `Nuestro repartidor cobrará S/ ${total.toFixed(2)} al momento de la entrega.`}
+                              {pagosConfig.efectivo.instruccion ?? `Nuestro repartidor cobrara ${formatMoney(total, currencySymbol)} al momento de la entrega.`}
                             </p>
                           </div>
                         )}
@@ -794,35 +797,35 @@ export default function CheckoutPage() {
                       <p className="truncate text-sm font-semibold text-gray-800">{item.nombre}</p>
                       <p className="text-xs text-gray-400">Talla: {item.talla}</p>
                     </div>
-                    <span className="text-sm font-bold text-gray-700">S/ {(item.precio * item.cantidad).toFixed(2)}</span>
+                    <span className="text-sm font-bold text-gray-700">{formatMoney(item.precio * item.cantidad, currencySymbol)}</span>
                   </div>
                 ))}
               </div>
               <div className="border-t border-gray-100 px-6 py-4 space-y-2">
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Subtotal</span>
-                  <span>S/ {subtotal.toFixed(2)}</span>
+                  <span>{formatMoney(subtotal, currencySymbol)}</span>
                 </div>
                 {descuento > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Descuento</span>
-                    <span className="font-semibold text-green-600">-S/ {descuento.toFixed(2)}</span>
+                    <span className="font-semibold text-green-600">-{formatMoney(descuento, currencySymbol)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Gastos de envío</span>
                   <span className={costoEnvioFinal === 0 ? 'font-semibold text-green-600' : 'text-accent font-semibold'}>
-                    {costoEnvioFinal === 0 ? 'Gratis ✓' : `S/ ${costoEnvioFinal.toFixed(2)}`}
+                    {costoEnvioFinal === 0 ? 'Gratis ✓' : formatMoney(costoEnvioFinal, currencySymbol)}
                   </span>
                 </div>
                 {costoEnvioFinal > 0 && (
-                  <p className="text-xs text-gray-400">Compras mayores a S/299 tienen envío gratis</p>
+                  <p className="text-xs text-gray-400">Compras mayores a {formatMoney(299, currencySymbol)} tienen envio gratis</p>
                 )}
               </div>
               <div className="border-t-2 border-gray-100 px-6 py-4">
                 <div className="flex justify-between">
                   <span className="font-black text-gray-900">Total</span>
-                  <span className="text-xl font-black text-primary">S/ {total.toFixed(2)}</span>
+                  <span className="text-xl font-black text-primary">{formatMoney(total, currencySymbol)}</span>
                 </div>
               </div>
               {paso === 4 && (

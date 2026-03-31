@@ -3,6 +3,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import AgregarAlCarrito from './AgregarAlCarrito'
+import { useCurrencySymbol } from '@/hooks/useCurrencySymbol'
+import { formatMoney } from '@/lib/money'
 
 export type ProductoCard = {
   id: string
@@ -36,6 +38,7 @@ const PLACEHOLDER_IMAGE = '/placeholder-product.svg'
 
 export default function TarjetaProducto({ producto, index = 0 }: { producto: ProductoCard; index?: number }) {
   const router = useRouter()
+  const currencySymbol = useCurrencySymbol()
   const [modalOpen, setModalOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
   const [carritoItems, setCarritoItems] = useState<DrawerItem[]>([])
@@ -84,7 +87,7 @@ export default function TarjetaProducto({ producto, index = 0 }: { producto: Pro
         </div>
       )}
 
-      <div className="relative h-52 overflow-hidden bg-gray-50">
+      <div className="relative h-40 overflow-hidden bg-gray-50 sm:h-52">
         <Image
           src={imageSrc}
           alt={producto.nombre}
@@ -111,10 +114,10 @@ export default function TarjetaProducto({ producto, index = 0 }: { producto: Pro
         )}
 
         <div className="mb-3 flex items-center gap-2">
-          <span className="text-xl font-black text-primary">S/ {producto.precio}</span>
+          <span className="text-xl font-black text-primary">{formatMoney(producto.precio, currencySymbol)}</span>
           {producto.precioAnterior && (
             <>
-              <span className="text-sm text-gray-400 line-through">S/ {producto.precioAnterior}</span>
+              <span className="text-sm text-gray-400 line-through">{formatMoney(producto.precioAnterior, currencySymbol)}</span>
               <span className="text-xs font-semibold text-red-500">-{descuento}%</span>
             </>
           )}
@@ -156,7 +159,7 @@ export default function TarjetaProducto({ producto, index = 0 }: { producto: Pro
       {panelOpen && (
         <>
           <button className="fixed inset-0 z-50 bg-black/35" onClick={() => setPanelOpen(false)} aria-label="Cerrar panel de carrito" />
-          <aside className="fixed right-0 top-0 z-[60] h-full w-full max-w-md border-l border-gray-200 bg-white shadow-2xl">
+          <aside className="fixed right-0 top-0 z-[60] h-full w-full border-l border-gray-200 bg-white shadow-2xl sm:max-w-md">
             <div className="flex items-center justify-between border-b px-5 py-4">
               <h3 className="text-lg font-black text-primary">Tu carrito</h3>
               <button onClick={() => setPanelOpen(false)} className="text-2xl font-bold text-gray-400 hover:text-gray-700" aria-label="Cerrar">
@@ -175,7 +178,7 @@ export default function TarjetaProducto({ producto, index = 0 }: { producto: Pro
                         <div className="min-w-0 flex-1">
                           <p className="line-clamp-2 text-sm font-semibold text-gray-900">{item.nombre}</p>
                           <p className="mt-1 text-xs text-gray-500">Talla: {item.talla || '-'}</p>
-                          <p className="mt-1 text-sm font-bold text-primary">S/ {(item.precio * item.cantidad).toFixed(2)}</p>
+                          <p className="mt-1 text-sm font-bold text-primary">{formatMoney(item.precio * item.cantidad, currencySymbol)}</p>
                           <div className="mt-2 flex items-center gap-2">
                             <button
                               type="button"
@@ -216,7 +219,7 @@ export default function TarjetaProducto({ producto, index = 0 }: { producto: Pro
             <div className="border-t bg-white px-5 py-4">
               <div className="mb-3 flex items-center justify-between text-sm">
                 <span className="font-semibold text-gray-700">Subtotal</span>
-                <span className="text-lg font-black text-primary">S/ {subtotal.toFixed(2)}</span>
+                <span className="text-lg font-black text-primary">{formatMoney(subtotal, currencySymbol)}</span>
               </div>
               <button
                 type="button"
@@ -236,4 +239,3 @@ export default function TarjetaProducto({ producto, index = 0 }: { producto: Pro
     </div>
   )
 }
-

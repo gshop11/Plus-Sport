@@ -1,40 +1,58 @@
-import 'server-only'
+﻿import 'server-only'
 import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
-
-export type ProductoCard = {
-  id: string
-  nombre: string
-  marca: string
-  precio: number
-  precioAnterior?: number
-  imagenUrl?: string | null
-  tallas?: string[]
-  etiqueta?: 'nuevo' | 'hot' | 'top' | 'oferta' | ''
-}
-
-export type HomeSlide = {
-  id: string
-  titulo: string
-  subtitulo: string
-  descripcion: string
-  btn1Text: string
-  btn1Url: string
-  btn2Text?: string
-  btn2Url?: string
-  colorFondo: string
-  imagenUrl?: string | null
-}
-
-export type StoreIdentity = {
-  name: string
-  tagline: string
-  logoUrl: string | null
-  logoAlt: string
-}
+import type { HeaderMenuItem, HomeSectionConfig, ProductoCard, StoreIdentity, StorefrontConfig } from './storefront-types'
+export type { HeaderMenuItem, HomeSectionConfig, ProductoCard, StoreIdentity, StorefrontConfig } from './storefront-types'
 
 export const PRODUCTS_PER_PAGE = 24
+
+const defaultMenu: HeaderMenuItem[] = [
+  { etiqueta: 'Catalogo', url: '/productos' },
+  { etiqueta: 'Mujer', url: '/productos?segmento=mujer' },
+  { etiqueta: 'Hombre', url: '/productos?segmento=hombre' },
+  { etiqueta: 'Ninos', url: '/productos?segmento=ninos' },
+  { etiqueta: 'Marcas', url: '/marcas' },
+  { etiqueta: 'Ofertas', url: '/ofertas', esDestacado: true },
+]
+
+const defaultLinksFooter = [
+  { etiqueta: 'Inicio', url: '/' },
+  { etiqueta: 'Todos los productos', url: '/productos' },
+  { etiqueta: 'Categorias', url: '/categorias' },
+  { etiqueta: 'Ofertas', url: '/ofertas' },
+]
+
+const defaultHomeSections: HomeSectionConfig[] = [
+  {
+    key: 'categorias',
+    titulo: 'TU DEPORTE, TU ESTILO',
+    subtitulo: '- Explora por deporte',
+    mostrar: true,
+    orden: 1,
+  },
+  {
+    key: 'marcas',
+    titulo: 'LAS MEJORES DEL MUNDO',
+    subtitulo: '- Marcas oficiales',
+    mostrar: true,
+    orden: 2,
+  },
+  {
+    key: 'destacados',
+    titulo: 'LO MAS VENDIDO',
+    subtitulo: '- Mas comprados',
+    mostrar: true,
+    orden: 3,
+  },
+  {
+    key: 'suscripcion',
+    titulo: 'Ofertas exclusivas para ti',
+    subtitulo: 'Dejanos tu WhatsApp y te avisamos primero.',
+    mostrar: true,
+    orden: 4,
+  },
+]
 
 let payloadClientPromise: ReturnType<typeof getPayload> | null = null
 
@@ -51,9 +69,7 @@ const BLOB_BASE = 'https://6nu9xv9pttjecmvj.public.blob.vercel-storage.com'
 const resolveImagenUrl = (imagenPrincipal: any): string | null => {
   if (!imagenPrincipal || typeof imagenPrincipal !== 'object') return null
   const { url, filename } = imagenPrincipal
-  // Si la URL ya apunta a Vercel Blob, usarla directamente
   if (url && url.includes('blob.vercel-storage.com')) return url
-  // Si el filename existe, construir la URL de Blob directamente
   if (filename) return `${BLOB_BASE}/${filename}`
   return null
 }
@@ -88,11 +104,112 @@ const resolveMediaUrl = async (payload: Awaited<ReturnType<typeof getPayloadClie
   }
 }
 
+const normalizeStorefrontConfig = (configTienda: any): StorefrontConfig => {
+  const menuPrincipalRaw = Array.isArray(configTienda?.header?.menuPrincipal) ? configTienda.header.menuPrincipal : []
+  const menuPrincipal =
+    menuPrincipalRaw
+      .map((item: any) => ({
+        etiqueta: String(item?.etiqueta || '').trim(),
+        url: String(item?.url || '').trim(),
+        esDestacado: Boolean(item?.esDestacado),
+        subItems: Array.isArray(item?.subItems)
+          ? item.subItems
+              .map((sub: any) => ({ etiqueta: String(sub?.etiqueta || '').trim(), url: String(sub?.url || '').trim() }))
+              .filter((sub: { etiqueta: string; url: string }) => sub.etiqueta && sub.url)
+          : [],
+      }))
+      .filter((item: HeaderMenuItem) => item.etiqueta && item.url) ?? []
+
+  const linksRapidosRaw = Array.isArray(configTienda?.footer?.linksRapidos) ? configTienda.footer.linksRapidos : []
+  const linksRapidos =
+    linksRapidosRaw
+      .map((item: any) => ({ etiqueta: String(item?.etiqueta || '').trim(), url: String(item?.url || '').trim() }))
+      .filter((item: { etiqueta: string; url: string }) => item.etiqueta && item.url) ?? []
+
+  const homeRaw = Array.isArray(configTienda?.home?.secciones) ? configTienda.home.secciones : []
+  const homeSections =
+    homeRaw
+      .map((item: any) => ({
+        key: item?.key,
+        titulo: String(item?.titulo || '').trim(),
+        subtitulo: String(item?.subtitulo || '').trim(),
+        mostrar: item?.mostrar !== false,
+        orden: Number(item?.orden || 999),
+      }))
+      .filter(
+        (item: any) =>
+          ['categorias', 'marcas', 'destacados', 'suscripcion'].includes(item.key) &&
+          item.titulo,
+      )
+      .sort((a: HomeSectionConfig, b: HomeSectionConfig) => a.orden - b.orden)
+
+  return {
+    identity: {
+      name: configTienda?.nombreTienda ?? 'PlusSport',
+      tagline: configTienda?.tagline ?? 'Performance Athletic Wear',
+      logoUrl:
+        typeof configTienda?.logo === 'object' && configTienda.logo
+          ? configTienda.logo.url || (configTienda.logo.filename ? `/media/${configTienda.logo.filename}` : null)
+          : null,
+      logoAlt: configTienda?.nombreTienda ? `${configTienda.nombreTienda} logo` : 'PlusSport logo',
+    },
+    header: {
+      anuncioBarra: configTienda?.header?.anuncioBarra ?? 'ENVIO GRATIS POR COMPRAS MAYORES A S/299',
+      mostrarAnuncio: configTienda?.header?.mostrarAnuncio !== false,
+      menuPrincipal: menuPrincipal.length > 0 ? menuPrincipal : defaultMenu,
+    },
+    footer: {
+      descripcion: configTienda?.footer?.descripcion ?? 'Tu tienda deportiva de confianza en Peru.',
+      telefono: configTienda?.footer?.telefono ?? '',
+      email: configTienda?.footer?.email ?? '',
+      direccion: configTienda?.footer?.direccion ?? 'Lima, Peru',
+      horario: configTienda?.footer?.horario ?? 'Lunes a Sabado 9am-8pm',
+      redesSociales: {
+        facebook: configTienda?.footer?.redesSociales?.facebook ?? '',
+        instagram: configTienda?.footer?.redesSociales?.instagram ?? '',
+        tiktok: configTienda?.footer?.redesSociales?.tiktok ?? '',
+        youtube: configTienda?.footer?.redesSociales?.youtube ?? '',
+      },
+      linksRapidos: linksRapidos.length > 0 ? linksRapidos : defaultLinksFooter,
+      textoCopyright:
+        configTienda?.footer?.textoCopyright ??
+        `© ${new Date().getFullYear()} PlusSport. Todos los derechos reservados.`,
+    },
+    colores: {
+      primario: configTienda?.colores?.primario ?? '#1a237e',
+      acento: configTienda?.colores?.acento ?? '#ff6f00',
+      fondo: configTienda?.colores?.fondo ?? '#ffffff',
+    },
+    moneda: {
+      simbolo: configTienda?.moneda?.simbolo ?? 'S/',
+      codigoISO: configTienda?.moneda?.codigoISO ?? 'PEN',
+    },
+    homeSections: homeSections.length > 0 ? homeSections : defaultHomeSections,
+  }
+}
+
+export const getStorefrontConfig = unstable_cache(
+  async (): Promise<StorefrontConfig> => {
+    const payload = await getPayloadClient()
+
+    const configTienda = await payload
+      .findGlobal({
+        slug: 'config-tienda',
+        depth: 1,
+      })
+      .catch(() => null as any)
+
+    return normalizeStorefrontConfig(configTienda)
+  },
+  ['storefront-config'],
+  { revalidate: 300 },
+)
+
 export const getHomeData = unstable_cache(
   async () => {
     const payload = await getPayloadClient()
 
-    const [productosRes, marcasRes, bannersRes, categoriasRes] = await Promise.all([
+    const [productosRes, marcasRes, bannersRes, categoriasRes, storefront] = await Promise.all([
       payload
         .find({
           collection: 'productos',
@@ -129,17 +246,15 @@ export const getHomeData = unstable_cache(
           depth: 0,
         })
         .catch(() => ({ docs: [] as any[] })),
+      getStorefrontConfig(),
     ])
 
     const slides = await Promise.all(
       bannersRes.docs.map(async (doc: any) => {
-        // Resolver URL de imagen directamente del objeto poblado (depth:1)
         let imagenUrl: string | null = null
         if (doc.imagen) {
           if (typeof doc.imagen === 'object') {
-            imagenUrl =
-              doc.imagen.url ||
-              (doc.imagen.filename ? `/media/${doc.imagen.filename}` : null)
+            imagenUrl = doc.imagen.url || (doc.imagen.filename ? `/media/${doc.imagen.filename}` : null)
           } else {
             imagenUrl = await resolveMediaUrl(payload, doc.imagen)
           }
@@ -172,6 +287,7 @@ export const getHomeData = unstable_cache(
         icono: c.icono ?? 'X',
         slug: c.slug ?? '',
       })),
+      storefront,
     }
   },
   ['store-home-data'],
@@ -180,27 +296,8 @@ export const getHomeData = unstable_cache(
 
 export const getStoreIdentity = unstable_cache(
   async (): Promise<StoreIdentity> => {
-    const payload = await getPayloadClient()
-
-    const configTienda = await payload
-      .findGlobal({
-        slug: 'config-tienda',
-        depth: 1,
-      })
-      .catch(() => null as any)
-
-    const logo = configTienda?.logo
-    const logoUrl =
-      typeof logo === 'object' && logo
-        ? logo.url || (logo.filename ? `/media/${logo.filename}` : null)
-        : null
-
-    return {
-      name: configTienda?.nombreTienda ?? 'PlusSport',
-      tagline: configTienda?.tagline ?? 'Performance Athletic Wear',
-      logoUrl,
-      logoAlt: configTienda?.nombreTienda ? `${configTienda.nombreTienda} logo` : 'PlusSport logo',
-    }
+    const storefront = await getStorefrontConfig()
+    return storefront.identity
   },
   ['store-identity'],
   { revalidate: 300 },
@@ -301,10 +398,7 @@ export const getProductList = async ({
   }
 
   if (search && search.trim()) {
-    where.or = [
-      { nombre: { contains: search.trim() } },
-      { slug: { contains: search.trim() } },
-    ]
+    where.or = [{ nombre: { contains: search.trim() } }, { slug: { contains: search.trim() } }]
   }
 
   const res = await payload

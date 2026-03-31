@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import HeaderClient from '@/components/HeaderClient'
 import Footer from '@/components/Footer'
+import { useCurrencySymbol } from '@/hooks/useCurrencySymbol'
+import { formatMoney } from '@/lib/money'
 
 interface CarritoItem {
   id: string
@@ -26,6 +28,7 @@ type CuponAplicado = {
 }
 
 export default function CarritoPage() {
+  const currencySymbol = useCurrencySymbol()
   const [items, setItems] = useState<CarritoItem[]>([])
   const [loading, setLoading] = useState(true)
   const [codigoCupon, setCodigoCupon] = useState('')
@@ -124,7 +127,7 @@ export default function CarritoPage() {
   if (loading) {
     return (
       <>
-        <HeaderClient brand={{ name: 'PlusSport', tagline: 'Performance Athletic Wear', logoUrl: null, logoAlt: 'PlusSport logo' }} />
+        <HeaderClient />
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-gray-500">Cargando carrito...</div>
         </div>
@@ -135,11 +138,11 @@ export default function CarritoPage() {
 
   return (
     <>
-      <HeaderClient brand={{ name: 'PlusSport', tagline: 'Performance Athletic Wear', logoUrl: null, logoAlt: 'PlusSport logo' }} />
+      <HeaderClient />
       <main className="bg-gray-50">
         <section className="bg-primary py-8 text-white">
           <div className="mx-auto max-w-7xl px-4">
-            <h1 className="text-4xl font-black">Tu Carrito</h1>
+            <h1 className="text-2xl font-black sm:text-4xl">Tu Carrito</h1>
           </div>
         </section>
 
@@ -157,13 +160,13 @@ export default function CarritoPage() {
                 <div className="lg:col-span-2">
                   <div className="space-y-4">
                     {items.map((item, index) => (
-                      <div key={index} className="flex gap-4 rounded-lg border border-gray-200 bg-white p-4">
-                        {item.imagenUrl && <img src={item.imagenUrl} alt={item.nombre} className="h-24 w-24 rounded object-cover" />}
+                      <div key={index} className="flex gap-3 rounded-lg border border-gray-200 bg-white p-3 sm:gap-4 sm:p-4">
+                        {item.imagenUrl && <img src={item.imagenUrl} alt={item.nombre} className="h-16 w-16 rounded object-cover sm:h-24 sm:w-24" />}
                         <div className="flex-1">
                           <h3 className="font-bold text-gray-900">{item.nombre}</h3>
                           {item.marca && <p className="text-sm text-gray-500">{item.marca}</p>}
                           {item.talla && <p className="text-sm text-gray-600">Talla: {item.talla}</p>}
-                          <p className="mt-2 text-lg font-bold text-primary">S/ {(item.precio * item.cantidad).toFixed(2)}</p>
+                          <p className="mt-2 text-lg font-bold text-primary">{formatMoney(item.precio * item.cantidad, currencySymbol)}</p>
                         </div>
                         <div className="flex flex-col items-end gap-3">
                           <input
@@ -210,27 +213,27 @@ export default function CarritoPage() {
                   <div className="mb-4 space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
-                      <span>S/ {subtotal.toFixed(2)}</span>
+                      <span>{formatMoney(subtotal, currencySymbol)}</span>
                     </div>
                     {descuento > 0 && (
                       <div className="flex justify-between">
                         <span>Descuento:</span>
-                        <span className="font-semibold text-green-600">-S/ {descuento.toFixed(2)}</span>
+                        <span className="font-semibold text-green-600">-{formatMoney(descuento, currencySymbol)}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
                       <span>Envio:</span>
                       <span className={costoEnvioFinal === 0 ? 'font-bold text-green-600' : ''}>
-                        {costoEnvioFinal === 0 ? 'Gratis' : `S/ ${costoEnvioFinal.toFixed(2)}`}
+                        {costoEnvioFinal === 0 ? 'Gratis' : formatMoney(costoEnvioFinal, currencySymbol)}
                       </span>
                     </div>
-                    {costoEnvioFinal > 0 && <p className="pt-2 text-xs text-gray-500">Envio gratis desde S/ 299</p>}
+                    {costoEnvioFinal > 0 && <p className="pt-2 text-xs text-gray-500">Envio gratis desde {formatMoney(299, currencySymbol)}</p>}
                   </div>
 
                   <div className="mb-6 border-t pt-4">
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total:</span>
-                      <span className="text-primary">S/ {total.toFixed(2)}</span>
+                      <span className="text-primary">{formatMoney(total, currencySymbol)}</span>
                     </div>
                   </div>
 

@@ -1,7 +1,7 @@
-import { getStoreIdentity } from '@/lib/storefront'
+import { getStorefrontConfig } from '@/lib/storefront'
 import HeaderClient from './HeaderClient'
 
 export default async function Header() {
-  const brand = await getStoreIdentity()
-  return <HeaderClient brand={brand} />
+  const storefront = await getStorefrontConfig()
+  return <HeaderClient initialConfig={storefront} />
 }

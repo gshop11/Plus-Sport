@@ -35,6 +35,7 @@ interface ProductosPageProps {
     segmento?: string
     coleccion?: string
     marca?: string
+    oferta?: string
     page?: string
     search?: string
   }>
@@ -55,9 +56,10 @@ const buildHref = (params: URLSearchParams, page: number) => {
 }
 
 export default async function ProductosPage({ searchParams }: ProductosPageProps) {
-  const { segmento, coleccion, marca, page, search } = await searchParams
+  const { segmento, coleccion, marca, oferta, page, search } = await searchParams
   const currentPage = parsePage(page)
   const normalizedSegmento = segmento && segmento in segmentMeta ? (segmento as SegmentKey) : undefined
+  const onlyOffers = oferta === '1'
   const categoriaCalzado = coleccion === 'calzado' ? await getCategoriaBySlug('calzado') : null
   const searchTerm = search?.trim() || undefined
 
@@ -67,6 +69,7 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
     segmento: normalizedSegmento,
     marcaSlug: marca,
     categoriaId: categoriaCalzado ? String(categoriaCalzado.id) : undefined,
+    onlyOffers,
     search: searchTerm,
   })
 
@@ -76,8 +79,20 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
         titleAccent: `"${searchTerm}"`,
         description: `${totalDocs} producto${totalDocs !== 1 ? 's' : ''} encontrado${totalDocs !== 1 ? 's' : ''}.`,
       }
-    : normalizedSegmento
+    : normalizedSegmento && onlyOffers
+      ? {
+          titleLead: 'Ofertas para',
+          titleAccent: segmentMeta[normalizedSegmento].titleAccent,
+          description: `Descuentos en la coleccion ${segmentMeta[normalizedSegmento].titleAccent.toLowerCase()}.`,
+        }
+      : normalizedSegmento
       ? segmentMeta[normalizedSegmento]
+      : onlyOffers
+        ? {
+            titleLead: 'Productos en',
+            titleAccent: 'Oferta',
+            description: 'Descuentos especiales en productos seleccionados.',
+          }
       : coleccion === 'calzado'
         ? {
             titleLead: 'Coleccion',
@@ -94,6 +109,7 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
   if (segmento) query.set('segmento', segmento)
   if (coleccion) query.set('coleccion', coleccion)
   if (marca) query.set('marca', marca)
+  if (onlyOffers) query.set('oferta', '1')
   if (searchTerm) query.set('search', searchTerm)
 
   return (
@@ -103,9 +119,17 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
         <section className="py-12 text-white" style={{ background: heroBackground }}>
           <div className="mx-auto max-w-7xl px-4">
             <div className="mb-4 inline-flex rounded-full border border-white/25 bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">
-              {normalizedSegmento ? `Segmento ${normalizedSegmento}` : coleccion === 'calzado' ? 'Linea calzado' : 'Catalogo completo'}
+              {onlyOffers && normalizedSegmento
+                ? `Ofertas ${normalizedSegmento}`
+                : onlyOffers
+                  ? 'Promociones activas'
+                  : normalizedSegmento
+                    ? `Segmento ${normalizedSegmento}`
+                    : coleccion === 'calzado'
+                      ? 'Linea calzado'
+                      : 'Catalogo completo'}
             </div>
-            <h1 className="mb-2 text-4xl font-black tracking-tight lg:text-5xl">
+            <h1 className="mb-2 text-2xl font-black tracking-tight sm:text-4xl lg:text-5xl">
               <span className="text-[#fff7ef]">{heroContent.titleLead} </span>
               <span className="text-primary">{heroContent.titleAccent}</span>
             </h1>
@@ -120,7 +144,7 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
                 <p className="text-gray-600">
                   Mostrando <span className="font-bold">{productos.length}</span> de <span className="font-bold">{totalDocs}</span> productos
                 </p>
-                {(normalizedSegmento || coleccion || marca || searchTerm) && (
+                {(normalizedSegmento || coleccion || marca || onlyOffers || searchTerm) && (
                   <a
                     href="/productos"
                     className="rounded-full border border-primary px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"

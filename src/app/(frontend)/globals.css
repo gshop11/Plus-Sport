@@ -4,7 +4,12 @@
 
 :root {
   --color-primario: #1a237e;
+  --color-primario-light: #283593;
+  --color-primario-dark: #0d1757;
   --color-acento: #ff6f00;
+  --color-acento-light: #ffa000;
+  --color-acento-dark: #e65100;
+  --color-fondo: #ffffff;
 }
 
 * {
@@ -16,6 +21,7 @@
 body {
   font-family: 'Inter', sans-serif;
   color: #1a1a1a;
+  background: var(--color-fondo);
 }
 
 /* Animación fade para slides */
