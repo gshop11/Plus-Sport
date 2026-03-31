@@ -3,7 +3,7 @@
 import type { StorefrontConfig } from '@/lib/storefront-types'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import CartCountBadge from './CartCountBadge'
 
 type HeaderClientProps = {
@@ -90,7 +90,7 @@ function CartIcon() {
   )
 }
 
-export default function HeaderClient({ initialConfig }: HeaderClientProps) {
+function HeaderClientInner({ initialConfig }: HeaderClientProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -430,5 +430,13 @@ export default function HeaderClient({ initialConfig }: HeaderClientProps) {
 
       {menuOpen && <div className="animate-overlayIn fixed inset-0 z-40 bg-black/60 sm:hidden" onClick={() => setMenuOpen(false)} aria-hidden="true" />}
     </>
+  )
+}
+
+export default function HeaderClient(props: HeaderClientProps) {
+  return (
+    <Suspense fallback={null}>
+      <HeaderClientInner {...props} />
+    </Suspense>
   )
 }
