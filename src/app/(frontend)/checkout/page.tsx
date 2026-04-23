@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -34,16 +34,118 @@ interface PagosConfig {
   efectivo: { activo: boolean; nombre: string; instruccion: string | null }
 }
 
+type IzipayVisualStatus = 'success' | 'failed' | 'cancelled' | 'unknown'
+
+type IzipaySessionResponse = {
+  success: boolean
+  session?: {
+    scriptUrl: string
+    authorization: string
+    keyRSA: string
+    returnUrl: string
+    config: Record<string, unknown>
+  }
+}
+
 const PASOS = [
   { n: 1, label: 'Carrito' },
   { n: 2, label: 'Datos personales' },
   { n: 3, label: 'Datos de entrega' },
-  { n: 4, label: 'Método de pago' },
+  { n: 4, label: 'MÃ©todo de pago' },
 ]
 
 const inputCls =
   'w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20'
 const labelCls = 'mb-1 block text-sm font-semibold text-gray-700'
+
+declare global {
+  interface Window {
+    Izipay?: new (input: { config: Record<string, unknown> }) => {
+      LoadForm: (input: {
+        authorization: string
+        keyRSA: string
+        callbackResponse?: (response: unknown) => void
+      }) => void
+    }
+  }
+}
+
+function loadIzipayScript(scriptUrl: string) {
+  if (typeof window === 'undefined') return Promise.resolve()
+  if (window.Izipay) return Promise.resolve()
+
+  return new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>('script[data-izipay-sdk="1"]')
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true })
+      existing.addEventListener('error', () => reject(new Error('No se pudo cargar el SDK Izipay.')), { once: true })
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = scriptUrl
+    script.defer = true
+    script.async = true
+    script.dataset.izipaySdk = '1'
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('No se pudo cargar el SDK Izipay.'))
+    document.head.appendChild(script)
+  })
+}
+
+function resolveVisualStatus(response: unknown): IzipayVisualStatus {
+  const source =
+    typeof response === 'string'
+      ? response.toLowerCase()
+      : JSON.stringify(response || '').toLowerCase()
+
+  if (
+    source.includes('authorised') ||
+    source.includes('authorized') ||
+    source.includes('captured') ||
+    source.includes('"00"') ||
+    source.includes('operacion exitosa') ||
+    source.includes('successful')
+  ) {
+    return 'success'
+  }
+
+  if (source.includes('cancel') || source.includes('anulad') || source.includes('abort')) {
+    return 'cancelled'
+  }
+
+  if (
+    source.includes('refused') ||
+    source.includes('deneg') ||
+    source.includes('rechaz') ||
+    source.includes('failed') ||
+    source.includes('error')
+  ) {
+    return 'failed'
+  }
+
+  return 'unknown'
+}
+
+function getResponseTransactionId(response: any) {
+  if (!response || typeof response !== 'object') return ''
+  const fromOrder = response?.response?.order?.[0]?.referenceNumber
+  return String(
+    response?.transactionId ||
+      response?.response?.transactionId ||
+      fromOrder ||
+      '',
+  ).trim()
+}
+
+function buildReturnUrl(base: string, query: Record<string, string | undefined>) {
+  const parsed = new URL(base, window.location.origin)
+  Object.entries(query).forEach(([key, value]) => {
+    if (!value) return
+    parsed.searchParams.set(key, value)
+  })
+  return parsed.toString()
+}
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -71,8 +173,6 @@ export default function CheckoutPage() {
   const [pagosConfig, setPagosConfig] = useState<PagosConfig | null>(null)
   const [yapeData, setYapeData] = useState({ celular: '', codigo: ['', '', '', '', '', ''] })
   const [plinData, setPlinData] = useState({ celular: '' })
-  const [tarjetaData, setTarjetaData] = useState({ numero: '', nombre: '', mes: '', anio: '', cvv: '', cuotas: '1' })
-  const [tarjetaDireccionIgual, setTarjetaDireccionIgual] = useState(true)
 
   useEffect(() => {
     const carrito = JSON.parse(localStorage.getItem('carrito') || '[]')
@@ -128,7 +228,7 @@ export default function CheckoutPage() {
       .then((r) => r.json())
       .then((data: PagosConfig) => {
         setPagosConfig(data)
-        // Seleccionar automáticamente el primer método activo
+        // Seleccionar automÃ¡ticamente el primer mÃ©todo activo
         const primero = (['yape', 'plin', 'bcp', 'interbank', 'tarjeta', 'efectivo'] as const)
           .find((m) => data[m]?.activo)
         if (primero) setMetodoPago(primero)
@@ -153,7 +253,7 @@ export default function CheckoutPage() {
     Boolean(datosEnvio.referencias.trim())
 
   useEffect(() => {
-    const warningMessage = 'Si sales del checkout, perderas el avance. ¿Deseas salir?'
+    const warningMessage = 'Si sales del checkout, perderas el avance. Â¿Deseas salir?'
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (!hasCheckoutProgress || allowNavigationRef.current) return
@@ -247,17 +347,85 @@ export default function CheckoutPage() {
         throw new Error('Error orden: ' + (e.details || e.error || ordenRes.status))
       }
       const orden = await ordenRes.json()
+      const order = orden.order || orden.doc
+      const orderRef = order?.codigoCorrelacion || order?.numeroPedido || order?.id
+
+      if (metodoPago === 'tarjeta') {
+        const sessionRes = await fetch('/api/payments/izipay/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderRef,
+            orderId: order?.id,
+          }),
+        })
+
+        const sessionJson = (await sessionRes.json().catch(() => ({}))) as IzipaySessionResponse & {
+          error?: string
+          details?: string
+        }
+
+        if (!sessionRes.ok || !sessionJson.session) {
+          throw new Error(sessionJson.details || sessionJson.error || 'No se pudo preparar checkout Izipay.')
+        }
+
+        const sdkSession = sessionJson.session
+        await loadIzipayScript(sdkSession.scriptUrl)
+        if (!window.Izipay) {
+          throw new Error('El SDK de Izipay no esta disponible en este navegador.')
+        }
+
+        const checkout = new window.Izipay({ config: sdkSession.config })
+
+        checkout.LoadForm({
+          authorization: sdkSession.authorization,
+          keyRSA: sdkSession.keyRSA,
+          callbackResponse: async (response: unknown) => {
+            const visualStatus = resolveVisualStatus(response)
+            const responseTransactionId = getResponseTransactionId(response as any)
+
+            try {
+              await fetch('/api/payments/izipay/visual-result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  orderRef,
+                  orderId: order?.id,
+                  visualStatus,
+                  transactionId: responseTransactionId,
+                  response,
+                }),
+              })
+            } catch {
+              // The order still exists. Final state will be corrected in webhook phase.
+            }
+
+            if (visualStatus === 'success') {
+              localStorage.setItem('carrito', '[]')
+              localStorage.removeItem('carrito_cupon')
+              window.dispatchEvent(new Event('carrito:update'))
+            }
+
+            allowNavigationRef.current = true
+            const returnUrl = buildReturnUrl(sdkSession.returnUrl || `${window.location.origin}/confirmacion`, {
+              orderRef: String(orderRef || ''),
+              ordenId: String(order?.id || ''),
+              izipayStatus: visualStatus,
+              izipayTx: responseTransactionId || undefined,
+            })
+
+            window.location.assign(returnUrl)
+          },
+        })
+        setLoading(false)
+        return
+      }
 
       localStorage.setItem('carrito', '[]')
       localStorage.removeItem('carrito_cupon')
       window.dispatchEvent(new Event('carrito:update'))
-
-      const order = orden.order || orden.doc
-      const orderRef = order?.codigoCorrelacion || order?.numeroPedido || order?.id
       allowNavigationRef.current = true
-      router.push(
-        `/confirmacion?orderRef=${encodeURIComponent(orderRef)}&ordenId=${encodeURIComponent(order?.id || '')}`,
-      )
+      router.push(`/confirmacion?orderRef=${encodeURIComponent(orderRef)}&ordenId=${encodeURIComponent(order?.id || '')}`)
     } catch (error) {
       alert('Error: ' + (error as Error).message)
       setLoading(false)
@@ -297,7 +465,7 @@ export default function CheckoutPage() {
                           : 'bg-gray-200 text-gray-400'
                     }`}
                   >
-                    {p.n < paso ? '✓' : p.n}
+                    {p.n < paso ? 'âœ“' : p.n}
                   </div>
                   <span
                     className={`mt-1 hidden text-xs font-semibold sm:block ${
@@ -323,13 +491,13 @@ export default function CheckoutPage() {
                 <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso > 2 ? 'bg-green-500 text-white' : 'bg-primary text-white'}`}>
-                      {paso > 2 ? '✓' : '1'}
+                      {paso > 2 ? 'âœ“' : '1'}
                     </span>
                     <h2 className="font-bold text-gray-900">Datos Personales</h2>
                   </div>
                   {paso > 2 && (
                     <button onClick={() => setPaso(2)} className="flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
-                      ✏️ Editar
+                      âœï¸ Editar
                     </button>
                   )}
                 </div>
@@ -344,7 +512,7 @@ export default function CheckoutPage() {
                       </div>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div>
-                          <label className={labelCls}>Correo electrónico *</label>
+                          <label className={labelCls}>Correo electrÃ³nico *</label>
                           <input className={inputCls} type="email" value={datosPersonales.email}
                             onChange={(e) => setDatosPersonales((p) => ({ ...p, email: e.target.value }))} required />
                         </div>
@@ -363,21 +531,21 @@ export default function CheckoutPage() {
                     <button
                       onClick={() => {
                         if (!datosPersonales.nombre || !datosPersonales.email || !datosPersonales.telefono) {
-                          alert('Completa nombre, email y teléfono')
+                          alert('Completa nombre, email y telÃ©fono')
                           return
                         }
                         setPaso(3)
                       }}
                       className="mt-6 w-full rounded-lg bg-primary py-3 font-bold text-white transition-colors hover:bg-primary-dark"
                     >
-                      Continuar →
+                      Continuar â†’
                     </button>
                   </div>
                 ) : paso > 2 ? (
                   <div className="px-6 py-4 text-sm text-gray-600">
                     <p><span className="font-semibold">Nombre:</span> {datosPersonales.nombre}</p>
                     <p><span className="font-semibold">Correo:</span> {datosPersonales.email}</p>
-                    <p><span className="font-semibold">Teléfono:</span> {datosPersonales.telefono}</p>
+                    <p><span className="font-semibold">TelÃ©fono:</span> {datosPersonales.telefono}</p>
                     {datosPersonales.dni && <p><span className="font-semibold">DNI:</span> {datosPersonales.dni}</p>}
                   </div>
                 ) : null}
@@ -388,13 +556,13 @@ export default function CheckoutPage() {
                 <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
                   <div className="flex items-center gap-3">
                     <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso > 3 ? 'bg-green-500 text-white' : paso === 3 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'}`}>
-                      {paso > 3 ? '✓' : '2'}
+                      {paso > 3 ? 'âœ“' : '2'}
                     </span>
                     <h2 className={`font-bold ${paso >= 3 ? 'text-gray-900' : 'text-gray-400'}`}>Datos de entrega</h2>
                   </div>
                   {paso > 3 && (
                     <button onClick={() => setPaso(3)} className="flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
-                      ✏️ Editar
+                      âœï¸ Editar
                     </button>
                   )}
                 </div>
@@ -403,7 +571,7 @@ export default function CheckoutPage() {
                   <div className="p-6">
                     <div className="space-y-4">
                       <div>
-                        <label className={labelCls}>Calle y número *</label>
+                        <label className={labelCls}>Calle y nÃºmero *</label>
                         <input className={inputCls} type="text" value={datosEnvio.calle}
                           onChange={(e) => setDatosEnvio((p) => ({ ...p, calle: e.target.value }))} required />
                       </div>
@@ -436,7 +604,7 @@ export default function CheckoutPage() {
                       }}
                       className="mt-6 w-full rounded-lg bg-primary py-3 font-bold text-white transition-colors hover:bg-primary-dark"
                     >
-                      Continuar →
+                      Continuar â†’
                     </button>
                   </div>
                 ) : paso > 3 ? (
@@ -448,13 +616,13 @@ export default function CheckoutPage() {
                 ) : null}
               </div>
 
-              {/* Paso 4: Método de pago */}
+              {/* Paso 4: MÃ©todo de pago */}
               <div className="rounded-xl border border-gray-100 bg-white shadow-sm">
                 <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-4">
                   <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso === 4 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'}`}>
                     3
                   </span>
-                  <h2 className={`font-bold ${paso === 4 ? 'text-gray-900' : 'text-gray-400'}`}>Método de pago</h2>
+                  <h2 className={`font-bold ${paso === 4 ? 'text-gray-900' : 'text-gray-400'}`}>MÃ©todo de pago</h2>
                 </div>
 
                 {paso === 4 && (
@@ -477,12 +645,12 @@ export default function CheckoutPage() {
 
                     {/* Cargando config */}
                     {!pagosConfig && (
-                      <div className="py-8 text-center text-sm text-gray-400">Cargando métodos de pago...</div>
+                      <div className="py-8 text-center text-sm text-gray-400">Cargando mÃ©todos de pago...</div>
                     )}
 
                     {pagosConfig && (
                       <>
-                        {/* Opciones de pago — solo las activas */}
+                        {/* Opciones de pago â€” solo las activas */}
                         <div className="grid gap-3 sm:grid-cols-2">
 
                           {pagosConfig.tarjeta.activo && (
@@ -494,7 +662,7 @@ export default function CheckoutPage() {
                               </span>
                               <span className="flex items-center gap-1">
                                 <span className="rounded bg-[#1a1f71] px-1.5 py-0.5 text-[9px] font-black text-white">VISA</span>
-                                <span className="text-lg font-black text-red-500">◉</span>
+                                <span className="text-lg font-black text-red-500">â—‰</span>
                               </span>
                             </label>
                           )}
@@ -556,91 +724,35 @@ export default function CheckoutPage() {
 
                         </div>
 
-                        {/* — Detalle Tarjeta — */}
+                        {/* â€” Detalle Tarjeta â€” */}
                         {metodoPago === 'tarjeta' && (
                           <div className="mt-4 space-y-4 rounded-xl border border-gray-200 bg-white p-5">
                             <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">
                               <span className="rounded bg-[#1a1f71] px-1.5 py-0.5 text-[9px] font-black text-white">VISA</span>
                               <span className="rounded bg-[#eb001b] px-1.5 py-0.5 text-[9px] font-black text-white">MC</span>
-                              Acepta tarjetas Visa y Mastercard
+                              Checkout seguro Izipay Sandbox
                             </div>
-                            <div>
-                              <label className="mb-1 block text-sm font-semibold text-gray-700">Número de Tarjeta</label>
-                              <input type="text" inputMode="numeric" maxLength={19} placeholder="0000 0000 0000 0000"
-                                value={tarjetaData.numero}
-                                onChange={(e) => {
-                                  const raw = e.target.value.replace(/\D/g, '').slice(0, 16)
-                                  const fmt = raw.match(/.{1,4}/g)?.join(' ') ?? raw
-                                  setTarjetaData((p) => ({ ...p, numero: fmt }))
-                                }}
-                                className={inputCls} />
+                            <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                              Los datos de tarjeta no se capturan en este formulario. El cobro se procesa en la pasarela oficial de Izipay.
                             </div>
-                            <div>
-                              <label className="mb-1 block text-sm font-semibold text-gray-700">Nombre como figura en la tarjeta</label>
-                              <input type="text" placeholder="NOMBRE APELLIDO" value={tarjetaData.nombre}
-                                onChange={(e) => setTarjetaData((p) => ({ ...p, nombre: e.target.value.toUpperCase() }))}
-                                className={inputCls} />
-                            </div>
-                            <div className="grid gap-4 sm:grid-cols-3">
-                              <div>
-                                <label className="mb-1 block text-sm font-semibold text-gray-700">Mes</label>
-                                <select value={tarjetaData.mes} onChange={(e) => setTarjetaData((p) => ({ ...p, mes: e.target.value }))} className={inputCls}>
-                                  <option value="">MM</option>
-                                  {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map((m) => (
-                                    <option key={m} value={m}>{m}</option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div>
-                                <label className="mb-1 block text-sm font-semibold text-gray-700">Año</label>
-                                <select value={tarjetaData.anio} onChange={(e) => setTarjetaData((p) => ({ ...p, anio: e.target.value }))} className={inputCls}>
-                                  <option value="">AA</option>
-                                  {Array.from({ length: 10 }, (_, i) => String(new Date().getFullYear() + i).slice(-2)).map((y) => (
-                                    <option key={y} value={y}>{y}</option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div>
-                                <label className="mb-1 block text-sm font-semibold text-gray-700">CVV</label>
-                                <input type="password" maxLength={4} placeholder="•••" value={tarjetaData.cvv}
-                                  onChange={(e) => setTarjetaData((p) => ({ ...p, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
-                                  className={inputCls} />
-                              </div>
-                            </div>
-                            <div>
-                              <label className="mb-1 block text-sm font-semibold text-gray-700">Cuotas disponibles</label>
-                              <select value={tarjetaData.cuotas} onChange={(e) => setTarjetaData((p) => ({ ...p, cuotas: e.target.value }))} className={inputCls}>
-                                <option value="1">1 cuota (sin intereses)</option>
-                                <option value="3">3 cuotas</option>
-                                <option value="6">6 cuotas</option>
-                                <option value="12">12 cuotas</option>
-                              </select>
-                            </div>
-                            <label className="flex items-center gap-2 text-sm text-gray-600">
-                              <input
-                                type="checkbox"
-                                checked={tarjetaDireccionIgual}
-                                onChange={(e) => setTarjetaDireccionIgual(e.target.checked)}
-                                className="h-4 w-4 accent-primary"
-                              />
-                              La direccion de facturacion de la tarjeta es la misma que la de entrega.
-                            </label>
+                            <ul className="space-y-2 text-sm text-gray-700">
+                              <li>1. Se registra la orden local con estado de pago pendiente.</li>
+                              <li>2. Se solicita el token de sesion de Izipay desde backend.</li>
+                              <li>3. Se abre el checkout Izipay para completar el intento de pago.</li>
+                            </ul>
                             <p className="text-xs text-gray-500">
-                              {pagosConfig.tarjeta.instruccion ?? 'Modo pre-pasarela: aun no se realiza cobro automatico con tarjeta.'}
+                              {pagosConfig.tarjeta.instruccion ?? 'La confirmacion final del pago dependera del webhook backend en la siguiente fase.'}
                             </p>
                           </div>
                         )}
 
-
-
-                        {/* — Detalle Yape — */}
                         {metodoPago === 'yape' && (
                           <div className="mt-4 rounded-xl border border-gray-200 bg-white p-5">
                             <div className="mb-4 rounded-xl border border-[#e8daf7] bg-[#fbf8ff] p-5">
                               <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#6b21a8] text-lg font-black text-white">
                                 Y
                               </div>
-                              <p className="text-center text-2xl font-black text-gray-900">¡Paga con Yape</p>
+                              <p className="text-center text-2xl font-black text-gray-900">Â¡Paga con Yape</p>
                               <p className="mb-4 text-center text-2xl font-black text-gray-900">en pocos minutos!</p>
                               <ul className="space-y-3 text-sm text-gray-700">
                                 <li className="flex items-start gap-3">
@@ -664,7 +776,7 @@ export default function CheckoutPage() {
                             )}
                             {false && pagosConfig.yape.numero && (
                               <p className="mb-3 text-center text-sm font-semibold text-gray-700">
-                                Número: <span className="font-black text-[#6b21a8]">{pagosConfig.yape.numero}</span>
+                                NÃºmero: <span className="font-black text-[#6b21a8]">{pagosConfig.yape.numero}</span>
                               </p>
                             )}
                             {false && <div className="mb-4">
@@ -674,7 +786,7 @@ export default function CheckoutPage() {
                                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#6b21a8] focus:ring-2 focus:ring-[#6b21a8]/20" />
                             </div>}
                             {false && <div className="mb-3">
-                              <label className="mb-1 block text-sm font-semibold text-gray-700">Código de aprobación</label>
+                              <label className="mb-1 block text-sm font-semibold text-gray-700">CÃ³digo de aprobaciÃ³n</label>
                               <div className="flex gap-2">
                                 {yapeData.codigo.map((d, i) => (
                                   <input key={i} id={`yape-digit-${i}`} type="text" inputMode="numeric" maxLength={1} value={d}
@@ -688,15 +800,15 @@ export default function CheckoutPage() {
                                     className="h-12 w-full rounded-lg border-2 border-gray-300 text-center text-lg font-black outline-none focus:border-[#6b21a8] focus:ring-2 focus:ring-[#6b21a8]/20" />
                                 ))}
                               </div>
-                              <p className="mt-1 text-xs text-gray-400">Encuéntralo en el menú de Yape.</p>
+                              <p className="mt-1 text-xs text-gray-400">EncuÃ©ntralo en el menÃº de Yape.</p>
                             </div>}
                             <p className="text-xs text-gray-500">
-                              {pagosConfig.yape.instruccion ?? 'Verifica que "Compras por internet" esté activado en tu Yape.'}
+                              {pagosConfig.yape.instruccion ?? 'Verifica que "Compras por internet" estÃ© activado en tu Yape.'}
                             </p>
                           </div>
                         )}
 
-                        {/* — Detalle Plin — */}
+                        {/* â€” Detalle Plin â€” */}
                         {metodoPago === 'plin' && (
                           <div className="mt-4 rounded-xl border-2 border-[#00b4d8]/20 bg-cyan-50 p-5">
                             <p className="mb-3 text-center text-base font-black text-[#00b4d8]">Paga {formatMoney(total, currencySymbol)} con Plin</p>
@@ -707,7 +819,7 @@ export default function CheckoutPage() {
                             )}
                             {pagosConfig.plin.numero && (
                               <p className="mb-3 text-center text-sm font-semibold text-gray-700">
-                                Número: <span className="font-black text-[#00b4d8]">{pagosConfig.plin.numero}</span>
+                                NÃºmero: <span className="font-black text-[#00b4d8]">{pagosConfig.plin.numero}</span>
                               </p>
                             )}
                             <div>
@@ -722,7 +834,7 @@ export default function CheckoutPage() {
                           </div>
                         )}
 
-                        {/* — Detalle BCP — */}
+                        {/* â€” Detalle BCP â€” */}
                         {metodoPago === 'bcp' && (
                           <div className="mt-4 rounded-xl border-2 border-[#003087]/20 bg-blue-50 p-5 text-sm text-gray-700">
                             <p className="mb-3 font-black text-[#003087]">Datos para transferencia BCP</p>
@@ -732,16 +844,16 @@ export default function CheckoutPage() {
                               </div>
                             )}
                             {pagosConfig.bcp.numeroCuenta
-                              ? <p>N° de cuenta: <strong>{pagosConfig.bcp.numeroCuenta}</strong></p>
-                              : <p className="text-gray-400 italic">Número de cuenta no configurado aún.</p>
+                              ? <p>NÂ° de cuenta: <strong>{pagosConfig.bcp.numeroCuenta}</strong></p>
+                              : <p className="text-gray-400 italic">NÃºmero de cuenta no configurado aÃºn.</p>
                             }
                             <p className="mt-2 text-gray-500">
-                              {pagosConfig.bcp.instruccion ?? 'Envía tu voucher por WhatsApp al finalizar la compra.'}
+                              {pagosConfig.bcp.instruccion ?? 'EnvÃ­a tu voucher por WhatsApp al finalizar la compra.'}
                             </p>
                           </div>
                         )}
 
-                        {/* — Detalle Interbank — */}
+                        {/* â€” Detalle Interbank â€” */}
                         {metodoPago === 'interbank' && (
                           <div className="mt-4 rounded-xl border-2 border-[#00843d]/20 bg-green-50 p-5 text-sm text-gray-700">
                             <p className="mb-3 font-black text-[#00843d]">Datos para transferencia Interbank</p>
@@ -751,16 +863,16 @@ export default function CheckoutPage() {
                               </div>
                             )}
                             {pagosConfig.interbank.numeroCuenta
-                              ? <p>N° de cuenta: <strong>{pagosConfig.interbank.numeroCuenta}</strong></p>
-                              : <p className="text-gray-400 italic">Número de cuenta no configurado aún.</p>
+                              ? <p>NÂ° de cuenta: <strong>{pagosConfig.interbank.numeroCuenta}</strong></p>
+                              : <p className="text-gray-400 italic">NÃºmero de cuenta no configurado aÃºn.</p>
                             }
                             <p className="mt-2 text-gray-500">
-                              {pagosConfig.interbank.instruccion ?? 'Envía tu voucher por WhatsApp al finalizar la compra.'}
+                              {pagosConfig.interbank.instruccion ?? 'EnvÃ­a tu voucher por WhatsApp al finalizar la compra.'}
                             </p>
                           </div>
                         )}
 
-                        {/* — Detalle Efectivo — */}
+                        {/* â€” Detalle Efectivo â€” */}
                         {metodoPago === 'efectivo' && (
                           <div className="mt-4 rounded-xl border-2 border-gray-300 bg-gray-50 p-5 text-sm text-gray-700">
                             <p className="font-semibold text-gray-800">Pago al recibir tu pedido</p>
@@ -808,9 +920,9 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Gastos de envío</span>
+                  <span className="text-gray-600">Gastos de envÃ­o</span>
                   <span className={costoEnvioFinal === 0 ? 'font-semibold text-green-600' : 'text-accent font-semibold'}>
-                    {costoEnvioFinal === 0 ? 'Gratis ✓' : formatMoney(costoEnvioFinal, currencySymbol)}
+                    {costoEnvioFinal === 0 ? 'Gratis âœ“' : formatMoney(costoEnvioFinal, currencySymbol)}
                   </span>
                 </div>
                 {costoEnvioFinal > 0 && (
@@ -830,7 +942,7 @@ export default function CheckoutPage() {
                     disabled={loading || !metodoPago}
                     className="w-full rounded-lg bg-accent py-4 font-black text-white shadow-lg shadow-accent/30 transition-all hover:bg-accent-dark disabled:opacity-60"
                   >
-                    {loading ? 'Procesando...' : 'REALIZAR COMPRA'}
+                    {loading ? 'Procesando...' : metodoPago === 'tarjeta' ? 'PAGAR CON IZIPAY' : 'REALIZAR COMPRA'}
                   </button>
                 </div>
               )}
@@ -842,3 +954,4 @@ export default function CheckoutPage() {
     </>
   )
 }
+

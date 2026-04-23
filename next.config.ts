@@ -17,6 +17,9 @@ const customMediaPattern = (() => {
 })()
 
 const nextConfig: NextConfig = {
+  typescript: {
+    tsconfigPath: './tsconfig.next.json',
+  },
   images: {
     remotePatterns: [
       { protocol: 'http', hostname: 'localhost' },

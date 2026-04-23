@@ -410,6 +410,7 @@ export async function POST(request: Request) {
     }
 
     const total = roundMoney(Math.max(0, subtotal - descuento) + costoEnvioFinal)
+    const paymentProvider = normalizedPaymentMethod === 'tarjeta' ? 'izipay_sandbox' : 'manual'
 
     const orden = await payload.create({
       collection: 'ordenes',
@@ -429,13 +430,14 @@ export async function POST(request: Request) {
         metodoPago: normalizedPaymentMethod,
         estadoComercial: 'pendiente',
         estadoPago: 'pending',
-        paymentProvider: 'manual',
+        paymentProvider,
         paymentMethod: normalizedPaymentMethod,
         paymentSignatureValid: false,
         paymentPayload: {
           source: 'checkout-api',
           comprobante: reqData.comprobante || null,
           cuponCodigo: cuponCodigoAplicado || null,
+          finalValidationPending: normalizedPaymentMethod === 'tarjeta',
         },
       },
     })
