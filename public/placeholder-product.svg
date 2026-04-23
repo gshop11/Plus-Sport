@@ -1,0 +1,10 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="400" rx="24" fill="#F3F4F6"/>
+  <rect x="52" y="72" width="296" height="256" rx="20" fill="#E5E7EB"/>
+  <path d="M120 240C120 211.281 143.281 188 172 188H228C256.719 188 280 211.281 280 240V248H120V240Z" fill="#D1D5DB"/>
+  <circle cx="170" cy="160" r="22" fill="#9CA3AF"/>
+  <circle cx="230" cy="160" r="22" fill="#9CA3AF"/>
+  <text x="200" y="292" text-anchor="middle" fill="#6B7280" font-family="Arial, sans-serif" font-size="18" font-weight="700">
+    PLUSSPORT
+  </text>
+</svg>

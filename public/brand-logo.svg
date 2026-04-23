@@ -1,0 +1,8 @@
+<svg width="360" height="140" viewBox="0 0 360 140" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PlusSport logo">
+  <rect width="360" height="140" rx="18" fill="white"/>
+  <path d="M58 38C46 39 37 45 31 55C24 67 24 82 32 93C38 101 47 106 58 107C48 100 42 89 42 76C42 63 48 52 58 45V38Z" fill="#FF6F00"/>
+  <path d="M34 73C40 68 46 65 54 64C63 62 72 64 80 69C73 75 67 79 60 82C51 86 42 87 34 84C33 80 33 77 34 73Z" fill="#1A237E"/>
+  <text x="86" y="58" fill="#FF6F00" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" font-style="italic">Plus</text>
+  <text x="86" y="90" fill="#1A237E" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="800" font-style="italic" letter-spacing="-2">Sport</text>
+  <text x="88" y="114" fill="#FF6F00" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="600">Zapatillas para todos</text>
+</svg>

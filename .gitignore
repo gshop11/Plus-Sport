@@ -1,0 +1,66 @@
+﻿.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+!.env.example
+
+node_modules/
+.next/
+dist/
+out/
+
+# Logs
+*.log
+*.err
+*.out
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Databases and local backups
+*.db
+*.db-*
+*.db.bak_*
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+
+# Temporary files
+.tmp-*
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Build and tool caches
+.cache/
+.turbo/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local tooling folders
+.claude/
+
+# Local-only assets and tooling (not for public repo)
+skills/
+catalogo-a-imagenes/
+ESCOLAR/
+JOMA/
+imagenes/
+yolov8n.pt
+CATALOGO ESCOLAR (1).pdf
+CATALOGO JOMA 01.26.pdf
+
+.vercel/
+
+# Payload local uploads (keep folder structure only)
+public/media/**
+!public/media/
+!public/media/.gitkeep
