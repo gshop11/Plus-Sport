@@ -1,4 +1,4 @@
-﻿import { getPayload } from 'payload'
+import { getPayload } from 'payload'
 import config from '@payload-config'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -10,7 +10,7 @@ const fallbackMetodos: Record<string, { label: string; instruccion: string }> = 
   plin: { label: 'Plin', instruccion: 'Paga con Plin a PLUS SPORT SAC y envia el comprobante por WhatsApp.' },
   interbank: { label: 'Transferencia Interbank', instruccion: 'Transfiere y envia el comprobante por WhatsApp.' },
   transferencia: { label: 'Transferencia BCP', instruccion: 'Deposita y envia el comprobante por WhatsApp.' },
-  tarjeta: { label: 'Tarjeta', instruccion: 'Aun no hay cobro automatico de tarjeta en esta fase.' },
+  tarjeta: { label: 'Tarjeta', instruccion: 'Pago en pasarela Izipay. La validacion final depende del webhook backend.' },
   efectivo: { label: 'Efectivo contra entrega', instruccion: 'Paga en efectivo cuando recibas tu pedido.' },
   whatsapp: { label: 'WhatsApp', instruccion: 'Coordina el pago directamente por WhatsApp.' },
 }
@@ -21,12 +21,18 @@ type ConfirmSearchParams = {
   numeroPedido?: string
   total?: string
   metodo?: string
+  izipayStatus?: string
+  izipayTx?: string
+}
+
+function clean(value?: string) {
+  return (value || '').trim()
 }
 
 async function findOrder(payload: any, refs: { orderRef?: string; ordenId?: string; numeroPedido?: string }) {
-  const orderRef = (refs.orderRef || '').trim()
-  const ordenId = (refs.ordenId || '').trim()
-  const numeroPedido = (refs.numeroPedido || '').trim()
+  const orderRef = clean(refs.orderRef)
+  const ordenId = clean(refs.ordenId)
+  const numeroPedido = clean(refs.numeroPedido)
 
   if (orderRef) {
     const byRef = await payload.find({
@@ -42,9 +48,7 @@ async function findOrder(payload: any, refs: { orderRef?: string; ordenId?: stri
       overrideAccess: true,
     })
 
-    if (byRef.docs.length > 0) {
-      return byRef.docs[0]
-    }
+    if (byRef.docs.length > 0) return byRef.docs[0]
   }
 
   if (ordenId) {
@@ -68,13 +72,102 @@ async function findOrder(payload: any, refs: { orderRef?: string; ordenId?: stri
       depth: 0,
       overrideAccess: true,
     })
-
-    if (byNumber.docs.length > 0) {
-      return byNumber.docs[0]
-    }
+    if (byNumber.docs.length > 0) return byNumber.docs[0]
   }
 
   return null
+}
+
+function getVisualStatusLabel(value: string) {
+  const v = value.toLowerCase()
+  if (v === 'success') return 'success'
+  if (v === 'failed') return 'failed'
+  if (v === 'cancelled') return 'cancelled'
+  return 'unknown'
+}
+
+function getPaymentCopy({
+  isIzipay,
+  estadoPago,
+  visualStatus,
+  paymentSignatureValid,
+  hasSecureOrder,
+}: {
+  isIzipay: boolean
+  estadoPago: string
+  visualStatus: string
+  paymentSignatureValid: boolean
+  hasSecureOrder: boolean
+}) {
+  if (!hasSecureOrder) {
+    return {
+      title: 'Orden no encontrada',
+      body: 'No se pudo validar la orden con la referencia recibida. Verifica el numero de pedido o vuelve al checkout.',
+      boxClass: 'border-orange-200 bg-orange-50 text-orange-900',
+    }
+  }
+
+  if (!isIzipay) {
+    return {
+      title: 'Pago pendiente',
+      body: 'Sigue las instrucciones del metodo de pago seleccionado para completar tu compra.',
+      boxClass: 'border-gray-200 bg-gray-50 text-gray-700',
+    }
+  }
+
+  if (estadoPago === 'paid' && paymentSignatureValid) {
+    return {
+      title: 'Pago confirmado',
+      body: 'La orden figura como pagada y confirmada por webhook backend.',
+      boxClass: 'border-green-200 bg-green-50 text-green-800',
+    }
+  }
+
+  if (estadoPago === 'failed') {
+    return {
+      title: 'Pago rechazado',
+      body: 'El pago fue rechazado y no se confirmo en backend. Puedes reintentar con una nueva sesion.',
+      boxClass: 'border-red-200 bg-red-50 text-red-800',
+    }
+  }
+
+  if (estadoPago === 'canceled') {
+    return {
+      title: 'Pago cancelado',
+      body: 'El pago fue cancelado y no se confirmo en backend.',
+      boxClass: 'border-orange-200 bg-orange-50 text-orange-800',
+    }
+  }
+
+  if (estadoPago === 'authorized' || visualStatus === 'success') {
+    return {
+      title: 'Pago autorizado visualmente',
+      body: 'Se recibio respuesta positiva en checkout Izipay, pero la validacion final se realiza por webhook backend.',
+      boxClass: 'border-amber-200 bg-amber-50 text-amber-900',
+    }
+  }
+
+  if (visualStatus === 'failed') {
+    return {
+      title: 'Pago rechazado visualmente',
+      body: 'El checkout visual reporta rechazo. Espera la validacion final backend o intenta nuevamente.',
+      boxClass: 'border-red-200 bg-red-50 text-red-800',
+    }
+  }
+
+  if (visualStatus === 'cancelled') {
+    return {
+      title: 'Pago cancelado visualmente',
+      body: 'El checkout visual fue cancelado. Si no hubo webhook final, la orden seguira pendiente.',
+      boxClass: 'border-orange-200 bg-orange-50 text-orange-800',
+    }
+  }
+
+  return {
+    title: 'Pago pendiente de verificacion',
+    body: 'La orden esta creada y lista para validacion final por webhook/consulta backend.',
+    boxClass: 'border-blue-200 bg-blue-50 text-blue-900',
+  }
 }
 
 export default async function ConfirmacionPage({
@@ -117,18 +210,22 @@ export default async function ConfirmacionPage({
 
   const metodo = String(order?.paymentMethod || order?.metodoPago || params.metodo || 'whatsapp')
   const fallback = fallbackMetodos[metodo] || fallbackMetodos.whatsapp
-
   const metodosConfig = Array.isArray(pagosConfig?.metodos) ? pagosConfig.metodos : []
   const metodoConfig = metodosConfig.find((m: any) => m?.codigo === metodo && m?.activo)
-
   const infoPago = {
     label: metodoConfig?.nombre || fallback.label,
     instruccion: metodoConfig?.instruccion || fallback.instruccion,
   }
 
-  const estadoPago = order?.estadoPago || 'pending'
-  const estadoComercial = order?.estadoComercial || 'pendiente'
+  const estadoPago = String(order?.estadoPago || 'pending')
+  const estadoComercial = String(order?.estadoComercial || 'pendiente')
+  const paymentSignatureValid = Boolean(order?.paymentSignatureValid)
+  const visualStatus = getVisualStatusLabel(clean(params.izipayStatus))
   const hasSecureOrder = Boolean(order)
+  const isIzipay = metodo === 'tarjeta' || String(order?.paymentProvider || '').toLowerCase().includes('izipay')
+  const paymentCopy = getPaymentCopy({ isIzipay, estadoPago, visualStatus, paymentSignatureValid, hasSecureOrder })
+  const transactionId = clean(order?.transactionId) || clean(params.izipayTx)
+  const paymentReference = clean(order?.paymentReference) || clean(order?.codigoCorrelacion)
 
   return (
     <>
@@ -143,17 +240,19 @@ export default async function ConfirmacionPage({
         <div className="mx-auto max-w-2xl space-y-6 px-4 py-12">
           <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
             <div className="mb-4 text-5xl">Pedido</div>
-            <h2 className="mb-1 text-2xl font-black text-green-600">Pedido registrado</h2>
-            <p className="text-sm text-gray-500">Tu orden fue registrada correctamente</p>
+            <h2 className="mb-1 text-2xl font-black text-primary">{hasSecureOrder ? 'Orden registrada' : 'Orden no validada'}</h2>
+            <p className="text-sm text-gray-500">
+              {hasSecureOrder
+                ? 'Tu orden fue creada correctamente en PlusSport.'
+                : 'No se pudo recuperar una orden valida con la referencia recibida.'}
+            </p>
 
             <div className="mt-5 inline-block rounded-xl border-2 border-primary bg-blue-50 px-8 py-4">
               <p className="mb-1 text-xs uppercase tracking-widest text-gray-500">Numero de pedido</p>
               <p className="text-2xl font-black text-primary">{numeroPedido}</p>
             </div>
 
-            {codigoCorrelacion && (
-              <p className="mt-3 text-xs text-gray-500">Ref: {codigoCorrelacion}</p>
-            )}
+            {codigoCorrelacion && <p className="mt-3 text-xs text-gray-500">Ref: {codigoCorrelacion}</p>}
 
             {total && (
               <p className="mt-4 text-lg font-bold text-gray-700">
@@ -162,8 +261,11 @@ export default async function ConfirmacionPage({
             )}
 
             <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-left text-sm text-gray-700">
-              <p><span className="font-semibold">Estado comercial:</span> {estadoComercial}</p>
-              <p><span className="font-semibold">Estado de pago:</span> {estadoPago}</p>
+              {hasSecureOrder && <p><span className="font-semibold">Estado comercial:</span> {estadoComercial}</p>}
+              {hasSecureOrder && <p><span className="font-semibold">Estado de pago:</span> {estadoPago}</p>}
+              {hasSecureOrder && isIzipay && <p><span className="font-semibold">Firma webhook valida:</span> {paymentSignatureValid ? 'si' : 'no / pendiente'}</p>}
+              {transactionId && <p><span className="font-semibold">Transaction ID:</span> {transactionId}</p>}
+              {paymentReference && <p><span className="font-semibold">Payment reference:</span> {paymentReference}</p>}
             </div>
 
             {!hasSecureOrder && (
@@ -173,7 +275,12 @@ export default async function ConfirmacionPage({
             )}
           </div>
 
-          <div className="hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className={`rounded-2xl border p-6 shadow-sm ${paymentCopy.boxClass}`}>
+            <h3 className="mb-2 text-base font-bold">{paymentCopy.title}</h3>
+            <p className="text-sm leading-relaxed">{paymentCopy.body}</p>
+          </div>
+
+          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
             <h3 className="mb-4 text-base font-bold">Metodo de pago: {infoPago.label}</h3>
             <p className="rounded-lg border border-orange-200 bg-orange-50 p-4 text-sm leading-relaxed text-gray-700">
               {infoPago.instruccion}

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "typecheck": "tsc --noEmit",
     "start": "next start",
     "reset": "node -e \"require('fs').rmSync('.next', { recursive: true, force: true })\"",
     "generate:types": "payload generate:types",

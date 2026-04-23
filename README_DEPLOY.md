@@ -4,11 +4,8 @@ Guia para desplegar PlusSport en Ubuntu con Next.js, Payload CMS y PostgreSQL.
 
 ## Estado de esta fase
 
-- No integra Izipay todavia.
-- No cambia el flujo de checkout.
-- No elimina el formulario actual de tarjeta.
-- No implementa webhook de pagos.
-- Prepara runtime, variables, base de datos, media persistente, healthcheck y documentacion para VPS.
+- Este documento cubre infraestructura y despliegue VPS (runtime, base de datos, media, proceso y reverse proxy).
+- El flujo de pagos Izipay sandbox/webhook se documenta en `README_IZIPAY.md`.
 
 ## Requisitos recomendados
 
@@ -260,23 +257,15 @@ Validaciones minimas:
 - [ ] Healthcheck publicado en `/api/health`.
 - [ ] Logs revisables con `pm2 logs plussport` o journald.
 
-## Archivos previstos para Fase 2 pagos/Izipay
+## Relacion con flujo de pagos
 
-La siguiente fase deberia tocar, como minimo:
+- La integracion sandbox y webhook de Izipay vive en `README_IZIPAY.md`.
+- Antes de deploy real en VPS/staging, ejecutar el checklist de QA de `README_IZIPAY.md`.
 
-- `src/app/(frontend)/checkout/page.tsx`: reemplazar inicio de pago por SDK/token de Izipay sin redisenar la vista.
-- `src/app/api/checkout/ordenes/route.ts`: dejar de confirmar stock/cupon antes del pago real y recalcular totales en servidor.
-- `src/collections/Ordenes.ts`: agregar estado de pago y campos de transaccion Izipay.
-- `src/app/api/izipay/session/route.ts`: crear sesion/token de pago desde backend.
-- `src/app/api/webhooks/izipay/route.ts`: recibir confirmacion IPN/webhook.
-- `.env.example`: completar variables finales de Izipay cuando se implemente.
+## Riesgos pendientes fuera de infraestructura
 
-## Riesgos pendientes fuera de Fase 1
-
-- El checkout actual aun confia demasiado en datos del navegador.
-- El formulario actual de tarjeta no debe usarse como flujo final de pago.
-- Stock y cupones se actualizan antes de confirmacion real de pago.
-- Falta webhook e idempotencia de pagos.
-- No existe estrategia formal de migraciones versionadas; debe resolverse antes de production estable.
+- Alinear codigos/estados definitivos Izipay live antes de pasar a credenciales de produccion.
+- Reforzar estrategia de migraciones versionadas (evitar depender de pushes automaticos).
+- Definir monitoreo/alertas de conciliacion de pagos y reintentos webhook.
 
 

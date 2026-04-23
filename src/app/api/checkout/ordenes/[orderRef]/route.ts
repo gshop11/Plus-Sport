@@ -28,7 +28,13 @@ function toPublicOrder(order: any) {
     metodoPago: order.metodoPago,
     paymentProvider: order.paymentProvider,
     paymentMethod: order.paymentMethod,
+    transactionId: order.transactionId,
+    externalOrderId: order.externalOrderId,
     paymentReference: order.paymentReference,
+    authorizationCode: order.authorizationCode,
+    paymentSignatureValid: order.paymentSignatureValid,
+    paymentErrorCode: order.paymentErrorCode,
+    paymentErrorMessage: order.paymentErrorMessage,
     paidAt: order.paidAt,
     createdAt: order.createdAt,
     nombreCliente: order.nombreCliente,
@@ -46,21 +52,25 @@ function toPublicOrder(order: any) {
 }
 
 async function findOrderByRef(payload: any, orderRef: string) {
-  const byCodeOrNumber = await payload.find({
-    collection: 'ordenes',
-    where: {
-      or: [
-        { codigoCorrelacion: { equals: orderRef } },
-        { numeroPedido: { equals: orderRef } },
-      ],
-    },
-    limit: 1,
-    depth: 1,
-    overrideAccess: true,
-  })
+  try {
+    const byCodeOrNumber = await payload.find({
+      collection: 'ordenes',
+      where: {
+        or: [
+          { codigoCorrelacion: { equals: orderRef } },
+          { numeroPedido: { equals: orderRef } },
+        ],
+      },
+      limit: 1,
+      depth: 1,
+      overrideAccess: true,
+    })
 
-  if (byCodeOrNumber.docs.length > 0) {
-    return byCodeOrNumber.docs[0]
+    if (byCodeOrNumber.docs.length > 0) {
+      return byCodeOrNumber.docs[0]
+    }
+  } catch {
+    // Continue with ID fallback if schema is partially updated in local DB.
   }
 
   try {
