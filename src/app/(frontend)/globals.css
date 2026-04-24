@@ -7,17 +7,17 @@
   --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --color-primario: #1a237e;
   --color-primario-light: #283593;
-  --color-primario-dark: #0d1757;
+  --color-primario-dark: #10184d;
   --color-acento: #ff6f00;
-  --color-acento-light: #ffa000;
-  --color-acento-dark: #e65100;
+  --color-acento-light: #ff922b;
+  --color-acento-dark: #d45500;
   --color-fondo: #ffffff;
   --surface-strong: #ffffff;
-  --surface-soft: #f4f7ff;
-  --surface-muted: #edf2ff;
-  --text-strong: #0f172a;
-  --text-soft: #576076;
-  --line-soft: #dde5f5;
+  --surface-soft: #f3f6ff;
+  --surface-muted: #e9efff;
+  --text-strong: #0e162f;
+  --text-soft: #495874;
+  --line-soft: #d6dff1;
 }
 
 * {
@@ -30,8 +30,8 @@ body {
   font-family: var(--font-base);
   color: var(--text-strong);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--color-acento) 14%, transparent), transparent 42%),
-    radial-gradient(circle at -10% 20%, color-mix(in srgb, var(--color-primario) 16%, transparent), transparent 44%),
+    radial-gradient(circle at 88% -8%, color-mix(in srgb, var(--color-acento) 15%, transparent), transparent 40%),
+    radial-gradient(circle at -8% 18%, color-mix(in srgb, var(--color-primario) 16%, transparent), transparent 42%),
     var(--color-fondo);
   line-height: 1.45;
 }
@@ -56,8 +56,8 @@ a {
 .section-eyebrow {
   @apply mb-3 inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em];
   color: color-mix(in srgb, var(--color-primario) 92%, white);
-  border-color: color-mix(in srgb, var(--color-primario) 18%, white);
-  background: color-mix(in srgb, var(--color-primario) 6%, white);
+  border-color: color-mix(in srgb, var(--color-primario) 26%, white);
+  background: color-mix(in srgb, var(--color-primario) 8%, white);
 }
 
 .section-heading {
@@ -73,23 +73,24 @@ a {
 .store-panel {
   @apply rounded-2xl border bg-white shadow-sm;
   border-color: var(--line-soft);
-  box-shadow: 0 18px 45px -38px color-mix(in srgb, var(--color-primario) 40%, transparent);
+  box-shadow: 0 22px 48px -40px color-mix(in srgb, var(--color-primario) 52%, transparent);
 }
 
 .store-button-primary {
   @apply inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-white transition-all;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-acento) 92%, black), var(--color-acento));
+  background: linear-gradient(135deg, var(--color-acento-dark), var(--color-acento));
 }
 
 .store-button-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px -18px color-mix(in srgb, var(--color-acento) 78%, transparent);
+  box-shadow: 0 16px 32px -20px color-mix(in srgb, var(--color-acento) 82%, transparent);
 }
 
 .store-button-secondary {
   @apply inline-flex items-center justify-center rounded-xl border px-5 py-3 text-sm font-semibold transition-colors;
-  border-color: color-mix(in srgb, var(--color-primario) 34%, white);
+  border-color: color-mix(in srgb, var(--color-primario) 30%, white);
   color: color-mix(in srgb, var(--color-primario) 88%, black);
+  background: color-mix(in srgb, var(--surface-soft) 48%, white);
 }
 
 .store-button-secondary:hover {
@@ -99,15 +100,15 @@ a {
 
 .store-chip {
   @apply inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em];
-  border-color: color-mix(in srgb, var(--color-primario) 20%, white);
+  border-color: color-mix(in srgb, var(--color-primario) 26%, white);
   color: color-mix(in srgb, var(--color-primario) 88%, black);
-  background: color-mix(in srgb, var(--color-primario) 4%, white);
+  background: color-mix(in srgb, var(--color-primario) 7%, white);
 }
 
 .store-empty-state {
   @apply rounded-3xl border border-dashed bg-white p-10 text-center;
   border-color: color-mix(in srgb, var(--color-primario) 25%, white);
-  background: linear-gradient(180deg, white 0%, color-mix(in srgb, var(--surface-soft) 72%, white) 100%);
+  background: linear-gradient(180deg, white 0%, color-mix(in srgb, var(--surface-soft) 82%, white) 100%);
 }
 
 .store-empty-state h3 {
@@ -173,4 +174,9 @@ a {
 ::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--color-primario) 80%, #32458f);
   border-radius: 999px;
+}
+
+::selection {
+  color: #fff;
+  background: color-mix(in srgb, var(--color-acento) 84%, #000);
 }

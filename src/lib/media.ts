@@ -15,6 +15,28 @@ export const resolveMediaURL = (media?: MediaLike | null): string | null => {
 
   const rawURL = typeof media.url === 'string' ? media.url.trim() : ''
   if (rawURL) {
+    const apiMediaPrefix = '/api/media/file/'
+
+    if (rawURL.startsWith(apiMediaPrefix) || rawURL.includes(`${apiMediaPrefix}`)) {
+      const parsed = new URL(rawURL, 'http://localhost')
+      const prefixIndex = parsed.pathname.indexOf(apiMediaPrefix)
+      const filenameFromAPI =
+        prefixIndex >= 0
+          ? parsed.pathname.slice(prefixIndex + apiMediaPrefix.length).replace(/^\/+/, '')
+          : ''
+
+      if (!filenameFromAPI) return null
+
+      const mediaBaseURL = getMediaBaseURL()
+      const queryString = parsed.search || ''
+
+      if (mediaBaseURL) {
+        return `${mediaBaseURL}/${filenameFromAPI}${queryString}`
+      }
+
+      return `/media/${filenameFromAPI}${queryString}`
+    }
+
     if (rawURL.startsWith('http://') || rawURL.startsWith('https://') || rawURL.startsWith('/')) {
       return rawURL
     }

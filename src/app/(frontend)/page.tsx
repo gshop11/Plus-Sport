@@ -13,21 +13,21 @@ const segmentCards = [
     copy: 'Sneakers, training y streetwear para uso diario.',
     href: '/productos?segmento=hombre',
     background:
-      'linear-gradient(152deg, rgba(17,24,39,0.96), rgba(17,24,39,0.72) 55%, rgba(17,24,39,0.35))',
+      'linear-gradient(152deg, rgba(13,23,87,0.97), rgba(13,23,87,0.76) 52%, rgba(17,24,39,0.48))',
   },
   {
     label: 'Mujer',
     copy: 'Nuevas siluetas y prendas deportivas en tendencia.',
     href: '/productos?segmento=mujer',
     background:
-      'linear-gradient(152deg, rgba(53,26,55,0.96), rgba(53,26,55,0.72) 55%, rgba(53,26,55,0.35))',
+      'linear-gradient(152deg, rgba(16,24,69,0.95), rgba(16,24,69,0.72) 48%, rgba(255,111,0,0.54))',
   },
   {
     label: 'Ninos',
     copy: 'Modelos resistentes para juego, colegio y deporte.',
     href: '/productos?segmento=ninos',
     background:
-      'linear-gradient(152deg, rgba(12,54,71,0.96), rgba(12,54,71,0.72) 55%, rgba(12,54,71,0.35))',
+      'linear-gradient(152deg, rgba(16,16,20,0.96), rgba(16,16,20,0.75) 48%, rgba(26,35,126,0.56))',
   },
 ]
 
@@ -51,21 +51,21 @@ export default async function HomePage() {
       <main>
         <HeroSlider slides={slides} />
 
-        <section className="border-y border-gray-200/80 bg-white py-3">
+        <section className="border-y border-[var(--line-soft)] bg-white py-2.5">
           <div className="section-shell grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {valueProps.map((item) => (
-              <p key={item} className="rounded-lg border border-gray-200/80 bg-[var(--surface-soft)] px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-600">
+              <p key={item} className="rounded-lg border border-[var(--line-soft)] bg-[var(--surface-soft)] px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-dark">
                 {item}
               </p>
             ))}
           </div>
         </section>
 
-        <section className="bg-[var(--surface-soft)] py-8">
+        <section className="bg-[var(--surface-soft)] py-6">
           <div className="section-shell grid gap-3 lg:grid-cols-[1.4fr_1fr]">
             <a
               href="/productos?sort=newest"
-              className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br from-primary to-primary-dark p-5 text-white shadow-lg"
+              className="group relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary to-primary-dark p-5 text-white shadow-[0_24px_48px_-30px_rgba(16,24,77,0.8)]"
             >
               <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/70">Nuevos ingresos</p>
@@ -77,7 +77,7 @@ export default async function HomePage() {
             </a>
             <a
               href="/productos?oferta=1"
-              className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br from-accent to-accent-dark p-5 text-white shadow-lg"
+              className="group relative overflow-hidden rounded-3xl border border-accent/30 bg-gradient-to-br from-accent to-accent-dark p-5 text-white shadow-[0_24px_48px_-30px_rgba(212,85,0,0.65)]"
             >
               <div className="absolute -bottom-8 -right-8 h-28 w-28 rounded-full bg-white/15" />
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/70">Oferta destacada</p>
@@ -90,17 +90,17 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="py-9">
+        <section className="py-8">
           <div className="section-shell">
             <span className="section-eyebrow">Compra por segmento</span>
             <h2 className="section-heading mb-2">Hombre, mujer y ninos</h2>
             <p className="section-copy mb-5 max-w-2xl">Entrada directa al catalogo por publico objetivo, con bloques densos y de alto contraste.</p>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-3 md:gap-4">
               {segmentCards.map((segment) => (
                 <a
                   key={segment.label}
                   href={segment.href}
-                  className="group relative overflow-hidden rounded-2xl border border-white/10 p-5 text-white shadow-lg"
+                  className="group relative overflow-hidden rounded-3xl border border-white/10 p-5 text-white shadow-[0_20px_45px_-30px_rgba(15,23,87,0.75)]"
                   style={{ background: segment.background }}
                 >
                   <div className="absolute -right-6 top-0 h-24 w-24 rounded-full bg-white/10 blur-xl" />
@@ -109,7 +109,7 @@ export default async function HomePage() {
                   </span>
                   <h3 className="mb-1 text-2xl font-black">{segment.label}</h3>
                   <p className="mb-4 text-sm text-white/80">{segment.copy}</p>
-                  <span className="inline-flex items-center text-sm font-semibold text-white transition-colors group-hover:text-[#ffd8b5]">Explorar ahora</span>
+                  <span className="inline-flex items-center text-sm font-semibold text-white transition-colors group-hover:text-white/80">Explorar ahora</span>
                 </a>
               ))}
             </div>
@@ -117,7 +117,7 @@ export default async function HomePage() {
         </section>
 
         {novedades.length > 0 ? (
-          <section className="bg-white pb-10">
+          <section className="bg-white pb-9">
             <div className="section-shell">
               <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
                 <div>
@@ -129,7 +129,7 @@ export default async function HomePage() {
                   Ver todo
                 </a>
               </div>
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
                 {novedades.map((producto, index) => (
                   <TarjetaProducto key={`novedad-${producto.id}`} producto={producto} index={index} />
                 ))}
@@ -144,18 +144,18 @@ export default async function HomePage() {
           .map((section) => {
             if (section.key === 'categorias' && categorias.length > 0) {
               return (
-                <section key={section.key} className="bg-[var(--surface-soft)] py-10">
+                <section key={section.key} className="bg-[var(--surface-soft)] py-9">
                   <div className="section-shell">
                     {section.subtitulo ? <span className="section-eyebrow">{section.subtitulo}</span> : null}
                     <h2 className="section-heading mb-1">{section.titulo}</h2>
                     <p className="section-copy mb-5 max-w-2xl">Compra por deporte con paneles de alto impacto para reducir sensacion de pantalla vacia.</p>
 
-                    <div className="grid auto-rows-[180px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid auto-rows-[168px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       {categorias.map(({ nombre, slug, descripcion, imagenUrl }, index) => (
                         <a
                           href={`/categoria/${slug}`}
                           key={slug}
-                          className={`group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg ${
+                          className={`group relative overflow-hidden rounded-3xl border border-[var(--line-soft)] bg-white shadow-[0_18px_44px_-34px_rgba(13,23,87,0.62)] transition-all hover:-translate-y-1 hover:shadow-[0_28px_54px_-36px_rgba(13,23,87,0.7)] ${
                             index === 0 ? 'sm:col-span-2 lg:col-span-2 lg:row-span-2' : ''
                           }`}
                         >
@@ -163,8 +163,8 @@ export default async function HomePage() {
                             className="absolute inset-0"
                             style={{
                               backgroundImage: imagenUrl
-                                ? `linear-gradient(156deg, rgba(16,24,40,0.86), rgba(16,24,40,0.28)), url(${imagenUrl})`
-                                : 'linear-gradient(156deg, rgba(16,24,40,0.86), rgba(16,24,40,0.38))',
+                                ? `linear-gradient(156deg, rgba(13,23,87,0.82), rgba(13,23,87,0.3)), url(${imagenUrl})`
+                                : 'linear-gradient(156deg, rgba(13,23,87,0.82), rgba(13,23,87,0.4))',
                               backgroundSize: 'cover',
                               backgroundPosition: 'center',
                             }}
@@ -184,7 +184,7 @@ export default async function HomePage() {
 
             if (section.key === 'marcas' && marcas.length > 0) {
               return (
-                <section key={section.key} className="bg-white py-10">
+                <section key={section.key} className="bg-white py-9">
                   <div className="section-shell">
                     {section.subtitulo ? <span className="section-eyebrow">{section.subtitulo}</span> : null}
                     <h2 className="section-heading mb-1">{section.titulo}</h2>
@@ -195,7 +195,7 @@ export default async function HomePage() {
                         <a
                           key={id}
                           href={`/productos?marca=${slug}`}
-                          className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-[#f4f7ff] p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+                          className="group relative overflow-hidden rounded-3xl border border-[var(--line-soft)] bg-gradient-to-br from-white to-[var(--surface-soft)] p-5 shadow-[0_20px_42px_-36px_rgba(13,23,87,0.6)] transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_28px_52px_-35px_rgba(13,23,87,0.75)]"
                         >
                           <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-primary/10 blur-lg" />
                           <div className="relative z-10 flex min-h-[120px] flex-col items-center justify-center gap-2 text-center">
@@ -213,7 +213,7 @@ export default async function HomePage() {
 
             if (section.key === 'destacados' && productos.length > 0) {
               return (
-                <section key={section.key} className="bg-[var(--surface-soft)] py-10">
+                <section key={section.key} className="bg-[var(--surface-soft)] py-9">
                   <div className="section-shell">
                     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
                       <div>
@@ -225,7 +225,7 @@ export default async function HomePage() {
                         Ver todo el catalogo
                       </a>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
                       {productos.map((producto, index) => (
                         <TarjetaProducto key={producto.id} producto={producto} index={index} />
                       ))}
@@ -237,7 +237,7 @@ export default async function HomePage() {
 
             if (section.key === 'suscripcion') {
               return (
-                <section key={section.key} className="py-10">
+                <section key={section.key} className="py-9">
                   <div className="section-shell">
                     <div className="store-panel overflow-hidden bg-gradient-to-br from-primary to-primary-dark text-white">
                       <div className="grid gap-4 px-6 py-8 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:items-center">
@@ -267,8 +267,8 @@ export default async function HomePage() {
           })}
 
         {ofertasVisibles.length > 0 ? (
-          <section className="bg-white pb-12">
-            <div className="section-shell">
+        <section className="bg-white pb-10">
+          <div className="section-shell">
               <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <span className="section-eyebrow">Ofertas destacadas</span>
@@ -279,7 +279,7 @@ export default async function HomePage() {
                   Ver todas las ofertas
                 </a>
               </div>
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
                 {ofertasVisibles.map((producto, index) => (
                   <TarjetaProducto key={`oferta-${producto.id}-${index}`} producto={producto} index={index + 12} />
                 ))}

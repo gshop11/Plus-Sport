@@ -5,6 +5,9 @@ export const Media: CollectionConfig = {
   admin: {
     group: 'Administración',
   },
+  access: {
+    read: () => true,
+  },
   labels: {
     singular: 'Archivo',
     plural: 'Archivos (Imágenes)',

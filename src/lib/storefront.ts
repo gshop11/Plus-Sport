@@ -354,7 +354,7 @@ export const getHomeData = unstable_cache(
         let imagenUrl: string | null = null
         if (doc.imagen) {
           if (typeof doc.imagen === 'object') {
-            imagenUrl = doc.imagen.url || (doc.imagen.filename ? `/media/${doc.imagen.filename}` : null)
+            imagenUrl = resolveMediaURL(doc.imagen)
           } else {
             imagenUrl = await resolveMediaUrl(payload, doc.imagen)
           }

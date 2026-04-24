@@ -56,8 +56,8 @@ const PASOS = [
 ]
 
 const inputCls =
-  'w-full rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20'
-const labelCls = 'mb-1 block text-sm font-semibold text-gray-700'
+  'w-full rounded-lg border border-[var(--line-soft)] bg-white px-4 py-3 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20'
+const labelCls = 'mb-1 block text-sm font-semibold text-primary-dark'
 
 declare global {
   interface Window {
@@ -473,11 +473,11 @@ export default function CheckoutPage() {
   return (
     <>
       <HeaderClient />
-      <main className="min-h-screen bg-[var(--surface-soft)] py-10">
-        <div className="mx-auto max-w-6xl px-4">
+      <main className="min-h-screen bg-[var(--surface-soft)] py-8 sm:py-10">
+        <div className="mx-auto max-w-7xl px-4">
 
           {/* Stepper */}
-          <div className="store-panel mb-6 flex items-center justify-center px-4 py-5">
+          <div className="store-panel mb-6 flex items-center justify-center px-4 py-5 sm:px-6">
             {PASOS.map((p, i) => (
               <div key={p.n} className="flex items-center">
                 <div className="flex flex-col items-center">
@@ -487,21 +487,21 @@ export default function CheckoutPage() {
                         ? 'bg-accent text-white'
                         : p.n === paso
                           ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                          : 'bg-gray-200 text-gray-400'
+                          : 'bg-[var(--surface-muted)] text-primary/45'
                     }`}
                   >
                     {p.n < paso ? '✓' : p.n}
                   </div>
                   <span
                     className={`mt-1 hidden text-xs font-semibold sm:block ${
-                      p.n === paso ? 'text-primary' : p.n < paso ? 'text-accent' : 'text-gray-400'
+                      p.n === paso ? 'text-primary' : p.n < paso ? 'text-accent' : 'text-primary/50'
                     }`}
                   >
                     {p.label}
                   </span>
                 </div>
                 {i < PASOS.length - 1 && (
-                  <div className={`mx-2 h-0.5 w-12 sm:w-20 ${p.n < paso ? 'bg-accent/70' : 'bg-gray-200'}`} />
+                  <div className={`mx-2 h-0.5 w-12 sm:w-20 ${p.n < paso ? 'bg-accent/70' : 'bg-[var(--line-soft)]'}`} />
                 )}
               </div>
             ))}
@@ -513,7 +513,7 @@ export default function CheckoutPage() {
 
               {/* Paso 2: Datos personales */}
               <div className="store-panel">
-                <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                <div className="flex items-center justify-between border-b border-[var(--line-soft)] px-6 py-4">
                   <div className="flex items-center gap-3">
                     <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso > 2 ? 'bg-accent text-white' : 'bg-primary text-white'}`}>
                       {paso > 2 ? '✓' : '1'}
@@ -561,7 +561,7 @@ export default function CheckoutPage() {
                         }
                         setPaso(3)
                       }}
-                      className="mt-6 w-full rounded-lg bg-primary py-3 font-bold text-white transition-colors hover:bg-primary-dark"
+                      className="store-button-primary mt-6 w-full"
                     >
                       Continuar
                     </button>
@@ -578,12 +578,12 @@ export default function CheckoutPage() {
 
               {/* Paso 3: Datos de entrega */}
               <div className="store-panel">
-                <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                <div className="flex items-center justify-between border-b border-[var(--line-soft)] px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso > 3 ? 'bg-accent text-white' : paso === 3 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'}`}>
+                    <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso > 3 ? 'bg-accent text-white' : paso === 3 ? 'bg-primary text-white' : 'bg-[var(--surface-muted)] text-primary/45'}`}>
                       {paso > 3 ? '✓' : '2'}
                     </span>
-                    <h2 className={`font-bold ${paso >= 3 ? 'text-gray-900' : 'text-gray-400'}`}>Datos de entrega</h2>
+                    <h2 className={`font-bold ${paso >= 3 ? 'text-gray-900' : 'text-primary/50'}`}>Datos de entrega</h2>
                   </div>
                   {paso > 3 && (
                     <button onClick={() => setPaso(3)} className="flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
@@ -662,7 +662,7 @@ export default function CheckoutPage() {
                         if (!validarDatosEnvio()) return
                         setPaso(4)
                       }}
-                      className="mt-6 w-full rounded-lg bg-primary py-3 font-bold text-white transition-colors hover:bg-primary-dark"
+                      className="store-button-primary mt-6 w-full"
                     >
                       Continuar
                     </button>
@@ -671,18 +671,18 @@ export default function CheckoutPage() {
                   <div className="px-6 py-4 text-sm text-gray-600">
                     <p>{datosEnvio.calle}</p>
                     <p>{datosEnvio.distrito}, {datosEnvio.ciudad}</p>
-                    {datosEnvio.referencias && <p className="text-gray-400">{datosEnvio.referencias}</p>}
+                    {datosEnvio.referencias && <p className="text-primary-dark/75">{datosEnvio.referencias}</p>}
                   </div>
                 ) : null}
               </div>
 
               {/* Paso 4: Metodo de pago */}
               <div className="store-panel">
-                <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-4">
-                  <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso === 4 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'}`}>
+                <div className="flex items-center gap-3 border-b border-[var(--line-soft)] px-6 py-4">
+                  <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso === 4 ? 'bg-primary text-white' : 'bg-[var(--surface-muted)] text-primary/45'}`}>
                     3
                   </span>
-                  <h2 className={`font-bold ${paso === 4 ? 'text-gray-900' : 'text-gray-400'}`}>Metodo de pago</h2>
+                  <h2 className={`font-bold ${paso === 4 ? 'text-gray-900' : 'text-primary/50'}`}>Metodo de pago</h2>
                 </div>
 
                 {paso === 4 && (
@@ -705,7 +705,7 @@ export default function CheckoutPage() {
 
                     {/* Cargando config */}
                     {!pagosConfig && (
-                      <div className="py-8 text-center text-sm text-gray-400">Cargando metodos de pago...</div>
+                      <div className="py-8 text-center text-sm text-primary/60">Cargando metodos de pago...</div>
                     )}
 
                     {pagosConfig && (
@@ -714,7 +714,7 @@ export default function CheckoutPage() {
                         <div className="grid gap-3 sm:grid-cols-2">
 
                           {pagosConfig.tarjeta.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'tarjeta' ? 'border-primary bg-[var(--surface-soft)]' : 'border-gray-200 hover:border-primary/30'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'tarjeta' ? 'border-primary bg-[var(--surface-soft)]' : 'border-[var(--line-soft)] hover:border-primary/30'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="tarjeta" checked={metodoPago === 'tarjeta'}
                                   onChange={() => setMetodoPago('tarjeta')} className="accent-primary" />
@@ -728,7 +728,7 @@ export default function CheckoutPage() {
                           )}
 
                           {pagosConfig.yape.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'yape' ? 'border-accent bg-[var(--surface-soft)]' : 'border-gray-200 hover:border-accent/40'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'yape' ? 'border-accent bg-[var(--surface-soft)]' : 'border-[var(--line-soft)] hover:border-accent/40'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="yape" checked={metodoPago === 'yape'}
                                   onChange={() => setMetodoPago('yape')} className="accent-accent" />
@@ -739,7 +739,7 @@ export default function CheckoutPage() {
                           )}
 
                           {pagosConfig.plin.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'plin' ? 'border-primary bg-[var(--surface-soft)]' : 'border-gray-200 hover:border-primary/30'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'plin' ? 'border-primary bg-[var(--surface-soft)]' : 'border-[var(--line-soft)] hover:border-primary/30'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="plin" checked={metodoPago === 'plin'}
                                   onChange={() => setMetodoPago('plin')} className="accent-primary" />
@@ -750,7 +750,7 @@ export default function CheckoutPage() {
                           )}
 
                           {pagosConfig.bcp.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'bcp' ? 'border-primary bg-[var(--surface-soft)]' : 'border-gray-200 hover:border-primary/30'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'bcp' ? 'border-primary bg-[var(--surface-soft)]' : 'border-[var(--line-soft)] hover:border-primary/30'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="bcp" checked={metodoPago === 'bcp'}
                                   onChange={() => setMetodoPago('bcp')} className="accent-primary" />
@@ -761,7 +761,7 @@ export default function CheckoutPage() {
                           )}
 
                           {pagosConfig.interbank.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'interbank' ? 'border-primary bg-[var(--surface-soft)]' : 'border-gray-200 hover:border-primary/30'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'interbank' ? 'border-primary bg-[var(--surface-soft)]' : 'border-[var(--line-soft)] hover:border-primary/30'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="interbank" checked={metodoPago === 'interbank'}
                                   onChange={() => setMetodoPago('interbank')} className="accent-primary" />
@@ -772,7 +772,7 @@ export default function CheckoutPage() {
                           )}
 
                           {pagosConfig.efectivo.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'efectivo' ? 'border-black/70 bg-black/5' : 'border-gray-200 hover:border-black/40'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'efectivo' ? 'border-primary/35 bg-[var(--surface-soft)]' : 'border-[var(--line-soft)] hover:border-primary/35'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="efectivo" checked={metodoPago === 'efectivo'}
                                   onChange={() => setMetodoPago('efectivo')} className="accent-primary" />
@@ -786,8 +786,8 @@ export default function CheckoutPage() {
 
                         {/* Detalle Tarjeta */}
                         {metodoPago === 'tarjeta' && (
-                          <div className="mt-4 space-y-4 rounded-xl border border-gray-200 bg-white p-5">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">
+                          <div className="mt-4 space-y-4 rounded-xl border border-[var(--line-soft)] bg-white p-5">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--line-soft)] bg-[var(--surface-soft)] px-3 py-1 text-xs font-semibold text-primary-dark">
                               <span className="rounded bg-primary px-1.5 py-0.5 text-[9px] font-black text-white">VISA</span>
                               <span className="rounded bg-accent px-1.5 py-0.5 text-[9px] font-black text-white">MC</span>
                               Checkout seguro Izipay Sandbox
@@ -807,7 +807,7 @@ export default function CheckoutPage() {
                         )}
 
                         {metodoPago === 'yape' && (
-                          <div className="mt-4 rounded-xl border border-gray-200 bg-white p-5">
+                          <div className="mt-4 rounded-xl border border-[var(--line-soft)] bg-white p-5">
                             <div className="mb-4 rounded-xl border border-primary/20 bg-[var(--surface-soft)] p-5">
                               <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-lg font-black text-white">
                                 Y
@@ -843,7 +843,7 @@ export default function CheckoutPage() {
                               <label className="mb-1 block text-sm font-semibold text-gray-700">Celular desde el que yapeas</label>
                               <input type="tel" placeholder="9XXXXXXXX" value={yapeData.celular}
                                 onChange={(e) => setYapeData((p) => ({ ...p, celular: e.target.value.replace(/\D/g, '').slice(0, 9) }))}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                                className="w-full rounded-lg border border-[var(--line-soft)] px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
                             </div>}
                             {false && <div className="mb-3">
                               <label className="mb-1 block text-sm font-semibold text-gray-700">Codigo de aprobacion</label>
@@ -857,10 +857,10 @@ export default function CheckoutPage() {
                                         if (prev) (prev as HTMLInputElement).focus()
                                       }
                                     }}
-                                    className="h-12 w-full rounded-lg border-2 border-gray-300 text-center text-lg font-black outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                                    className="h-12 w-full rounded-lg border-2 border-[var(--line-soft)] text-center text-lg font-black outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
                                 ))}
                               </div>
-                              <p className="mt-1 text-xs text-gray-400">Encuentralo en el menu de Yape.</p>
+                              <p className="mt-1 text-xs text-primary-dark/75">Encuentralo en el menu de Yape.</p>
                             </div>}
                             <p className="text-xs text-gray-500">
                               {pagosConfig.yape.instruccion ?? 'Verifica que "Compras por internet" este activado en tu Yape.'}
@@ -886,7 +886,7 @@ export default function CheckoutPage() {
                               <label className="mb-1 block text-sm font-semibold text-gray-700">Celular desde el que pagas</label>
                               <input type="tel" placeholder="9XXXXXXXX" value={plinData.celular}
                                 onChange={(e) => setPlinData({ celular: e.target.value.replace(/\D/g, '').slice(0, 9) })}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+                                className="w-full rounded-lg border border-[var(--line-soft)] px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
                             </div>
                             <p className="mt-3 text-xs text-gray-500">
                               {pagosConfig.plin.instruccion ?? 'Disponible con BBVA, Interbank, Scotiabank y Caja Arequipa.'}
@@ -905,7 +905,7 @@ export default function CheckoutPage() {
                             )}
                             {pagosConfig.bcp.numeroCuenta
                               ? <p>Nro de cuenta: <strong>{pagosConfig.bcp.numeroCuenta}</strong></p>
-                              : <p className="text-gray-400 italic">Numero de cuenta no configurado aun.</p>
+                              : <p className="text-primary-dark/70 italic">Numero de cuenta no configurado aun.</p>
                             }
                             <p className="mt-2 text-gray-500">
                               {pagosConfig.bcp.instruccion ?? 'Envia tu voucher por WhatsApp al finalizar la compra.'}
@@ -924,7 +924,7 @@ export default function CheckoutPage() {
                             )}
                             {pagosConfig.interbank.numeroCuenta
                               ? <p>Nro de cuenta: <strong>{pagosConfig.interbank.numeroCuenta}</strong></p>
-                              : <p className="text-gray-400 italic">Numero de cuenta no configurado aun.</p>
+                              : <p className="text-primary-dark/70 italic">Numero de cuenta no configurado aun.</p>
                             }
                             <p className="mt-2 text-gray-500">
                               {pagosConfig.interbank.instruccion ?? 'Envia tu voucher por WhatsApp al finalizar la compra.'}
@@ -934,7 +934,7 @@ export default function CheckoutPage() {
 
                         {/* Detalle Efectivo */}
                         {metodoPago === 'efectivo' && (
-                          <div className="mt-4 rounded-xl border-2 border-gray-300 bg-gray-50 p-5 text-sm text-gray-700">
+                          <div className="mt-4 rounded-xl border-2 border-[var(--line-soft)] bg-[var(--surface-soft)] p-5 text-sm text-gray-700">
                             <p className="font-semibold text-gray-800">Pago al recibir tu pedido</p>
                             <p className="mt-1 text-gray-500">
                               {pagosConfig.efectivo.instruccion ?? `Nuestro repartidor cobrara ${formatMoney(total, currencySymbol)} al momento de la entrega.`}
@@ -954,7 +954,7 @@ export default function CheckoutPage() {
               <div className="border-b border-gray-100 px-6 py-4">
                 <h2 className="font-black uppercase tracking-wide text-gray-900">Resumen de compra</h2>
               </div>
-              <div className="divide-y divide-gray-50 px-6 py-4">
+              <div className="divide-y divide-[var(--line-soft)]/60 px-6 py-4">
                 {items.map((item, i) => (
                   <div key={i} className="flex items-center gap-3 py-3">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-black text-white">
@@ -962,13 +962,13 @@ export default function CheckoutPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-gray-800">{item.nombre}</p>
-                      <p className="text-xs text-gray-400">Talla: {item.talla}</p>
+                      <p className="text-xs text-primary-dark/70">Talla: {item.talla}</p>
                     </div>
                     <span className="text-sm font-bold text-gray-700">{formatMoney(item.precio * item.cantidad, currencySymbol)}</span>
                   </div>
                 ))}
               </div>
-              <div className="border-t border-gray-100 px-6 py-4 space-y-2">
+              <div className="space-y-2 border-t border-[var(--line-soft)] px-6 py-4">
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Subtotal</span>
                   <span>{formatMoney(subtotal, currencySymbol)}</span>
@@ -986,10 +986,10 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 {costoEnvioFinal > 0 && (
-                  <p className="text-xs text-gray-400">Compras mayores a {formatMoney(299, currencySymbol)} tienen envio gratis</p>
+                  <p className="text-xs text-primary-dark/70">Compras mayores a {formatMoney(299, currencySymbol)} tienen envio gratis</p>
                 )}
               </div>
-              <div className="border-t-2 border-gray-100 px-6 py-4">
+              <div className="border-t-2 border-[var(--line-soft)] px-6 py-4">
                 <div className="flex justify-between">
                   <span className="font-black text-gray-900">Total</span>
                   <span className="text-xl font-black text-primary">{formatMoney(total, currencySymbol)}</span>
@@ -1000,7 +1000,7 @@ export default function CheckoutPage() {
                   <button
                     onClick={handleConfirmar}
                     disabled={loading || !metodoPago}
-                    className="w-full rounded-lg bg-accent py-4 font-black text-white shadow-lg shadow-accent/30 transition-all hover:bg-accent-dark disabled:opacity-60"
+                    className="w-full rounded-lg bg-accent py-4 font-black text-white shadow-lg shadow-accent/35 transition-all hover:bg-accent-dark disabled:opacity-60"
                   >
                     {loading ? 'Procesando...' : metodoPago === 'tarjeta' ? 'PAGAR CON IZIPAY' : 'REALIZAR COMPRA'}
                   </button>

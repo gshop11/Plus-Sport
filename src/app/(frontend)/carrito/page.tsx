@@ -130,7 +130,7 @@ export default function CarritoPage() {
       <>
         <HeaderClient />
         <div className="flex min-h-screen items-center justify-center bg-[var(--surface-soft)]">
-          <div className="rounded-xl border border-gray-200 bg-white px-6 py-4 text-gray-500">Cargando carrito...</div>
+          <div className="rounded-xl border border-[var(--line-soft)] bg-white px-6 py-4 text-primary-dark">Cargando carrito...</div>
         </div>
         <Footer />
       </>
@@ -141,7 +141,7 @@ export default function CarritoPage() {
     <>
       <HeaderClient />
       <main className="bg-[var(--surface-soft)]">
-        <section className="bg-gradient-to-br from-primary to-primary-dark py-10 text-white">
+        <section className="bg-gradient-to-br from-primary to-primary-dark py-9 text-white">
           <div className="section-shell">
             <span className="mb-3 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-white/85">
               Paso 1 de 2
@@ -151,7 +151,7 @@ export default function CarritoPage() {
           </div>
         </section>
 
-        <section className="py-12">
+        <section className="py-10">
           <div className="section-shell">
             {items.length === 0 ? (
               <div className="store-empty-state">
@@ -162,34 +162,34 @@ export default function CarritoPage() {
                 </Link>
               </div>
             ) : (
-              <div className="grid gap-8 lg:grid-cols-3">
+              <div className="grid gap-6 lg:grid-cols-3">
                 <div className="space-y-4 lg:col-span-2">
                   {items.map((item, index) => (
                     <div key={`${item.id}-${item.talla}-${index}`} className="store-panel p-4 sm:p-5">
                       <div className="flex items-start gap-4">
                         {item.imagenUrl ? (
-                          <img src={item.imagenUrl} alt={item.nombre} className="h-20 w-20 rounded-xl border border-gray-200 object-cover sm:h-24 sm:w-24" />
+                          <img src={item.imagenUrl} alt={item.nombre} className="h-20 w-20 rounded-xl border border-[var(--line-soft)] object-cover sm:h-24 sm:w-24" />
                         ) : (
-                          <div className="h-20 w-20 rounded-xl border border-gray-200 bg-gray-100 sm:h-24 sm:w-24" />
+                          <div className="h-20 w-20 rounded-xl border border-[var(--line-soft)] bg-[var(--surface-soft)] sm:h-24 sm:w-24" />
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">{item.marca}</p>
+                          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.13em] text-primary-dark/80">{item.marca}</p>
                           <h3 className="line-clamp-2 text-base font-bold text-gray-900">{item.nombre}</h3>
                           {item.talla ? <p className="mt-1 text-sm text-gray-600">Talla: {item.talla}</p> : null}
                           <p className="mt-3 text-lg font-black text-primary">{formatMoney(item.precio * item.cantidad, currencySymbol)}</p>
                         </div>
-                        <button onClick={() => removeItem(index)} className="rounded-full border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-500 transition-colors hover:border-accent hover:text-accent">
+                        <button onClick={() => removeItem(index)} className="rounded-full border border-[var(--line-soft)] px-2.5 py-1 text-xs font-semibold text-primary-dark transition-colors hover:border-accent hover:text-accent">
                           Quitar
                         </button>
                       </div>
 
-                      <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Cantidad</p>
+                      <div className="mt-4 flex items-center justify-between border-t border-[var(--line-soft)] pt-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary-dark/80">Cantidad</p>
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => updateCantidad(index, item.cantidad - 1)}
-                            className="h-8 w-8 rounded-lg border border-gray-300 text-sm font-bold text-gray-700 transition-colors hover:border-primary hover:text-primary"
+                            className="h-8 w-8 rounded-lg border border-[var(--line-soft)] bg-white text-sm font-bold text-gray-700 transition-colors hover:border-primary hover:text-primary"
                           >
                             -
                           </button>
@@ -198,12 +198,12 @@ export default function CarritoPage() {
                             min="1"
                             value={item.cantidad}
                             onChange={(e) => updateCantidad(index, Number.parseInt(e.target.value || '1', 10))}
-                            className="w-14 rounded-lg border border-gray-300 px-2 py-1 text-center text-sm font-semibold text-gray-800 outline-none focus:border-primary"
+                            className="w-14 rounded-lg border border-[var(--line-soft)] px-2 py-1 text-center text-sm font-semibold text-gray-800 outline-none focus:border-primary"
                           />
                           <button
                             type="button"
                             onClick={() => updateCantidad(index, item.cantidad + 1)}
-                            className="h-8 w-8 rounded-lg border border-gray-300 text-sm font-bold text-gray-700 transition-colors hover:border-primary hover:text-primary"
+                            className="h-8 w-8 rounded-lg border border-[var(--line-soft)] bg-white text-sm font-bold text-gray-700 transition-colors hover:border-primary hover:text-primary"
                           >
                             +
                           </button>
@@ -214,15 +214,15 @@ export default function CarritoPage() {
                 </div>
 
                 <aside className="store-panel sticky top-24 h-fit p-6">
-                  <div className="mb-5 rounded-xl border border-gray-200 bg-[var(--surface-soft)] p-4">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-gray-600">Codigo promocional</p>
+                  <div className="mb-5 rounded-xl border border-[var(--line-soft)] bg-[var(--surface-soft)] p-4">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-primary-dark/80">Codigo promocional</p>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={codigoCupon}
                         onChange={(e) => setCodigoCupon(e.target.value.toUpperCase())}
                         placeholder="Ej: SPORT10"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary"
+                        className="w-full rounded-lg border border-[var(--line-soft)] px-3 py-2 text-sm outline-none focus:border-primary"
                       />
                       <button
                         type="button"
@@ -239,7 +239,7 @@ export default function CarritoPage() {
 
                   <h2 className="mb-4 text-lg font-black text-gray-900">Resumen</h2>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-primary-dark/80">
                       <span>Subtotal</span>
                       <span className="font-semibold text-gray-900">{formatMoney(subtotal, currencySymbol)}</span>
                     </div>
@@ -249,16 +249,16 @@ export default function CarritoPage() {
                         <span className="font-semibold text-accent-dark">-{formatMoney(descuento, currencySymbol)}</span>
                       </div>
                     ) : null}
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-primary-dark/80">
                       <span>Envio</span>
                       <span className={costoEnvioFinal === 0 ? 'font-semibold text-primary-dark' : 'font-semibold text-gray-900'}>
                         {costoEnvioFinal === 0 ? 'Gratis' : formatMoney(costoEnvioFinal, currencySymbol)}
                       </span>
                     </div>
-                    {costoEnvioFinal > 0 ? <p className="text-xs text-gray-500">Envio gratis desde {formatMoney(299, currencySymbol)}</p> : null}
+                    {costoEnvioFinal > 0 ? <p className="text-xs text-primary-dark/75">Envio gratis desde {formatMoney(299, currencySymbol)}</p> : null}
                   </div>
 
-                  <div className="my-5 border-t border-gray-200 pt-4">
+                  <div className="my-5 border-t border-[var(--line-soft)] pt-4">
                     <div className="flex justify-between text-lg font-black">
                       <span>Total</span>
                       <span className="text-primary">{formatMoney(total, currencySymbol)}</span>
@@ -268,7 +268,7 @@ export default function CarritoPage() {
                   <Link href="/checkout" className="store-button-primary w-full">
                     Ir a checkout
                   </Link>
-                  <p className="mt-3 text-center text-xs text-gray-500">Pago seguro y confirmacion inmediata de orden.</p>
+                  <p className="mt-3 text-center text-xs text-primary-dark/75">Pago seguro y confirmacion inmediata de orden.</p>
                 </aside>
               </div>
             )}
