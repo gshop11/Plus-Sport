@@ -21,12 +21,13 @@ export default function AgregarAlCarrito({
   producto: ProductoCard
   onAdded?: (carrito: CarritoItem[]) => void
 }) {
+  const tallas = producto.tallas ?? []
   const [tallaSeleccionada, setTallaSeleccionada] = useState('')
   const [cantidad, setCantidad] = useState(1)
   const [agregado, setAgregado] = useState(false)
 
   const handleAgregar = () => {
-    if (!tallaSeleccionada && producto.tallas.length > 0) {
+    if (!tallaSeleccionada && tallas.length > 0) {
       alert('Por favor selecciona una talla')
       return
     }
@@ -62,17 +63,17 @@ export default function AgregarAlCarrito({
   }
 
   return (
-    <div className="space-y-3 mt-4">
-      {producto.tallas.length > 0 && (
+    <div className="mt-4 space-y-3">
+      {tallas.length > 0 && (
         <div>
-          <label className="block text-xs font-bold text-gray-600 mb-2">Talla</label>
+          <label className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-gray-600">Talla</label>
           <select
             value={tallaSeleccionada}
             onChange={(e) => setTallaSeleccionada(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-accent"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-accent focus:outline-none"
           >
             <option value="">Seleccionar talla</option>
-            {producto.tallas.map((talla) => (
+            {tallas.map((talla) => (
               <option key={talla} value={talla}>
                 {talla}
               </option>
@@ -82,26 +83,26 @@ export default function AgregarAlCarrito({
       )}
 
       <div>
-        <label className="block text-xs font-bold text-gray-600 mb-2">Cantidad</label>
+        <label className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-gray-600">Cantidad</label>
         <input
           type="number"
           min="1"
           max="10"
           value={cantidad}
           onChange={(e) => setCantidad(Math.max(1, parseInt(e.target.value)))}
-          className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-accent"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-accent focus:outline-none"
         />
       </div>
 
       <button
         onClick={handleAgregar}
-        className={`w-full py-2 rounded font-bold text-white transition-all ${
+        className={`w-full rounded-lg py-2.5 text-sm font-bold text-white transition-all ${
           agregado
             ? 'bg-green-500 text-green-100'
             : 'bg-accent hover:bg-orange-700'
         }`}
       >
-        {agregado ? '✓ Agregado al carrito' : '🛒 Agregar al carrito'}
+        {agregado ? 'Agregado al carrito' : 'Agregar al carrito'}
       </button>
     </div>
   )

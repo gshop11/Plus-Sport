@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 :root {
+  --font-base: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --color-primario: #1a237e;
   --color-primario-light: #283593;
   --color-primario-dark: #0d1757;
@@ -10,6 +12,10 @@
   --color-acento-light: #ffa000;
   --color-acento-dark: #e65100;
   --color-fondo: #ffffff;
+  --surface-strong: #ffffff;
+  --surface-soft: #f5f7fb;
+  --text-soft: #5f6675;
+  --line-soft: #e7ebf3;
 }
 
 * {
@@ -19,39 +25,147 @@
 }
 
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #1a1a1a;
-  background: var(--color-fondo);
+  font-family: var(--font-base);
+  color: #111827;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--color-acento) 14%, transparent), transparent 42%),
+    radial-gradient(circle at -10% 20%, color-mix(in srgb, var(--color-primario) 16%, transparent), transparent 44%),
+    var(--color-fondo);
+  line-height: 1.45;
 }
 
-/* Animación fade para slides */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+h1,
+h2,
+h3,
+h4,
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
 }
+
+a {
+  text-decoration: none;
+}
+
+.section-shell {
+  @apply mx-auto max-w-7xl px-4;
+}
+
+.section-eyebrow {
+  @apply mb-3 inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em];
+  color: color-mix(in srgb, var(--color-primario) 92%, white);
+  border-color: color-mix(in srgb, var(--color-primario) 18%, white);
+  background: color-mix(in srgb, var(--color-primario) 6%, white);
+}
+
+.section-heading {
+  @apply text-2xl font-black sm:text-4xl;
+  color: color-mix(in srgb, var(--color-primario) 92%, black);
+}
+
+.section-copy {
+  @apply text-sm sm:text-base;
+  color: var(--text-soft);
+}
+
+.store-panel {
+  @apply rounded-2xl border bg-white shadow-sm;
+  border-color: var(--line-soft);
+}
+
+.store-button-primary {
+  @apply inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-white transition-all;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-acento) 92%, black), var(--color-acento));
+}
+
+.store-button-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px -18px color-mix(in srgb, var(--color-acento) 78%, transparent);
+}
+
+.store-button-secondary {
+  @apply inline-flex items-center justify-center rounded-xl border px-5 py-3 text-sm font-semibold transition-colors;
+  border-color: color-mix(in srgb, var(--color-primario) 34%, white);
+  color: color-mix(in srgb, var(--color-primario) 88%, black);
+}
+
+.store-button-secondary:hover {
+  background: color-mix(in srgb, var(--color-primario) 6%, white);
+}
+
+.store-chip {
+  @apply inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em];
+  border-color: color-mix(in srgb, var(--color-primario) 20%, white);
+  color: color-mix(in srgb, var(--color-primario) 88%, black);
+  background: color-mix(in srgb, var(--color-primario) 4%, white);
+}
+
+.store-empty-state {
+  @apply rounded-3xl border border-dashed bg-white p-10 text-center;
+  border-color: color-mix(in srgb, var(--color-primario) 25%, white);
+}
+
+.store-empty-state h3 {
+  @apply mb-2 text-xl font-bold;
+}
+
+.store-empty-state p {
+  @apply mb-5 text-sm;
+  color: var(--text-soft);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.5s ease forwards;
 }
 
-/* Animación slide-down para menú móvil */
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.animate-slideDown {
-  animation: slideDown 0.25s ease-out forwards;
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Animación fade-in para overlay */
-@keyframes overlayIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+.animate-slideDown {
+  animation: slideDown 0.22s ease-out forwards;
 }
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .animate-overlayIn {
   animation: overlayIn 0.2s ease-out forwards;
 }
 
-/* Scrollbar personalizado */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #f1f1f1; }
-::-webkit-scrollbar-thumb { background: var(--color-primario); border-radius: 3px; }
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0f2f7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-primario) 80%, #32458f);
+  border-radius: 999px;
+}

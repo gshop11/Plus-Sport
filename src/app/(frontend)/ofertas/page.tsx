@@ -5,8 +5,6 @@ import { getProductList, PRODUCTS_PER_PAGE } from '@/lib/storefront'
 
 export const revalidate = 60
 
-const heroBackground = 'linear-gradient(90deg, #ff7a00 0%, #ff6f00 55%, #ff8c1a 100%)'
-
 interface OfertasPageProps {
   searchParams: Promise<{
     page?: string
@@ -36,71 +34,60 @@ export default async function OfertasPage({ searchParams }: OfertasPageProps) {
     <>
       <Header />
       <main>
-        <section className="py-12 text-white" style={{ background: heroBackground }}>
-          <div className="mx-auto max-w-7xl px-4">
-            <div className="mb-4 inline-flex rounded-full border border-white/25 bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">
+        <section className="bg-gradient-to-br from-accent to-accent-dark py-12 text-white">
+          <div className="section-shell">
+            <span className="mb-4 inline-flex rounded-full border border-white/25 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/90">
               Promociones activas
-            </div>
-            <h1 className="mb-2 text-4xl font-black tracking-tight lg:text-5xl">
-              <span className="text-[#fff7ef]">Nuestras </span>
-              <span className="text-primary">Ofertas</span>
-            </h1>
-            <p className="max-w-2xl text-[#fff1dd]">Descuentos especiales en productos seleccionados de las mejores marcas.</p>
+            </span>
+            <h1 className="mb-3 text-3xl font-black sm:text-5xl">Ofertas en zapatillas y moda deportiva</h1>
+            <p className="max-w-2xl text-sm text-white/80 sm:text-base">Descuentos visibles y comparacion clara de precio para acelerar la decision de compra.</p>
           </div>
         </section>
 
-        {productos.length > 0 ? (
-          <section className="bg-white py-12">
-            <div className="mx-auto max-w-7xl px-4">
-              <p className="mb-6 text-gray-600">
-                Mostrando <span className="font-bold">{productos.length}</span> de <span className="font-bold">{totalDocs}</span> productos en oferta
-              </p>
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                {productos.map((p, i) => (
-                  <TarjetaProducto key={p.id} producto={p} index={i} />
-                ))}
-              </div>
+        <section className="bg-white py-12">
+          <div className="section-shell">
+            {productos.length > 0 ? (
+              <>
+                <p className="mb-6 rounded-xl border border-gray-200 bg-[var(--surface-soft)] px-4 py-3 text-sm text-gray-600">
+                  Mostrando <span className="font-bold text-gray-900">{productos.length}</span> de <span className="font-bold text-gray-900">{totalDocs}</span> productos en oferta
+                </p>
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                  {productos.map((producto, index) => (
+                    <TarjetaProducto key={producto.id} producto={producto} index={index} />
+                  ))}
+                </div>
 
-              <div className="mt-8 flex items-center justify-center gap-3">
-                {hasPrevPage ? (
-                  <a
-                    href={prevHref}
-                    className="rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                  >
-                    Anterior
-                  </a>
-                ) : (
-                  <span className="cursor-not-allowed rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">
-                    Anterior
+                <div className="mt-8 flex items-center justify-center gap-3">
+                  {hasPrevPage ? (
+                    <a href={prevHref} className="store-button-secondary px-4 py-2">
+                      Anterior
+                    </a>
+                  ) : (
+                    <span className="cursor-not-allowed rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">Anterior</span>
+                  )}
+                  <span className="text-sm font-semibold text-gray-700">
+                    Pagina {currentPage} de {Math.max(totalPages, 1)}
                   </span>
-                )}
-
-                <span className="text-sm font-semibold text-gray-700">
-                  Pagina {currentPage} de {Math.max(totalPages, 1)}
-                </span>
-
-                {hasNextPage ? (
-                  <a
-                    href={nextHref}
-                    className="rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                  >
-                    Siguiente
-                  </a>
-                ) : (
-                  <span className="cursor-not-allowed rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">
-                    Siguiente
-                  </span>
-                )}
+                  {hasNextPage ? (
+                    <a href={nextHref} className="store-button-secondary px-4 py-2">
+                      Siguiente
+                    </a>
+                  ) : (
+                    <span className="cursor-not-allowed rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">Siguiente</span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="store-empty-state">
+                <h3>No hay ofertas activas por ahora</h3>
+                <p>Vuelve pronto o revisa el catalogo completo para descubrir nuevos ingresos.</p>
+                <a href="/productos" className="store-button-primary">
+                  Ir al catalogo
+                </a>
               </div>
-            </div>
-          </section>
-        ) : (
-          <section className="bg-white py-20 text-center">
-            <div className="mx-auto max-w-2xl">
-              <p className="text-lg text-gray-500">No hay ofertas disponibles en este momento.</p>
-            </div>
-          </section>
-        )}
+            )}
+          </div>
+        </section>
       </main>
       <Footer />
     </>

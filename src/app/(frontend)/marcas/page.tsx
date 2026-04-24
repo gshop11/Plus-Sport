@@ -4,8 +4,6 @@ import { getMarcasData } from '@/lib/storefront'
 
 export const revalidate = 60
 
-const heroBackground = 'linear-gradient(90deg, #ff7a00 0%, #ff6f00 55%, #ff8c1a 100%)'
-
 export default async function MarcasPage() {
   const marcas = await getMarcasData()
 
@@ -13,43 +11,43 @@ export default async function MarcasPage() {
     <>
       <Header />
       <main>
-        <section className="py-12 text-white" style={{ background: heroBackground }}>
-          <div className="mx-auto max-w-7xl px-4">
-            <div className="mb-4 inline-flex rounded-full border border-white/25 bg-white/15 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">
-              Marcas oficiales
-            </div>
-            <h1 className="mb-2 text-4xl font-black tracking-tight lg:text-5xl">
-              <span className="text-[#fff7ef]">Nuestras </span>
-              <span className="text-primary">Marcas</span>
-            </h1>
-            <p className="max-w-2xl text-[#fff1dd]">Descubre las marcas deportivas que forman parte de PlusSport.</p>
+        <section className="bg-gradient-to-br from-primary to-primary-dark py-12 text-white">
+          <div className="section-shell">
+            <span className="mb-4 inline-flex rounded-full border border-white/25 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/90">
+              Marcas destacadas
+            </span>
+            <h1 className="mb-3 text-3xl font-black sm:text-5xl">Marcas deportivas en Plus-Sport</h1>
+            <p className="max-w-2xl text-sm text-white/80 sm:text-base">Acceso directo por marca para replicar la navegacion comercial de sneaker retailers de referencia.</p>
           </div>
         </section>
 
-        {marcas.length > 0 ? (
-          <section className="bg-white py-16">
-            <div className="mx-auto max-w-7xl px-4">
-              <div className="flex flex-wrap justify-center gap-4">
+        <section className="bg-white py-14">
+          <div className="section-shell">
+            {marcas.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {marcas.map((marca) => (
                   <a
                     key={marca.id}
                     href={`/productos?marca=${marca.slug}`}
-                    className="w-full rounded-3xl border-2 border-gray-300 bg-white px-6 py-8 text-center shadow-sm transition-all hover:-translate-y-1 hover:border-accent hover:shadow-xl sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]"
+                    className="store-panel flex min-h-[150px] flex-col items-center justify-center gap-3 p-5 text-center transition-all hover:-translate-y-1 hover:shadow-lg"
                   >
-                    <p className="text-lg font-black uppercase tracking-[0.18em] text-primary">{marca.nombre}</p>
-                    <p className="mt-3 text-sm font-medium text-gray-500">Ver productos de esta marca</p>
+                    {marca.logoUrl ? <img src={marca.logoUrl} alt={marca.nombre} className="h-9 w-auto object-contain" /> : <span className="store-chip">Marca</span>}
+                    <p className="text-base font-black uppercase tracking-[0.12em] text-gray-900">{marca.nombre}</p>
+                    <span className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-500">Ver productos</span>
                   </a>
                 ))}
               </div>
-            </div>
-          </section>
-        ) : (
-          <section className="bg-white py-20 text-center">
-            <div className="mx-auto max-w-2xl">
-              <p className="text-lg text-gray-500">No hay marcas disponibles.</p>
-            </div>
-          </section>
-        )}
+            ) : (
+              <div className="store-empty-state">
+                <h3>No hay marcas activas</h3>
+                <p>Activa marcas en el admin para mostrarlas en esta pagina.</p>
+                <a href="/productos" className="store-button-primary">
+                  Ir al catalogo
+                </a>
+              </div>
+            )}
+          </div>
+        </section>
       </main>
       <Footer />
     </>

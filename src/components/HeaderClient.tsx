@@ -252,40 +252,40 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 shadow-md">
+      <header className="sticky top-0 z-50 border-b border-black/5 bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/80">
         {config.header.mostrarAnuncio && (
-          <div className="bg-primary px-4 py-2 text-center text-sm font-semibold text-white">{config.header.anuncioBarra}</div>
+          <div className="bg-primary px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.13em] text-white/90">{config.header.anuncioBarra}</div>
         )}
 
-        <div className="border-b border-gray-200 bg-white px-4 py-4 text-gray-900">
+        <div className="border-b border-gray-200/80 px-4 py-4 text-gray-900">
           <div className="mx-auto flex max-w-7xl items-center gap-4 lg:grid lg:grid-cols-[220px_minmax(0,1fr)_220px] lg:gap-6">
             <Link href="/" className="min-w-fit flex-shrink-0 lg:w-[220px]">
-              <span className="block text-[11px] font-semibold uppercase tracking-[0.35em] text-gray-700">{config.identity.tagline}</span>
-              <span className="block text-3xl font-black leading-none">
+              <span className="block text-[10px] font-semibold uppercase tracking-[0.28em] text-gray-500">{config.identity.tagline}</span>
+              <span className="font-display block text-3xl font-black leading-none">
                 <span className="text-accent">{firstNamePart}</span>
                 {restName ? <span className="text-primary"> {restName}</span> : null}
               </span>
             </Link>
 
             <div className="hidden flex-1 items-center justify-center md:flex lg:justify-center">
-              <form onSubmit={handleSearch} className="flex w-full max-w-2xl items-center overflow-hidden rounded-full border border-gray-800 bg-white">
+              <form onSubmit={handleSearch} className="flex w-full max-w-2xl items-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
                 <input
                   type="text"
-                  placeholder="Que estas buscando?"
+                  placeholder="Busca zapatillas, marcas o colecciones..."
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
                   className="flex-1 bg-transparent px-6 py-3 text-sm text-gray-800 outline-none"
                 />
-                <button type="submit" className="bg-accent px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-orange-700">BUSCAR</button>
+                <button type="submit" className="store-button-primary rounded-none px-5 py-3">Buscar</button>
               </form>
             </div>
 
-            <div className="hidden items-center justify-start gap-8 lg:flex lg:w-[220px]">
-              <Link href="/checkout" className="inline-flex items-center gap-2 text-sm font-semibold text-gray-800 transition-colors hover:text-accent">
+            <div className="hidden items-center justify-end gap-3 lg:flex lg:w-[220px]">
+              <Link href="/checkout" className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-primary hover:text-primary">
                 <UserIcon />
                 <span>Mi cuenta</span>
               </Link>
-              <Link href="/carrito" className="relative inline-flex items-center text-gray-900 transition-colors hover:text-accent" aria-label="Carrito">
+              <Link href="/carrito" className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 text-gray-900 transition-colors hover:border-primary hover:text-primary" aria-label="Carrito">
                 <CartIcon />
                 <span className="sr-only">Carrito</span>
                 <CartCountBadge />
@@ -293,44 +293,44 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
             </div>
 
             <div className="ml-auto flex items-center gap-4 md:hidden">
-              <Link href="/carrito" className="relative inline-flex items-center text-gray-900 hover:text-accent" aria-label="Carrito">
+              <Link href="/carrito" className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 text-gray-900 transition-colors hover:border-primary hover:text-primary" aria-label="Carrito">
                 <CartIcon />
                 <CartCountBadge />
               </Link>
-              <button className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-900" onClick={() => setMenuOpen((prev) => !prev)} aria-label="Abrir menu">
+              <button className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-900" onClick={() => setMenuOpen((prev) => !prev)} aria-label="Abrir menu">
                 {menuOpen ? 'Cerrar' : 'Menu'}
               </button>
             </div>
           </div>
 
           <div className="mx-auto mt-4 md:hidden">
-            <form onSubmit={handleSearch} className="flex items-center overflow-hidden rounded-full border border-gray-800 bg-white">
+            <form onSubmit={handleSearch} className="flex items-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm">
               <input
                 type="text"
-                placeholder="Que estas buscando?"
+                placeholder="Buscar productos..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 className="flex-1 bg-transparent px-4 py-3 text-sm text-gray-800 outline-none"
               />
-              <button type="submit" className="bg-accent px-4 py-3 text-xs font-bold text-white">BUSCAR</button>
+              <button type="submit" className="store-button-primary rounded-none px-4 py-3 text-xs">Buscar</button>
             </form>
           </div>
         </div>
 
-        <nav ref={navRef} className="hidden border-b border-primary bg-primary sm:block">
+        <nav ref={navRef} className="hidden border-b border-primary/15 bg-primary sm:block">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-4">
             <div className="flex min-w-0 items-center">
               <div className="relative flex-shrink-0">
                 <button
                   onClick={() => setDeporteOpen((prev) => !prev)}
-                  className="flex items-center gap-1 whitespace-nowrap px-5 py-4 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                  className="flex items-center gap-1 whitespace-nowrap px-5 py-4 text-sm font-medium uppercase tracking-[0.08em] text-white transition-colors hover:bg-white/10"
                   style={{ backgroundColor: isDeportesActive || deporteOpen ? 'var(--color-acento)' : 'transparent' }}
                 >
                   DEPORTES
                   <span className={`text-xs opacity-75 transition-transform ${deporteOpen ? 'rotate-180' : ''}`}>v</span>
                 </button>
                 {deporteOpen && (
-                  <div className="absolute left-0 top-full z-50 min-w-[220px] overflow-hidden rounded-b-xl bg-white shadow-xl">
+                  <div className="absolute left-0 top-full z-50 min-w-[220px] overflow-hidden rounded-b-xl border border-gray-200 bg-white shadow-xl">
                     {deportesItems.map((item) => (
                       <Link key={`deporte-${item.url}`} href={item.url} className="block px-5 py-3 text-sm font-medium text-gray-800 transition-colors hover:bg-orange-50 hover:text-accent">
                         {item.etiqueta}
@@ -347,7 +347,7 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
                     <Link
                       key={itemKey(item.url, index)}
                       href={buildNavHref(item.url)}
-                      className="whitespace-nowrap px-5 py-4 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                      className="whitespace-nowrap px-5 py-4 text-sm font-medium uppercase tracking-[0.08em] text-white transition-colors hover:bg-white/10"
                       style={{ backgroundColor: active ? 'var(--color-acento)' : 'transparent' }}
                     >
                       {item.etiqueta}
@@ -364,7 +364,7 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
                   <Link
                     key={itemKey(item.url, index)}
                     href={buildNavHref(item.url)}
-                    className="whitespace-nowrap px-5 py-4 text-sm font-bold text-white transition-colors hover:bg-white/10"
+                    className="whitespace-nowrap px-5 py-4 text-sm font-bold uppercase tracking-[0.08em] text-white transition-colors hover:bg-white/10"
                     style={{ backgroundColor: active ? 'var(--color-acento)' : 'transparent' }}
                   >
                     {item.etiqueta}
@@ -411,7 +411,7 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
               <Link
                 href="/carrito"
                 onClick={() => setMenuOpen(false)}
-                className="mx-3 flex items-center justify-center gap-3 rounded-xl bg-accent px-6 py-4 text-sm font-black uppercase tracking-widest text-white shadow-lg transition-all hover:bg-orange-600 active:scale-[0.98]"
+                className="mx-3 flex items-center justify-center gap-3 rounded-xl border border-white/15 bg-accent px-6 py-4 text-sm font-black uppercase tracking-widest text-white shadow-lg transition-all hover:bg-orange-600 active:scale-[0.98]"
               >
                 <CartIcon />
                 <span>VER CARRITO</span>

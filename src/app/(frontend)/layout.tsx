@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getStorefrontConfig } from '@/lib/storefront'
+import { Manrope, Space_Grotesk } from 'next/font/google'
 import './globals.css'
 
 export const revalidate = 300
@@ -8,6 +9,18 @@ export const metadata: Metadata = {
   title: 'Tienda Deportiva',
   description: 'Equipamiento deportivo de alto rendimiento',
 }
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-base',
+  display: 'swap',
+})
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+})
 
 const hexToRgb = (hex: string) => {
   const clean = hex.replace('#', '').trim()
@@ -35,7 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="es">
       <body
-        className="antialiased"
+        className={`${manrope.variable} ${spaceGrotesk.variable} antialiased`}
         style={
           {
             '--color-primario': storefront.colores.primario,

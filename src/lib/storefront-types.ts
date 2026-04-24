@@ -1,5 +1,6 @@
-﻿export type ProductoCard = {
+export type ProductoCard = {
   id: string
+  slug?: string
   nombre: string
   marca: string
   precio: number
@@ -77,4 +78,3 @@ export type StorefrontConfig = {
   }
   homeSections: HomeSectionConfig[]
 }
-

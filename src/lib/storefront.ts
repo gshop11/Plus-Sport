@@ -82,6 +82,7 @@ export const normalizeCategorySlug = (value: string) =>
 
 const mapProductoToCard = (doc: any): ProductoCard => ({
   id: String(doc.id),
+  slug: doc.slug ?? '',
   nombre: doc.nombre ?? '',
   marca: typeof doc.marca === 'object' && doc.marca ? doc.marca.nombre ?? '' : '',
   precio: doc.precio ?? 0,
@@ -327,10 +328,13 @@ export const getHomeData = unstable_cache(
         nombre: m.nombre ?? '',
         id: String(m.id),
         slug: m.slug ?? '',
+        logoUrl: resolveMediaURL(m.logo),
       })),
       categorias: categoriasRes.docs.map((c: any) => ({
         nombre: c.nombre ?? '',
         icono: c.icono ?? 'X',
+        descripcion: c.descripcion ?? '',
+        imagenUrl: resolveMediaURL(c.imagen),
         slug: normalizeCategorySlug(c.slug ?? c.nombre ?? ''),
       })),
       storefront,
@@ -366,6 +370,8 @@ export const getCategoriasData = unstable_cache(
     return categoriasRes.docs.map((c: any) => ({
       nombre: c.nombre ?? '',
       icono: c.icono ?? 'X',
+      descripcion: c.descripcion ?? '',
+      imagenUrl: resolveMediaURL(c.imagen),
       slug: normalizeCategorySlug(c.slug ?? c.nombre ?? ''),
       id: String(c.id),
     }))
@@ -392,11 +398,14 @@ export const getMarcasData = unstable_cache(
       id: String(m.id),
       nombre: m.nombre ?? '',
       slug: m.slug ?? '',
+      logoUrl: resolveMediaURL(m.logo),
     }))
   },
   ['store-marcas-data'],
   { revalidate: 120 },
 )
+
+export type ProductSort = 'newest' | 'price_asc' | 'price_desc' | 'name_asc'
 
 export type ProductListInput = {
   page?: number
@@ -406,6 +415,7 @@ export type ProductListInput = {
   categoriaId?: string
   onlyOffers?: boolean
   search?: string
+  sort?: ProductSort
 }
 
 export const getProductList = async ({
@@ -416,6 +426,7 @@ export const getProductList = async ({
   categoriaId,
   onlyOffers,
   search,
+  sort = 'newest',
 }: ProductListInput) => {
   const payload = await getPayloadClient()
 
@@ -447,6 +458,13 @@ export const getProductList = async ({
     where.or = [{ nombre: { contains: search.trim() } }, { slug: { contains: search.trim() } }]
   }
 
+  const sortMap: Record<ProductSort, string> = {
+    newest: '-createdAt',
+    price_asc: 'precio',
+    price_desc: '-precio',
+    name_asc: 'nombre',
+  }
+
   const res = await payload
     .find({
       collection: 'productos',
@@ -454,7 +472,7 @@ export const getProductList = async ({
       page,
       limit,
       depth: 1,
-      sort: '-createdAt',
+      sort: sortMap[sort] ?? '-createdAt',
     })
     .catch(() => ({
       docs: [] as any[],

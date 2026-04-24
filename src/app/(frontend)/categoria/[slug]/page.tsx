@@ -46,71 +46,70 @@ export default async function CategoriaPage({ params, searchParams }: CategoriaP
     <>
       <Header />
       <main>
-        <section className="bg-gradient-to-r from-accent to-accent/80 py-12 text-white">
-          <div className="mx-auto max-w-7xl px-4">
-            <div className="mb-4 flex items-center gap-4">
-              <span className="text-5xl">{categoria.icono}</span>
+        <section className="bg-gradient-to-br from-primary to-primary-dark py-12 text-white">
+          <div className="section-shell">
+            <a href="/categorias" className="mb-4 inline-flex items-center text-xs font-semibold uppercase tracking-[0.12em] text-white/70 hover:text-white">
+              ← Volver a categorias
+            </a>
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="text-5xl">{categoria.icono || '•'}</span>
               <div>
-                <h1 className="text-4xl font-black lg:text-5xl">{categoria.nombre}</h1>
+                <h1 className="text-3xl font-black sm:text-5xl">{categoria.nombre}</h1>
+                <p className="mt-2 max-w-2xl text-sm text-white/80 sm:text-base">
+                  {categoria.descripcion || `Explora productos de ${String(categoria.nombre).toLowerCase()} con disponibilidad actual.`}
+                </p>
               </div>
             </div>
-            <p className="text-blue-100">Encuentra todo lo que necesitas para {String(categoria.nombre).toLowerCase()}.</p>
           </div>
         </section>
 
-        {productos.length > 0 ? (
-          <section className="bg-white py-12">
-            <div className="mx-auto max-w-7xl px-4">
-              <p className="mb-6 text-gray-600">
-                Mostrando <span className="font-bold">{productos.length}</span> de <span className="font-bold">{totalDocs}</span> productos
-              </p>
+        <section className="bg-white py-12">
+          <div className="section-shell">
+            {productos.length > 0 ? (
+              <>
+                <p className="mb-6 rounded-xl border border-gray-200 bg-[var(--surface-soft)] px-4 py-3 text-sm text-gray-600">
+                  Mostrando <span className="font-bold text-gray-900">{productos.length}</span> de <span className="font-bold text-gray-900">{totalDocs}</span> productos
+                </p>
 
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                {productos.map((p, i) => (
-                  <TarjetaProducto key={p.id} producto={p} index={i} />
-                ))}
-              </div>
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                  {productos.map((producto, index) => (
+                    <TarjetaProducto key={producto.id} producto={producto} index={index} />
+                  ))}
+                </div>
 
-              <div className="mt-8 flex items-center justify-center gap-3">
-                {hasPrevPage ? (
-                  <a
-                    href={prevHref}
-                    className="rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                  >
-                    Anterior
-                  </a>
-                ) : (
-                  <span className="cursor-not-allowed rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">
-                    Anterior
+                <div className="mt-8 flex items-center justify-center gap-3">
+                  {hasPrevPage ? (
+                    <a href={prevHref} className="store-button-secondary px-4 py-2">
+                      Anterior
+                    </a>
+                  ) : (
+                    <span className="cursor-not-allowed rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">Anterior</span>
+                  )}
+
+                  <span className="text-sm font-semibold text-gray-700">
+                    Pagina {currentPage} de {Math.max(totalPages, 1)}
                   </span>
-                )}
 
-                <span className="text-sm font-semibold text-gray-700">
-                  Pagina {currentPage} de {Math.max(totalPages, 1)}
-                </span>
-
-                {hasNextPage ? (
-                  <a
-                    href={nextHref}
-                    className="rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                  >
-                    Siguiente
-                  </a>
-                ) : (
-                  <span className="cursor-not-allowed rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">
-                    Siguiente
-                  </span>
-                )}
+                  {hasNextPage ? (
+                    <a href={nextHref} className="store-button-secondary px-4 py-2">
+                      Siguiente
+                    </a>
+                  ) : (
+                    <span className="cursor-not-allowed rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">Siguiente</span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="store-empty-state">
+                <h3>No hay productos en {categoria.nombre}</h3>
+                <p>Esta categoria no tiene stock visible por ahora.</p>
+                <a href="/productos" className="store-button-primary">
+                  Ver catalogo completo
+                </a>
               </div>
-            </div>
-          </section>
-        ) : (
-          <section className="bg-white py-20 text-center">
-            <div className="mx-auto max-w-2xl">
-              <p className="text-lg text-gray-500">No hay productos en {categoria.nombre} en este momento.</p>
-            </div>
-          </section>
-        )}
+            )}
+          </div>
+        </section>
       </main>
       <Footer />
     </>

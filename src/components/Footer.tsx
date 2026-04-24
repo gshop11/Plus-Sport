@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import type { StorefrontConfig } from '@/lib/storefront-types'
 import Link from 'next/link'
@@ -29,6 +29,12 @@ const fallbackFooter: StorefrontConfig['footer'] = {
 const fallbackIdentity = {
   name: 'PlusSport',
 }
+
+const trustItems = [
+  'Compra segura',
+  'Enviamos a todo el pais',
+  'Soporte postventa',
+]
 
 export default function Footer() {
   const [metodosFooter, setMetodosFooter] = useState<string[]>(['BCP', 'Yape', 'Interbank'])
@@ -79,33 +85,54 @@ export default function Footer() {
   )
 
   return (
-    <footer className="bg-primary text-white">
+    <footer className="mt-12 bg-primary text-white">
+      <div className="border-b border-white/10 bg-gradient-to-r from-accent/95 to-accent-dark px-4 py-4">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
+          <p className="text-sm font-semibold uppercase tracking-[0.12em] text-white/90">Plus-Sport: tienda lista para compra real</p>
+          <a href="/productos?oferta=1" className="rounded-full border border-white/35 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.11em] text-white transition-colors hover:bg-white/20">
+            Ver ofertas destacadas
+          </a>
+        </div>
+      </div>
+
       <div className="mx-auto max-w-7xl px-4 py-10">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div>
-            <span className="mb-1 block text-2xl font-black">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {trustItems.map((item) => (
+            <div key={item} className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.12em] text-blue-100">
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 pb-12">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-[1.2fr_0.8fr_1fr]">
+          <div className="rounded-2xl border border-white/15 bg-white/5 p-6">
+            <span className="mb-2 block text-2xl font-black">
               <span className="text-accent">{storeName}</span>
             </span>
-            <p className="text-sm text-blue-200">{footerConfig.descripcion}</p>
+            <p className="max-w-sm text-sm text-blue-200/90">{footerConfig.descripcion}</p>
           </div>
 
           <div>
-            <h4 className="mb-3 text-sm font-bold uppercase tracking-widest">Tienda</h4>
-            <ul className="space-y-2 text-sm text-blue-200">
+            <h4 className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-blue-100">Tienda</h4>
+            <ul className="space-y-2 text-sm text-blue-200/90">
               {footerConfig.linksRapidos.map((link) => (
                 <li key={`${link.url}-${link.etiqueta}`}>
-                  <Link href={link.url}>{link.etiqueta}</Link>
+                  <Link href={link.url} className="transition-colors hover:text-white">
+                    {link.etiqueta}
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div>
-            <h4 className="mb-3 text-sm font-bold uppercase tracking-widest">Contacto</h4>
-            {footerConfig.telefono ? <p className="text-sm text-blue-200">WhatsApp: {footerConfig.telefono}</p> : null}
-            {footerConfig.email ? <p className="text-sm text-blue-200">Email: {footerConfig.email}</p> : null}
-            {footerConfig.direccion ? <p className="text-sm text-blue-200">{footerConfig.direccion}</p> : null}
-            {footerConfig.horario ? <p className="text-sm text-blue-200">{footerConfig.horario}</p> : null}
+          <div className="rounded-2xl border border-white/15 bg-white/5 p-6">
+            <h4 className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-blue-100">Contacto comercial</h4>
+            {footerConfig.telefono ? <p className="text-sm text-blue-200/90">WhatsApp: {footerConfig.telefono}</p> : null}
+            {footerConfig.email ? <p className="text-sm text-blue-200/90">Email: {footerConfig.email}</p> : null}
+            {footerConfig.direccion ? <p className="text-sm text-blue-200/90">{footerConfig.direccion}</p> : null}
+            {footerConfig.horario ? <p className="text-sm text-blue-200/90">{footerConfig.horario}</p> : null}
             {socialLinks.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
                 {socialLinks.map((social) => (
@@ -114,7 +141,7 @@ export default function Footer() {
                     href={social.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-blue-100 transition-colors hover:bg-white/20"
+                    className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-blue-100 transition-colors hover:bg-white/20"
                   >
                     {social.label}
                   </a>
@@ -126,11 +153,11 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-4 sm:flex-row">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 sm:flex-row">
           <div className="flex flex-wrap items-center gap-2 text-xs text-blue-300">
-            <span className="font-semibold text-blue-200">Metodos de pago:</span>
+            <span className="font-semibold uppercase tracking-[0.12em] text-blue-200">Metodos de pago:</span>
             {metodosFooter.map((m) => (
-              <span key={m} className="rounded-full bg-white/10 px-2.5 py-1">
+              <span key={m} className="rounded-full border border-white/10 bg-white/10 px-2.5 py-1">
                 {m}
               </span>
             ))}
@@ -141,5 +168,3 @@ export default function Footer() {
     </footer>
   )
 }
-
-

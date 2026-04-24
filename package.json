@@ -10,7 +10,8 @@
     "reset": "node -e \"require('fs').rmSync('.next', { recursive: true, force: true })\"",
     "generate:types": "payload generate:types",
     "seed": "npx tsx src/seed.ts",
-    "seed:catalogo": "npx tsx src/seed-catalogo.ts"
+    "seed:catalogo": "npx tsx src/seed-catalogo.ts",
+    "seed:staging-demo": "node scripts/seed-staging-demo-content.cjs"
   },
   "keywords": [],
   "author": "",
