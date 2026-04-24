@@ -4,6 +4,7 @@ import type { StorefrontConfig } from '@/lib/storefront-types'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import CartDrawer from './CartDrawer'
 import CartCountBadge from './CartCountBadge'
 
 type HeaderClientProps = {
@@ -91,6 +92,7 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
 
   const [config, setConfig] = useState<StorefrontConfig>(initialConfig ?? fallbackConfig)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
   const [deporteOpen, setDeporteOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const navRef = useRef<HTMLElement>(null)
@@ -127,11 +129,11 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
   }, [pathname, searchParams])
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    document.body.style.overflow = menuOpen || cartOpen ? 'hidden' : ''
     return () => {
       document.body.style.overflow = ''
     }
-  }, [menuOpen])
+  }, [menuOpen, cartOpen])
 
   useEffect(() => {
     const onOutsideClick = (event: MouseEvent) => {
@@ -144,6 +146,12 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
     document.addEventListener('mousedown', onOutsideClick)
     return () => document.removeEventListener('mousedown', onOutsideClick)
   }, [deporteOpen])
+
+  useEffect(() => {
+    const openCart = () => setCartOpen(true)
+    window.addEventListener('carrito:open', openCart)
+    return () => window.removeEventListener('carrito:open', openCart)
+  }, [])
 
   const menuItems = useMemo(() => config.header.menuPrincipal ?? [], [config])
 
@@ -285,18 +293,28 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
                 <UserIcon />
                 <span>Mi cuenta</span>
               </Link>
-              <Link href="/carrito" className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 text-gray-900 transition-colors hover:border-primary hover:text-primary" aria-label="Carrito">
+              <button
+                type="button"
+                onClick={() => setCartOpen(true)}
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 text-gray-900 transition-colors hover:border-primary hover:text-primary"
+                aria-label="Abrir carrito"
+              >
                 <CartIcon />
                 <span className="sr-only">Carrito</span>
                 <CartCountBadge />
-              </Link>
+              </button>
             </div>
 
             <div className="ml-auto flex items-center gap-4 md:hidden">
-              <Link href="/carrito" className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 text-gray-900 transition-colors hover:border-primary hover:text-primary" aria-label="Carrito">
+              <button
+                type="button"
+                onClick={() => setCartOpen(true)}
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 text-gray-900 transition-colors hover:border-primary hover:text-primary"
+                aria-label="Abrir carrito"
+              >
                 <CartIcon />
                 <CartCountBadge />
-              </Link>
+              </button>
               <button className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-900" onClick={() => setMenuOpen((prev) => !prev)} aria-label="Abrir menu">
                 {menuOpen ? 'Cerrar' : 'Menu'}
               </button>
@@ -408,20 +426,24 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
 
               <div className="mx-5 my-3 border-t border-white/10" />
 
-              <Link
-                href="/carrito"
-                onClick={() => setMenuOpen(false)}
-                className="mx-3 flex items-center justify-center gap-3 rounded-xl border border-white/15 bg-accent px-6 py-4 text-sm font-black uppercase tracking-widest text-white shadow-lg transition-all hover:bg-orange-600 active:scale-[0.98]"
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false)
+                  setCartOpen(true)
+                }}
+                className="mx-3 flex w-[calc(100%-1.5rem)] items-center justify-center gap-3 rounded-xl border border-white/15 bg-accent px-6 py-4 text-sm font-black uppercase tracking-widest text-white shadow-lg transition-all hover:bg-orange-600 active:scale-[0.98]"
               >
                 <CartIcon />
                 <span>VER CARRITO</span>
                 <CartCountBadge />
-              </Link>
+              </button>
             </div>
           </div>
         )}
       </header>
 
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
       {menuOpen && <div className="animate-overlayIn fixed inset-0 z-40 bg-black/60 sm:hidden" onClick={() => setMenuOpen(false)} aria-hidden="true" />}
     </>
   )

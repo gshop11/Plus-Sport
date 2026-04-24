@@ -3,8 +3,8 @@ import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import { resolveMediaURL } from './media'
-import type { HeaderMenuItem, HomeSectionConfig, ProductoCard, StoreIdentity, StorefrontConfig } from './storefront-types'
-export type { HeaderMenuItem, HomeSectionConfig, ProductoCard, StoreIdentity, StorefrontConfig } from './storefront-types'
+import type { HeaderMenuItem, HomeSectionConfig, ProductoCard, ProductoDetalle, StoreIdentity, StorefrontConfig } from './storefront-types'
+export type { HeaderMenuItem, HomeSectionConfig, ProductoCard, ProductoDetalle, StoreIdentity, StorefrontConfig } from './storefront-types'
 
 export const PRODUCTS_PER_PAGE = 24
 
@@ -91,6 +91,59 @@ const mapProductoToCard = (doc: any): ProductoCard => ({
   tallas: Array.isArray(doc.tallas) ? doc.tallas.map((t: any) => t.talla) : [],
   etiqueta: (doc.etiqueta as ProductoCard['etiqueta']) ?? '',
 })
+
+const getRelationshipId = (value: any) => {
+  if (typeof value === 'number' || typeof value === 'string') return String(value)
+  if (value && typeof value === 'object' && value.id !== undefined && value.id !== null) {
+    return String(value.id)
+  }
+  return ''
+}
+
+const getRelationshipName = (value: any, fallback = '') => {
+  if (value && typeof value === 'object' && typeof value.nombre === 'string') {
+    return value.nombre
+  }
+  return fallback
+}
+
+const getRelationshipSlug = (value: any, fallback = '') => {
+  if (value && typeof value === 'object' && typeof value.slug === 'string') {
+    return value.slug
+  }
+  return fallback
+}
+
+const getTextFromNode = (node: any): string => {
+  if (!node || typeof node !== 'object') return ''
+
+  if (typeof node.text === 'string') {
+    return node.text
+  }
+
+  if (!Array.isArray(node.children)) return ''
+
+  return node.children
+    .map((child: any) => getTextFromNode(child))
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+const extractDescription = (value: any): string => {
+  if (typeof value === 'string') {
+    return value.trim()
+  }
+  if (!value || typeof value !== 'object') return ''
+  const rootChildren = Array.isArray(value.root?.children) ? value.root.children : []
+  if (!rootChildren.length) return ''
+
+  return rootChildren
+    .map((node: any) => getTextFromNode(node))
+    .filter(Boolean)
+    .join('\n\n')
+    .trim()
+}
 
 const resolveMediaUrl = async (payload: Awaited<ReturnType<typeof getPayloadClient>>, mediaRef: any) => {
   if (!mediaRef) return null
@@ -491,6 +544,147 @@ export const getProductList = async ({
     hasPrevPage: res.hasPrevPage ?? false,
     hasNextPage: res.hasNextPage ?? false,
   }
+}
+
+export const getProductoDetalleBySlug = async (slug: string): Promise<{ producto: ProductoDetalle; relacionados: ProductoCard[] } | null> => {
+  const getCachedBySlug = unstable_cache(
+    async () => {
+      const payload = await getPayloadClient()
+      const slugValue = String(slug || '').trim().toLowerCase()
+      if (!slugValue) return null
+
+      const productoRes = await payload
+        .find({
+          collection: 'productos',
+          where: {
+            and: [{ slug: { equals: slugValue } }, { activo: { equals: true } }],
+          },
+          limit: 1,
+          depth: 2,
+        })
+        .catch(() => ({ docs: [] as any[] }))
+
+      const doc = productoRes.docs[0]
+      if (!doc) return null
+
+      const marcaId = getRelationshipId(doc.marca)
+      const categoriaId = getRelationshipId(doc.categoria)
+
+      const galeriaUrls: string[] = []
+      let principal = resolveImagenUrl(doc.imagenPrincipal)
+      if (!principal && doc.imagenPrincipal) {
+        principal = await resolveMediaUrl(payload, doc.imagenPrincipal)
+      }
+      if (principal) galeriaUrls.push(principal)
+
+      if (Array.isArray(doc.imagenes)) {
+        for (const item of doc.imagenes) {
+          let imageURL = resolveImagenUrl(item?.imagen)
+          if (!imageURL && item?.imagen) {
+            imageURL = await resolveMediaUrl(payload, item.imagen)
+          }
+          if (imageURL) galeriaUrls.push(imageURL)
+        }
+      }
+
+      const uniqueGallery = [...new Set(galeriaUrls)]
+
+      const tallas = Array.isArray(doc.tallas)
+        ? doc.tallas
+            .map((item: any) => ({
+              talla: String(item?.talla || '').trim(),
+              stock: Number(item?.stock || 0),
+            }))
+            .filter((item: { talla: string }) => item.talla.length > 0)
+        : []
+
+      const stock =
+        tallas.length > 0
+          ? tallas.reduce((acc: number, item: { stock: number }) => acc + (Number(item.stock) || 0), 0)
+          : Number(doc.stock || 0)
+
+      const descripcion = extractDescription(doc.descripcion)
+
+      const producto: ProductoDetalle = {
+        id: String(doc.id),
+        slug: doc.slug ?? slugValue,
+        nombre: doc.nombre ?? '',
+        marca: {
+          id: marcaId,
+          nombre: getRelationshipName(doc.marca, ''),
+          slug: getRelationshipSlug(doc.marca, ''),
+        },
+        categoria: {
+          id: categoriaId,
+          nombre: getRelationshipName(doc.categoria, ''),
+          slug: normalizeCategorySlug(getRelationshipSlug(doc.categoria, getRelationshipName(doc.categoria, ''))),
+        },
+        precio: Number(doc.precio || 0),
+        precioAnterior: doc.precioAnterior ?? undefined,
+        imagenUrl: principal,
+        galeriaUrls: uniqueGallery,
+        tallas,
+        stock,
+        descripcion,
+        etiqueta: (doc.etiqueta as ProductoDetalle['etiqueta']) ?? '',
+        segmento: (doc.segmento as ProductoDetalle['segmento']) ?? 'unisex',
+      }
+
+      const relacionados: ProductoCard[] = []
+      const seenIds = new Set([producto.id])
+
+      const addRelatedDocs = (docs: any[]) => {
+        for (const row of docs) {
+          const rowId = String(row.id)
+          if (seenIds.has(rowId)) continue
+          seenIds.add(rowId)
+          relacionados.push(mapProductoToCard(row))
+          if (relacionados.length >= 8) break
+        }
+      }
+
+      if (categoriaId) {
+        const byCategory = await payload
+          .find({
+            collection: 'productos',
+            where: {
+              and: [{ activo: { equals: true } }, { categoria: { equals: categoriaId } }],
+            },
+            limit: 10,
+            depth: 1,
+            sort: '-createdAt',
+          })
+          .catch(() => ({ docs: [] as any[] }))
+
+        addRelatedDocs(byCategory.docs)
+      }
+
+      if (relacionados.length < 4 && marcaId) {
+        const byBrand = await payload
+          .find({
+            collection: 'productos',
+            where: {
+              and: [{ activo: { equals: true } }, { marca: { equals: marcaId } }],
+            },
+            limit: 10,
+            depth: 1,
+            sort: '-createdAt',
+          })
+          .catch(() => ({ docs: [] as any[] }))
+
+        addRelatedDocs(byBrand.docs)
+      }
+
+      return {
+        producto,
+        relacionados: relacionados.slice(0, 8),
+      }
+    },
+    ['store-producto-detalle', slug],
+    { revalidate: 60 },
+  )
+
+  return getCachedBySlug()
 }
 
 export const getCategoriaBySlug = async (slug: string) => {

@@ -10,6 +10,36 @@ export type ProductoCard = {
   etiqueta?: 'nuevo' | 'hot' | 'top' | 'oferta' | ''
 }
 
+export type ProductoTalla = {
+  talla: string
+  stock: number
+}
+
+export type ProductoDetalle = {
+  id: string
+  slug: string
+  nombre: string
+  marca: {
+    id: string
+    nombre: string
+    slug: string
+  }
+  categoria: {
+    id: string
+    nombre: string
+    slug: string
+  }
+  precio: number
+  precioAnterior?: number
+  imagenUrl: string | null
+  galeriaUrls: string[]
+  tallas: ProductoTalla[]
+  stock: number
+  descripcion: string
+  etiqueta?: 'nuevo' | 'hot' | 'top' | 'oferta' | ''
+  segmento?: 'hombre' | 'mujer' | 'ninos' | 'unisex'
+}
+
 export type HomeSlide = {
   id: string
   titulo: string

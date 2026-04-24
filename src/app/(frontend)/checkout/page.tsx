@@ -6,6 +6,7 @@ import HeaderClient from '@/components/HeaderClient'
 import Footer from '@/components/Footer'
 import { useCurrencySymbol } from '@/hooks/useCurrencySymbol'
 import { formatMoney } from '@/lib/money'
+import { getDistrictsByCity, isDistrictValidForCity, PERU_CITY_OPTIONS } from '@/lib/peru-locations'
 
 interface CarritoItem {
   id: string
@@ -241,6 +242,15 @@ export default function CheckoutPage() {
   const descuento = cuponAplicado?.descuento || 0
   const costoEnvioFinal = cuponAplicado ? cuponAplicado.envioFinal : costoEnvio
   const total = Math.max(0, subtotal - descuento) + costoEnvioFinal
+  const distritosDisponibles = getDistrictsByCity(datosEnvio.ciudad)
+  const ciudadConDistritos = distritosDisponibles.length > 0
+
+  useEffect(() => {
+    if (!datosEnvio.distrito || !ciudadConDistritos) return
+    if (!isDistrictValidForCity(datosEnvio.ciudad, datosEnvio.distrito)) {
+      setDatosEnvio((prev) => ({ ...prev, distrito: '' }))
+    }
+  }, [ciudadConDistritos, datosEnvio.ciudad, datosEnvio.distrito])
 
   const hasCheckoutProgress =
     paso > 2 ||
@@ -251,6 +261,20 @@ export default function CheckoutPage() {
     Boolean(datosEnvio.calle.trim()) ||
     Boolean(datosEnvio.distrito.trim()) ||
     Boolean(datosEnvio.referencias.trim())
+
+  const validarDatosEnvio = () => {
+    if (!datosEnvio.calle.trim() || !datosEnvio.ciudad.trim() || !datosEnvio.distrito.trim()) {
+      alert('Completa calle, ciudad y distrito')
+      return false
+    }
+
+    if (!isDistrictValidForCity(datosEnvio.ciudad, datosEnvio.distrito)) {
+      alert(`Selecciona un distrito valido para ${datosEnvio.ciudad}.`)
+      return false
+    }
+
+    return true
+  }
 
   useEffect(() => {
     const warningMessage = 'Si sales del checkout perderas el avance. Deseas salir?'
@@ -304,6 +328,7 @@ export default function CheckoutPage() {
   }, [hasCheckoutProgress])
 
   const handleConfirmar = async () => {
+    if (!validarDatosEnvio()) return
     setLoading(true)
     try {
       const clienteRes = await fetch('/api/clientes', {
@@ -577,14 +602,52 @@ export default function CheckoutPage() {
                       </div>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div>
-                          <label className={labelCls}>Distrito *</label>
-                          <input className={inputCls} type="text" value={datosEnvio.distrito}
-                            onChange={(e) => setDatosEnvio((p) => ({ ...p, distrito: e.target.value }))} required />
+                          <label className={labelCls}>Ciudad *</label>
+                          <input
+                            className={inputCls}
+                            type="text"
+                            list="checkout-ciudades-peru"
+                            value={datosEnvio.ciudad}
+                            onChange={(e) => setDatosEnvio((p) => ({ ...p, ciudad: e.target.value }))}
+                            required
+                          />
+                          <datalist id="checkout-ciudades-peru">
+                            {PERU_CITY_OPTIONS.map((city) => (
+                              <option key={city} value={city} />
+                            ))}
+                          </datalist>
+                          <p className="mt-1 text-xs text-gray-500">Escribe o selecciona una ciudad sugerida para autocompletar distritos.</p>
                         </div>
                         <div>
-                          <label className={labelCls}>Ciudad</label>
-                          <input className={inputCls} type="text" value={datosEnvio.ciudad}
-                            onChange={(e) => setDatosEnvio((p) => ({ ...p, ciudad: e.target.value }))} />
+                          <label className={labelCls}>Distrito *</label>
+                          {ciudadConDistritos ? (
+                            <select
+                              className={inputCls}
+                              value={datosEnvio.distrito}
+                              onChange={(e) => setDatosEnvio((p) => ({ ...p, distrito: e.target.value }))}
+                              required
+                            >
+                              <option value="">Selecciona un distrito</option>
+                              {distritosDisponibles.map((district) => (
+                                <option key={district} value={district}>
+                                  {district}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              className={inputCls}
+                              type="text"
+                              value={datosEnvio.distrito}
+                              onChange={(e) => setDatosEnvio((p) => ({ ...p, distrito: e.target.value }))}
+                              required
+                            />
+                          )}
+                          <p className="mt-1 text-xs text-gray-500">
+                            {ciudadConDistritos
+                              ? `Distritos sugeridos para ${datosEnvio.ciudad}.`
+                              : 'Ciudad sin catalogo local de distritos. Puedes ingresar distrito manualmente.'}
+                          </p>
                         </div>
                       </div>
                       <div>
@@ -596,10 +659,7 @@ export default function CheckoutPage() {
                     </div>
                     <button
                       onClick={() => {
-                        if (!datosEnvio.calle || !datosEnvio.distrito) {
-                          alert('Completa calle y distrito')
-                          return
-                        }
+                        if (!validarDatosEnvio()) return
                         setPaso(4)
                       }}
                       className="mt-6 w-full rounded-lg bg-primary py-3 font-bold text-white transition-colors hover:bg-primary-dark"

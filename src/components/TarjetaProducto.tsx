@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import AgregarAlCarrito from './AgregarAlCarrito'
 import { useCurrencySymbol } from '@/hooks/useCurrencySymbol'
@@ -20,15 +19,6 @@ export type ProductoCard = {
   etiqueta?: 'nuevo' | 'hot' | 'top' | 'oferta' | ''
 }
 
-type DrawerItem = {
-  id: string
-  nombre: string
-  precio: number
-  talla: string
-  cantidad: number
-  imagenUrl?: string | null
-}
-
 const etiquetaConfig = {
   nuevo: { texto: 'Nuevo', className: 'bg-blue-600 text-white' },
   hot: { texto: 'Hot', className: 'bg-red-500 text-white' },
@@ -40,11 +30,8 @@ const etiquetaConfig = {
 const PLACEHOLDER_IMAGE = '/placeholder-product.svg'
 
 export default function TarjetaProducto({ producto, index = 0 }: { producto: ProductoCard; index?: number }) {
-  const router = useRouter()
   const currencySymbol = useCurrencySymbol()
   const [modalOpen, setModalOpen] = useState(false)
-  const [panelOpen, setPanelOpen] = useState(false)
-  const [carritoItems, setCarritoItems] = useState<DrawerItem[]>([])
 
   const tallas = producto.tallas ?? []
   const descuento = producto.precioAnterior
@@ -54,36 +41,8 @@ export default function TarjetaProducto({ producto, index = 0 }: { producto: Pro
   const etiqueta = producto.etiqueta ? etiquetaConfig[producto.etiqueta] : null
   const imageSrc = producto.imagenUrl || PLACEHOLDER_IMAGE
   const isAboveFold = index < 4
-  const subtotal = carritoItems.reduce((acc, item) => acc + item.precio * item.cantidad, 0)
   const ahorro = producto.precioAnterior ? Math.max(0, producto.precioAnterior - producto.precio) : 0
-  const productHref = producto.slug ? `/productos?search=${encodeURIComponent(producto.slug)}` : '/productos'
-
-  const persistCarrito = (nextItems: DrawerItem[]) => {
-    setCarritoItems(nextItems)
-    localStorage.setItem('carrito', JSON.stringify(nextItems))
-    window.dispatchEvent(new Event('carrito:update'))
-  }
-
-  const handleIncrement = (targetIndex: number) => {
-    const next = carritoItems.map((item, i) => (i === targetIndex ? { ...item, cantidad: item.cantidad + 1 } : item))
-    persistCarrito(next)
-  }
-
-  const handleRemove = (targetIndex: number) => {
-    const next = carritoItems.filter((_, i) => i !== targetIndex)
-    persistCarrito(next)
-  }
-
-  const handleDecrement = (targetIndex: number) => {
-    const current = carritoItems[targetIndex]
-    if (!current) return
-    if (current.cantidad <= 1) {
-      handleRemove(targetIndex)
-      return
-    }
-    const next = carritoItems.map((item, i) => (i === targetIndex ? { ...item, cantidad: item.cantidad - 1 } : item))
-    persistCarrito(next)
-  }
+  const productHref = producto.slug ? `/producto/${encodeURIComponent(producto.slug)}` : '/productos'
 
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
@@ -186,95 +145,13 @@ export default function TarjetaProducto({ producto, index = 0 }: { producto: Pro
             </div>
             <AgregarAlCarrito
               producto={{ ...producto, tallas }}
-              onAdded={(carrito) => {
-                setCarritoItems(carrito)
+              onAdded={() => {
                 setModalOpen(false)
-                setPanelOpen(true)
+                window.dispatchEvent(new Event('carrito:open'))
               }}
             />
           </div>
         </div>
-      )}
-
-      {panelOpen && (
-        <>
-          <button className="fixed inset-0 z-50 bg-black/45" onClick={() => setPanelOpen(false)} aria-label="Cerrar panel de carrito" />
-          <aside className="fixed right-0 top-0 z-[60] h-full w-full border-l border-gray-200 bg-white shadow-2xl sm:max-w-md">
-            <div className="flex items-center justify-between border-b px-5 py-4">
-              <h3 className="text-lg font-black text-primary">Tu carrito</h3>
-              <button onClick={() => setPanelOpen(false)} className="rounded-full border border-gray-300 px-2.5 py-1 text-sm font-bold text-gray-500 hover:border-gray-500 hover:text-gray-800" aria-label="Cerrar">
-                X
-              </button>
-            </div>
-
-            <div className="h-[calc(100%-168px)] overflow-y-auto p-5">
-              {carritoItems.length === 0 ? (
-                <p className="text-sm text-gray-500">No hay productos en el carrito.</p>
-              ) : (
-                <div className="space-y-3">
-                  {carritoItems.map((item, i) => (
-                    <div key={`${item.id}-${item.talla}-${i}`} className="rounded-xl border border-gray-200 p-3">
-                      <div className="flex items-start gap-3">
-                        <div className="min-w-0 flex-1">
-                          <p className="line-clamp-2 text-sm font-semibold text-gray-900">{item.nombre}</p>
-                          <p className="mt-1 text-xs text-gray-500">Talla: {item.talla || '-'}</p>
-                          <p className="mt-1 text-sm font-bold text-primary">{formatMoney(item.precio * item.cantidad, currencySymbol)}</p>
-                          <div className="mt-2 flex items-center gap-2">
-                            <button
-                              type="button"
-                              className="h-7 w-7 rounded border border-gray-300 text-sm font-bold text-gray-700 hover:border-accent hover:text-accent"
-                              onClick={() => handleDecrement(i)}
-                              aria-label="Disminuir cantidad"
-                            >
-                              -
-                            </button>
-                            <span className="min-w-5 text-center text-sm font-semibold text-gray-800">{item.cantidad}</span>
-                            <button
-                              type="button"
-                              className="h-7 w-7 rounded border border-gray-300 text-sm font-bold text-gray-700 hover:border-accent hover:text-accent"
-                              onClick={() => handleIncrement(i)}
-                              aria-label="Aumentar cantidad"
-                            >
-                              +
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRemove(i)}
-                              className="ml-auto text-xs font-semibold text-red-500 hover:text-red-700"
-                            >
-                              Eliminar
-                            </button>
-                          </div>
-                        </div>
-                        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
-                          <Image src={item.imagenUrl || PLACEHOLDER_IMAGE} alt={item.nombre} fill sizes="64px" className="object-cover" />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="border-t bg-white px-5 py-4">
-              <div className="mb-3 flex items-center justify-between text-sm">
-                <span className="font-semibold text-gray-700">Subtotal</span>
-                <span className="text-lg font-black text-primary">{formatMoney(subtotal, currencySymbol)}</span>
-              </div>
-              <button
-                type="button"
-                className="store-button-primary w-full"
-                onClick={() => {
-                  setPanelOpen(false)
-                  setModalOpen(false)
-                  router.push('/carrito')
-                }}
-              >
-                Ir al carrito
-              </button>
-            </div>
-          </aside>
-        </>
       )}
     </article>
   )
