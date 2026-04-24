@@ -21,9 +21,9 @@ const SLIDES_DEFAULT: SlideData[] = [
     titulo: 'NUEVA TEMPORADA SNEAKER',
     subtitulo: 'Lanzamientos y modelos top en tendencia',
     descripcion: 'Descubre pares de alto impacto y ropa sport para rotacion diaria.',
-    btn1Text: 'Ver novedades',
+    btn1Text: 'VER NOVEDADES',
     btn1Url: '/productos?sort=newest',
-    btn2Text: 'Comprar ofertas',
+    btn2Text: 'IR A OFERTAS',
     btn2Url: '/productos?oferta=1',
     colorFondo: '#10184d',
   },
@@ -32,10 +32,10 @@ const SLIDES_DEFAULT: SlideData[] = [
     titulo: 'RUNNING Y TRAINING',
     subtitulo: 'Performance para tu proxima marca',
     descripcion: 'Calzado tecnico, prendas ligeras y accesorios para entrenar con ritmo.',
-    btn1Text: 'Explorar catalogo',
+    btn1Text: 'VER CATALOGO',
     btn1Url: '/productos',
-    btn2Text: 'Ver hombre',
-    btn2Url: '/productos?segmento=hombre',
+    btn2Text: 'VER OFERTAS',
+    btn2Url: '/productos?oferta=1',
     colorFondo: '#18348d',
   },
   {
@@ -43,24 +43,19 @@ const SLIDES_DEFAULT: SlideData[] = [
     titulo: 'STREETWEAR ACTIVO',
     subtitulo: 'Looks urbanos con ADN deportivo',
     descripcion: 'Combina sneakers iconicos con prendas esenciales para uso diario.',
-    btn1Text: 'Ver mujer',
-    btn1Url: '/productos?segmento=mujer',
-    btn2Text: 'Ver ninos',
-    btn2Url: '/productos?segmento=ninos',
+    btn1Text: 'VER COLECCION',
+    btn1Url: '/productos',
+    btn2Text: 'IR A OFERTAS',
+    btn2Url: '/productos?oferta=1',
     colorFondo: '#1f1f27',
   },
 ]
 
-const quickSegments = [
-  { label: 'Hombre', href: '/productos?segmento=hombre' },
-  { label: 'Mujer', href: '/productos?segmento=mujer' },
-  { label: 'Ninos', href: '/productos?segmento=ninos' },
-]
-
-const commerceQuickLinks = [
-  { label: 'Nuevos drops', href: '/productos?sort=newest' },
-  { label: 'Lo mas vendido', href: '/productos' },
-  { label: 'Ofertas destacadas', href: '/productos?oferta=1' },
+const heroBenefits = [
+  'Envio express',
+  'Cambios faciles',
+  'Ofertas reales',
+  'Compra segura',
 ]
 
 export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
@@ -70,6 +65,31 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
   const slide = data[current]
+
+  const headline = useMemo(() => {
+    const words = String(slide.titulo || '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9ÑÁÉÍÓÚÜ ]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean)
+
+    if (words.length === 0) {
+      return { lead: 'TRAINING', accent: 'Y GYM' }
+    }
+
+    if (words.length === 1) {
+      return { lead: words[0], accent: 'Y GYM' }
+    }
+
+    if (words.length === 2) {
+      return { lead: words[0], accent: words[1] }
+    }
+
+    return {
+      lead: words.slice(0, 2).join(' '),
+      accent: words.slice(2, 4).join(' '),
+    }
+  }, [slide.titulo])
 
   useEffect(() => {
     if (paused || data.length <= 1) return
@@ -81,9 +101,9 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
 
   const heroBackground = useMemo(() => {
     if (slide.imagenUrl) {
-      return `linear-gradient(106deg, rgba(8, 12, 34, 0.94) 0%, rgba(8, 12, 34, 0.78) 46%, rgba(8, 12, 34, 0.42) 100%), url(${slide.imagenUrl})`
+      return `linear-gradient(125deg, rgba(10, 17, 52, 0.16), rgba(10, 17, 52, 0.72)), url(${slide.imagenUrl})`
     }
-    return `radial-gradient(circle at 84% 2%, rgba(255, 111, 0, 0.26), transparent 38%), linear-gradient(122deg, ${slide.colorFondo} 0%, color-mix(in srgb, ${slide.colorFondo} 74%, #060911) 76%)`
+    return `radial-gradient(circle at 8% 22%, rgba(255, 111, 0, 0.45), transparent 36%), linear-gradient(140deg, ${slide.colorFondo} 0%, color-mix(in srgb, ${slide.colorFondo} 62%, #0b102b) 78%)`
   }, [slide.colorFondo, slide.imagenUrl])
 
   return (
@@ -92,110 +112,74 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div
-        className="relative flex min-h-[470px] items-center bg-cover bg-center text-white sm:min-h-[560px]"
-        style={{ backgroundImage: heroBackground }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/18 via-transparent to-black/52" />
-        <div className="absolute -left-24 top-20 h-72 w-72 rounded-full bg-accent/28 blur-3xl" />
-        <div className="absolute right-[-8rem] top-[-6rem] h-80 w-80 rounded-full bg-primary/30 blur-3xl" />
-
-        <div className="section-shell relative z-10 py-8 sm:py-12">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-7">
-            <div className="max-w-2xl animate-fadeIn">
-              <span className="mb-4 inline-flex items-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90 backdrop-blur-sm">
-                {slide.subtitulo || 'Coleccion destacada'}
+      <div className="relative bg-white">
+        <div className="section-shell relative py-6 sm:py-8 lg:py-10">
+          <div className="grid items-stretch gap-5 lg:grid-cols-[1.06fr_0.94fr] lg:gap-6">
+            <div className="store-panel animate-fadeIn border-primary/15 bg-white p-6 sm:p-8 lg:p-10">
+              <span className="mb-4 inline-flex items-center rounded-full border border-primary/25 bg-[var(--surface-soft)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.17em] text-primary">
+                {slide.subtitulo || 'NUEVA TEMPORADA'}
               </span>
 
-              <h1 className="mb-3 text-4xl font-black uppercase leading-[0.92] sm:text-5xl lg:text-6xl">{slide.titulo}</h1>
-              {slide.descripcion ? <p className="mb-7 max-w-xl text-sm text-white/80 sm:text-base">{slide.descripcion}</p> : null}
+              <h1 className="font-display mb-4 leading-[0.9]">
+                <span className="block text-[2.3rem] font-black uppercase tracking-[-0.03em] text-primary sm:text-[3.2rem] lg:text-[4.4rem]">
+                  {headline.lead}
+                </span>
+                <span className="mt-1 block text-[2.3rem] font-black uppercase tracking-[-0.02em] text-accent sm:text-[3.2rem] lg:text-[4.2rem]">
+                  {headline.accent}
+                </span>
+              </h1>
 
-              <div className="mb-6 flex flex-wrap gap-3">
+              <p className="mb-6 max-w-xl text-sm text-primary-dark/90 sm:text-base">
+                {slide.descripcion || 'Estabilidad, grip y respuesta para entrenar mejor, todos los dias.'}
+              </p>
+
+              <div className="mb-5 flex flex-wrap gap-3">
                 <a href={slide.btn1Url} className="store-button-primary">
-                  {slide.btn1Text || 'Comprar ahora'}
+                  {slide.btn1Text || 'VER NOVEDADES'}
                 </a>
                 {slide.btn2Text ? (
-                  <a href={slide.btn2Url || '/productos'} className="store-button-secondary border-white/40 text-white hover:bg-white/10">
+                  <a
+                    href={slide.btn2Url || '/productos'}
+                    className="inline-flex items-center justify-center rounded-xl border border-primary bg-white px-5 py-3 text-sm font-semibold text-primary transition-colors hover:bg-[var(--surface-soft)]"
+                  >
                     {slide.btn2Text}
                   </a>
                 ) : null}
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {quickSegments.map((segment) => (
-                  <a
-                    key={segment.href}
-                    href={segment.href}
-                    className="rounded-full border border-white/28 bg-primary/25 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-white/90 transition-colors hover:border-accent/60 hover:bg-accent/25"
-                  >
-                    {segment.label}
-                  </a>
+              <div className="grid gap-2 text-[11px] font-semibold uppercase tracking-[0.11em] text-primary-dark sm:grid-cols-2">
+                {heroBenefits.map((benefit) => (
+                  <p key={benefit} className="inline-flex items-center gap-2 rounded-lg border border-[var(--line-soft)] bg-[var(--surface-soft)] px-3 py-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    {benefit}
+                  </p>
                 ))}
               </div>
             </div>
 
-            <div className="grid gap-3">
-              <div className="rounded-2xl border border-white/20 bg-black/22 p-4 backdrop-blur-sm">
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/65">Drop de la semana</p>
-                <button
-                  type="button"
-                  onClick={() => setCurrent((current + 1) % data.length)}
-                  className="group relative block h-44 w-full overflow-hidden rounded-xl border border-white/20 text-left"
-                  style={{
-                    backgroundImage: slide.imagenUrl
-                      ? `linear-gradient(150deg, rgba(9,9,12,0.84), rgba(9,9,12,0.16)), url(${slide.imagenUrl})`
-                      : 'linear-gradient(150deg, rgba(255,255,255,0.15), rgba(255,255,255,0.03))',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <p className="line-clamp-2 text-sm font-bold uppercase text-white">{slide.titulo}</p>
-                    <p className="text-xs text-white/75">Nuevo drop activo en tienda</p>
-                  </div>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <a href="/productos?sort=price_desc" className="rounded-xl border border-white/20 bg-black/22 p-3 backdrop-blur-sm transition-colors hover:border-accent/45 hover:bg-black/35">
-                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/65">Top Picks</p>
-                  <p className="text-sm font-bold text-white">Lo mas vendido</p>
-                </a>
-                <a href="/productos?oferta=1" className="rounded-xl border border-white/20 bg-black/22 p-3 backdrop-blur-sm transition-colors hover:border-accent/45 hover:bg-black/35">
-                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/65">Flash deals</p>
-                  <p className="text-sm font-bold text-white">Ofertas activas</p>
-                </a>
+            <div className="relative min-h-[320px] overflow-hidden rounded-3xl border border-[var(--line-soft)] bg-primary shadow-[0_26px_52px_-34px_rgba(13,23,87,0.72)] sm:min-h-[400px]">
+              <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: heroBackground }} />
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-transparent to-accent/20" />
+              <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-accent/30 blur-2xl" />
+              <div className="absolute bottom-4 left-4 rounded-full border border-white/35 bg-black/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
+                SNEAKER / SPORTWEAR
               </div>
             </div>
           </div>
         </div>
 
         {data.length > 1 && (
-          <div className="absolute inset-x-0 bottom-4 z-20">
-            <div className="section-shell flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                {data.map((item, index) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setCurrent(index)}
-                    aria-label={`Ver slide ${index + 1}`}
-                    className={`h-2 rounded-full transition-all ${index === current ? 'w-14 bg-white' : 'w-6 bg-white/35 hover:bg-white/65'}`}
-                  />
-                ))}
-              </div>
-              <div className="hidden items-center gap-2 sm:flex">
-                {commerceQuickLinks.map((item) => (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.11em] text-white/85 transition-colors hover:bg-white/20"
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </div>
+          <div className="section-shell pb-2">
+            <div className="flex items-center justify-center gap-2 pt-2">
+              {data.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setCurrent(index)}
+                  aria-label={`Ver slide ${index + 1}`}
+                  className={`h-2 rounded-full transition-all ${index === current ? 'w-12 bg-primary' : 'w-5 bg-primary/35 hover:bg-primary/55'}`}
+                />
+              ))}
             </div>
           </div>
         )}

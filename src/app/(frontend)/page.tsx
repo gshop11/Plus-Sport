@@ -9,34 +9,30 @@ export const revalidate = 60
 
 const segmentCards = [
   {
+    key: 'hombre',
     label: 'Hombre',
-    copy: 'Sneakers, training y streetwear para uso diario.',
+    copy: 'Sneakers y training con enfoque en estabilidad y uso diario.',
     href: '/productos?segmento=hombre',
-    background:
-      'linear-gradient(152deg, rgba(13,23,87,0.97), rgba(13,23,87,0.76) 52%, rgba(17,24,39,0.48))',
+    fallbackBackground:
+      'linear-gradient(152deg, rgba(13,23,87,0.97), rgba(13,23,87,0.76) 52%, rgba(17,24,39,0.54))',
   },
   {
+    key: 'mujer',
     label: 'Mujer',
-    copy: 'Nuevas siluetas y prendas deportivas en tendencia.',
+    copy: 'Siluetas nuevas con soporte deportivo y lectura premium.',
     href: '/productos?segmento=mujer',
-    background:
-      'linear-gradient(152deg, rgba(16,24,69,0.95), rgba(16,24,69,0.72) 48%, rgba(255,111,0,0.54))',
+    fallbackBackground:
+      'linear-gradient(152deg, rgba(16,24,69,0.95), rgba(16,24,69,0.72) 48%, rgba(255,111,0,0.58))',
   },
   {
+    key: 'ninos',
     label: 'Ninos',
-    copy: 'Modelos resistentes para juego, colegio y deporte.',
+    copy: 'Modelos resistentes para juego, colegio y entrenamiento.',
     href: '/productos?segmento=ninos',
-    background:
-      'linear-gradient(152deg, rgba(16,16,20,0.96), rgba(16,16,20,0.75) 48%, rgba(26,35,126,0.56))',
+    fallbackBackground:
+      'linear-gradient(152deg, rgba(16,16,20,0.96), rgba(16,16,20,0.75) 48%, rgba(26,35,126,0.62))',
   },
-]
-
-const valueProps = [
-  'Envio nacional con seguimiento',
-  'Cambios y devoluciones simples',
-  'Pago seguro y metodos locales',
-  'Soporte comercial por WhatsApp',
-]
+] as const
 
 export default async function HomePage() {
   const { slides, productos, marcas, categorias, storefront } = await getHomeData()
@@ -44,6 +40,12 @@ export default async function HomePage() {
   const novedades = productos.slice(0, 4)
   const ofertas = productos.filter((item) => item.etiqueta === 'oferta' || Number(item.precioAnterior || 0) > Number(item.precio || 0)).slice(0, 4)
   const ofertasVisibles = ofertas.length > 0 ? ofertas : productos.slice(4, 8)
+  const previewImages = productos.map((item) => item.imagenUrl).filter(Boolean) as string[]
+  const segmentPreviewByKey = {
+    hombre: previewImages[0],
+    mujer: previewImages[1] ?? previewImages[0],
+    ninos: previewImages[2] ?? previewImages[1] ?? previewImages[0],
+  } as const
 
   return (
     <>
@@ -51,13 +53,47 @@ export default async function HomePage() {
       <main>
         <HeroSlider slides={slides} />
 
-        <section className="border-y border-[var(--line-soft)] bg-white py-2.5">
-          <div className="section-shell grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {valueProps.map((item) => (
-              <p key={item} className="rounded-lg border border-[var(--line-soft)] bg-[var(--surface-soft)] px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-dark">
-                {item}
-              </p>
-            ))}
+        <section className="bg-white pb-6 pt-4 sm:pb-8 sm:pt-5">
+          <div className="section-shell">
+            <span className="section-eyebrow">Compra por segmento</span>
+            <h2 className="section-heading mb-2">Hombre, mujer y ninos</h2>
+            <p className="section-copy mb-4 max-w-2xl">Acceso directo por publico para encontrar pares y ropa en menos pasos.</p>
+            <div className="grid gap-3 md:grid-cols-3 md:gap-4">
+              {segmentCards.map((segment) => {
+                const previewImage = segmentPreviewByKey[segment.key]
+                const backgroundImage = previewImage
+                  ? `linear-gradient(152deg, rgba(10,19,66,0.82), rgba(10,19,66,0.32) 52%, rgba(255,111,0,0.28)), url(${previewImage})`
+                  : segment.fallbackBackground
+
+                return (
+                  <a
+                    key={segment.label}
+                    href={segment.href}
+                    className="group relative isolate min-h-[208px] overflow-hidden rounded-3xl border border-primary/20 shadow-[0_22px_46px_-34px_rgba(13,23,87,0.66)] transition-all hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_30px_58px_-35px_rgba(13,23,87,0.78)]"
+                  >
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-[1.03]"
+                      style={{
+                        backgroundImage,
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
+                    <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-accent/28 blur-2xl" />
+
+                    <div className="relative flex h-full flex-col justify-end p-5 text-white">
+                      <span className="mb-2 inline-flex w-fit rounded-full border border-white/35 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.13em]">
+                        {segment.label}
+                      </span>
+                      <h3 className="mb-1 text-[1.55rem] font-black uppercase tracking-[-0.01em]">{segment.label}</h3>
+                      <p className="mb-4 text-sm text-white/90">{segment.copy}</p>
+                      <span className="inline-flex w-fit items-center rounded-full border border-white/35 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors group-hover:bg-white/20">
+                        Ver coleccion
+                      </span>
+                    </div>
+                  </a>
+                )
+              })}
+            </div>
           </div>
         </section>
 
@@ -87,32 +123,6 @@ export default async function HomePage() {
                 Entrar a ofertas
               </span>
             </a>
-          </div>
-        </section>
-
-        <section className="py-8">
-          <div className="section-shell">
-            <span className="section-eyebrow">Compra por segmento</span>
-            <h2 className="section-heading mb-2">Hombre, mujer y ninos</h2>
-            <p className="section-copy mb-5 max-w-2xl">Entrada directa al catalogo por publico objetivo, con bloques densos y de alto contraste.</p>
-            <div className="grid gap-3 md:grid-cols-3 md:gap-4">
-              {segmentCards.map((segment) => (
-                <a
-                  key={segment.label}
-                  href={segment.href}
-                  className="group relative overflow-hidden rounded-3xl border border-white/10 p-5 text-white shadow-[0_20px_45px_-30px_rgba(15,23,87,0.75)]"
-                  style={{ background: segment.background }}
-                >
-                  <div className="absolute -right-6 top-0 h-24 w-24 rounded-full bg-white/10 blur-xl" />
-                  <span className="mb-2 inline-flex rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]">
-                    {segment.label}
-                  </span>
-                  <h3 className="mb-1 text-2xl font-black">{segment.label}</h3>
-                  <p className="mb-4 text-sm text-white/80">{segment.copy}</p>
-                  <span className="inline-flex items-center text-sm font-semibold text-white transition-colors group-hover:text-white/80">Explorar ahora</span>
-                </a>
-              ))}
-            </div>
           </div>
         </section>
 
