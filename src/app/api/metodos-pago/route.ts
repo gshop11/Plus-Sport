@@ -16,22 +16,53 @@ const emptyLegacy = {
   qr: null as string | null,
 }
 
+const defaultMetodos: Metodo[] = [
+  {
+    nombre: 'Visa / Mastercard',
+    codigo: 'tarjeta',
+    activo: true,
+    mostrarEnFooter: true,
+    instruccion: 'Pago seguro con Izipay Sandbox. La validacion final depende del webhook backend.',
+  },
+  {
+    nombre: 'Yape',
+    codigo: 'yape',
+    activo: true,
+    mostrarEnFooter: true,
+    instruccion: 'Te compartiremos los pasos de pago por WhatsApp al finalizar la compra.',
+  },
+  {
+    nombre: 'Plin',
+    codigo: 'plin',
+    activo: true,
+    mostrarEnFooter: true,
+    instruccion: 'Disponible para transferencias inmediatas desde apps bancarias compatibles.',
+  },
+  {
+    nombre: 'Transferencia BCP',
+    codigo: 'transferencia',
+    activo: true,
+    mostrarEnFooter: true,
+    instruccion: 'Completa la transferencia y envia el comprobante para validar la orden.',
+  },
+  {
+    nombre: 'Transferencia Interbank',
+    codigo: 'interbank',
+    activo: true,
+    mostrarEnFooter: true,
+    instruccion: 'Completa la transferencia y envia el comprobante para validar la orden.',
+  },
+  {
+    nombre: 'Pago en Efectivo',
+    codigo: 'efectivo',
+    activo: true,
+    mostrarEnFooter: true,
+    instruccion: 'El pago se realiza contra entrega dentro de la cobertura disponible.',
+  },
+]
+
 export async function GET() {
-  try {
-    const payload = await getPayload({ config })
-    const ct = await payload.findGlobal({ slug: 'config-tienda', depth: 2 })
-    const pagos = (ct as any)?.pagos ?? {}
-    const metodosRaw = Array.isArray(pagos.metodos) ? pagos.metodos : []
-
-    const metodos: Metodo[] = metodosRaw.map((m: any) => ({
-      nombre: m?.nombre || 'Metodo',
-      codigo: (m?.codigo || 'whatsapp') as Metodo['codigo'],
-      activo: Boolean(m?.activo),
-      mostrarEnFooter: m?.mostrarEnFooter !== false,
-      instruccion: m?.instruccion || null,
-    }))
-
-    // Compatibilidad para checkout actual
+  const buildResponse = (metodos: Metodo[]) => {
     const find = (codigo: Metodo['codigo']) => metodos.find((m) => m.codigo === codigo && m.activo)
 
     const yape = find('yape')
@@ -55,7 +86,25 @@ export async function GET() {
         headers: { 'Cache-Control': 'no-store' },
       },
     )
-  } catch {
-    return NextResponse.json({ error: 'Error leyendo config' }, { status: 500 })
+  }
+
+  try {
+    const payload = await getPayload({ config })
+    const ct = await payload.findGlobal({ slug: 'config-tienda', depth: 2, overrideAccess: true })
+    const pagos = (ct as any)?.pagos ?? {}
+    const metodosRaw = Array.isArray(pagos.metodos) ? pagos.metodos : []
+
+    const metodos: Metodo[] = metodosRaw.map((m: any) => ({
+      nombre: m?.nombre || 'Metodo',
+      codigo: (m?.codigo || 'whatsapp') as Metodo['codigo'],
+      activo: Boolean(m?.activo),
+      mostrarEnFooter: m?.mostrarEnFooter !== false,
+      instruccion: m?.instruccion || null,
+    }))
+
+    return buildResponse(metodos.length > 0 ? metodos : defaultMetodos)
+  } catch (error) {
+    console.error('Error en /api/metodos-pago:', error)
+    return buildResponse(defaultMetodos)
   }
 }

@@ -71,6 +71,10 @@ function asIdString(value: unknown) {
   return asNonEmptyString(value)
 }
 
+function toRelationshipValue(value: string) {
+  return /^\d+$/.test(value) ? Number(value) : value
+}
+
 function toPositiveInt(value: unknown) {
   const num = typeof value === 'number' ? value : Number(value)
   if (!Number.isInteger(num) || num <= 0) return null
@@ -275,7 +279,7 @@ export async function POST(request: Request) {
     }
 
     const computedItems: Array<{
-      producto: string
+      producto: string | number
       nombreProducto: string
       talla?: string
       cantidad: number
@@ -353,7 +357,7 @@ export async function POST(request: Request) {
       subtotal = roundMoney(subtotal + lineSubtotal)
 
       computedItems.push({
-        producto: item.productoId,
+        producto: toRelationshipValue(item.productoId),
         nombreProducto: producto.nombre || 'Producto',
         talla: item.talla,
         cantidad: item.cantidad,
@@ -416,7 +420,7 @@ export async function POST(request: Request) {
       collection: 'ordenes',
       overrideAccess: true,
       data: {
-        cliente: reqData.cliente,
+        cliente: toRelationshipValue(reqData.cliente),
         nombreCliente: reqData.nombreCliente,
         telefono: reqData.telefono,
         metodoEntrega: reqData.metodoEntrega,
