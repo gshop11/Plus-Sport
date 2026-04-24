@@ -96,8 +96,8 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
         onClick={onClose}
         aria-label="Cerrar carrito lateral"
       />
-      <aside className="fixed right-0 top-0 z-[80] flex h-full w-full max-w-md flex-col border-l border-gray-200 bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+      <aside className="fixed right-0 top-0 z-[80] flex h-full w-full max-w-md flex-col border-l border-primary/15 bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[var(--line-soft)] px-5 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.11em] text-gray-500">Resumen rapido</p>
             <h2 className="text-lg font-black text-primary">Tu carrito</h2>
@@ -105,7 +105,7 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-gray-300 px-2.5 py-1 text-sm font-bold text-gray-500 transition-colors hover:border-gray-500 hover:text-gray-800"
+            className="rounded-full border border-gray-300 px-2.5 py-1 text-sm font-bold text-gray-500 transition-colors hover:border-accent hover:text-accent"
             aria-label="Cerrar"
           >
             X
@@ -114,16 +114,16 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
 
         <div className="flex-1 overflow-y-auto p-5">
           {items.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-center">
-              <p className="text-sm font-semibold text-gray-600">Tu carrito esta vacio.</p>
+            <div className="rounded-xl border border-dashed border-primary/30 bg-[var(--surface-soft)] p-5 text-center">
+              <p className="text-sm font-semibold text-primary-dark">Tu carrito esta vacio.</p>
               <p className="mt-1 text-xs text-gray-500">Agrega productos para continuar con la compra.</p>
             </div>
           ) : (
             <div className="space-y-3">
               {items.map((item, index) => (
-                <div key={`${item.id}-${item.talla}-${index}`} className="rounded-xl border border-gray-200 p-3">
+                <div key={`${item.id}-${item.talla}-${index}`} className="rounded-xl border border-[var(--line-soft)] p-3">
                   <div className="flex items-start gap-3">
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-[var(--line-soft)] bg-[var(--surface-soft)]">
                       <Image src={item.imagenUrl || PLACEHOLDER_IMAGE} alt={item.nombre} fill sizes="64px" className="object-cover" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -148,13 +148,13 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
                         >
                           +
                         </button>
-                        <button type="button" onClick={() => remove(index)} className="ml-auto text-xs font-semibold text-red-500 hover:text-red-700">
+                        <button type="button" onClick={() => remove(index)} className="ml-auto text-xs font-semibold text-primary hover:text-accent">
                           Quitar
                         </button>
                       </div>
                     </div>
                   </div>
-                  <div className="mt-2 border-t border-gray-100 pt-2 text-right text-sm font-bold text-primary">
+                  <div className="mt-2 border-t border-[var(--line-soft)] pt-2 text-right text-sm font-bold text-primary">
                     Subtotal: {formatMoney(item.precio * item.cantidad, currencySymbol)}
                   </div>
                 </div>
@@ -163,7 +163,7 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
           )}
         </div>
 
-        <div className="border-t border-gray-200 bg-white px-5 py-4">
+        <div className="border-t border-[var(--line-soft)] bg-white px-5 py-4">
           <div className="mb-4 flex items-center justify-between">
             <span className="text-sm font-semibold text-gray-700">Total general</span>
             <span className="text-xl font-black text-primary">{formatMoney(total, currencySymbol)}</span>
@@ -196,4 +196,3 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
     </>
   )
 }
-

@@ -178,7 +178,7 @@ export default function CarritoPage() {
                           {item.talla ? <p className="mt-1 text-sm text-gray-600">Talla: {item.talla}</p> : null}
                           <p className="mt-3 text-lg font-black text-primary">{formatMoney(item.precio * item.cantidad, currencySymbol)}</p>
                         </div>
-                        <button onClick={() => removeItem(index)} className="rounded-full border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-500 transition-colors hover:border-red-300 hover:text-red-600">
+                        <button onClick={() => removeItem(index)} className="rounded-full border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-500 transition-colors hover:border-accent hover:text-accent">
                           Quitar
                         </button>
                       </div>
@@ -233,8 +233,8 @@ export default function CarritoPage() {
                         {aplicandoCupon ? '...' : 'Aplicar'}
                       </button>
                     </div>
-                    {cuponAplicado ? <p className="mt-2 text-xs font-semibold text-green-600">Cupon aplicado: {cuponAplicado.codigo}</p> : null}
-                    {cuponError ? <p className="mt-2 text-xs font-semibold text-red-500">{cuponError}</p> : null}
+                    {cuponAplicado ? <p className="mt-2 text-xs font-semibold text-primary">Cupon aplicado: {cuponAplicado.codigo}</p> : null}
+                    {cuponError ? <p className="mt-2 text-xs font-semibold text-accent-dark">{cuponError}</p> : null}
                   </div>
 
                   <h2 className="mb-4 text-lg font-black text-gray-900">Resumen</h2>
@@ -246,12 +246,12 @@ export default function CarritoPage() {
                     {descuento > 0 ? (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Descuento</span>
-                        <span className="font-semibold text-green-600">-{formatMoney(descuento, currencySymbol)}</span>
+                        <span className="font-semibold text-accent-dark">-{formatMoney(descuento, currencySymbol)}</span>
                       </div>
                     ) : null}
                     <div className="flex justify-between text-gray-600">
                       <span>Envio</span>
-                      <span className={costoEnvioFinal === 0 ? 'font-semibold text-green-600' : 'font-semibold text-gray-900'}>
+                      <span className={costoEnvioFinal === 0 ? 'font-semibold text-primary-dark' : 'font-semibold text-gray-900'}>
                         {costoEnvioFinal === 0 ? 'Gratis' : formatMoney(costoEnvioFinal, currencySymbol)}
                       </span>
                     </div>

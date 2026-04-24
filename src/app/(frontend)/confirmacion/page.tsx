@@ -103,7 +103,7 @@ function getPaymentCopy({
     return {
       title: 'Orden no encontrada',
       body: 'No se pudo validar la orden con la referencia recibida. Verifica el numero de pedido o vuelve al checkout.',
-      boxClass: 'border-orange-200 bg-orange-50 text-orange-900',
+      boxClass: 'border-accent/30 bg-accent/10 text-accent-dark',
     }
   }
 
@@ -111,7 +111,7 @@ function getPaymentCopy({
     return {
       title: 'Pago pendiente',
       body: 'Sigue las instrucciones del metodo de pago seleccionado para completar tu compra.',
-      boxClass: 'border-gray-200 bg-gray-50 text-gray-700',
+      boxClass: 'border-primary/25 bg-[var(--surface-soft)] text-primary-dark',
     }
   }
 
@@ -119,7 +119,7 @@ function getPaymentCopy({
     return {
       title: 'Pago confirmado',
       body: 'La orden figura como pagada y confirmada por webhook backend.',
-      boxClass: 'border-green-200 bg-green-50 text-green-800',
+      boxClass: 'border-primary/25 bg-primary/10 text-primary-dark',
     }
   }
 
@@ -127,7 +127,7 @@ function getPaymentCopy({
     return {
       title: 'Pago rechazado',
       body: 'El pago fue rechazado y no se confirmo en backend. Puedes reintentar con una nueva sesion.',
-      boxClass: 'border-red-200 bg-red-50 text-red-800',
+      boxClass: 'border-accent/30 bg-accent/10 text-accent-dark',
     }
   }
 
@@ -135,7 +135,7 @@ function getPaymentCopy({
     return {
       title: 'Pago cancelado',
       body: 'El pago fue cancelado y no se confirmo en backend.',
-      boxClass: 'border-orange-200 bg-orange-50 text-orange-800',
+      boxClass: 'border-accent/30 bg-accent/10 text-accent-dark',
     }
   }
 
@@ -143,7 +143,7 @@ function getPaymentCopy({
     return {
       title: 'Pago autorizado visualmente',
       body: 'Se recibio respuesta positiva en checkout Izipay, pero la validacion final se realiza por webhook backend.',
-      boxClass: 'border-amber-200 bg-amber-50 text-amber-900',
+      boxClass: 'border-primary/25 bg-[var(--surface-soft)] text-primary-dark',
     }
   }
 
@@ -151,7 +151,7 @@ function getPaymentCopy({
     return {
       title: 'Pago rechazado visualmente',
       body: 'El checkout visual reporta rechazo. Espera la validacion final backend o intenta nuevamente.',
-      boxClass: 'border-red-200 bg-red-50 text-red-800',
+      boxClass: 'border-accent/30 bg-accent/10 text-accent-dark',
     }
   }
 
@@ -159,14 +159,14 @@ function getPaymentCopy({
     return {
       title: 'Pago cancelado visualmente',
       body: 'El checkout visual fue cancelado. Si no hubo webhook final, la orden seguira pendiente.',
-      boxClass: 'border-orange-200 bg-orange-50 text-orange-800',
+      boxClass: 'border-accent/30 bg-accent/10 text-accent-dark',
     }
   }
 
   return {
     title: 'Pago pendiente de verificacion',
     body: 'La orden esta creada y lista para validacion final por webhook/consulta backend.',
-    boxClass: 'border-blue-200 bg-blue-50 text-blue-900',
+    boxClass: 'border-primary/25 bg-[var(--surface-soft)] text-primary-dark',
   }
 }
 
@@ -230,7 +230,7 @@ export default async function ConfirmacionPage({
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-gray-50">
+      <main className="min-h-screen bg-[var(--surface-soft)]">
         <section className="bg-primary py-8 text-white">
           <div className="mx-auto max-w-7xl px-4">
             <h1 className="text-3xl font-black">Confirmacion de pedido</h1>
@@ -238,7 +238,7 @@ export default async function ConfirmacionPage({
         </section>
 
         <div className="mx-auto max-w-2xl space-y-6 px-4 py-12">
-          <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
+          <div className="rounded-2xl border border-[var(--line-soft)] bg-white p-8 text-center shadow-sm">
             <div className="mb-4 text-5xl">Pedido</div>
             <h2 className="mb-1 text-2xl font-black text-primary">{hasSecureOrder ? 'Orden registrada' : 'Orden no validada'}</h2>
             <p className="text-sm text-gray-500">
@@ -247,7 +247,7 @@ export default async function ConfirmacionPage({
                 : 'No se pudo recuperar una orden valida con la referencia recibida.'}
             </p>
 
-            <div className="mt-5 inline-block rounded-xl border-2 border-primary bg-blue-50 px-8 py-4">
+            <div className="mt-5 inline-block rounded-xl border-2 border-primary/25 bg-[var(--surface-soft)] px-8 py-4">
               <p className="mb-1 text-xs uppercase tracking-widest text-gray-500">Numero de pedido</p>
               <p className="text-2xl font-black text-primary">{numeroPedido}</p>
             </div>
@@ -260,7 +260,7 @@ export default async function ConfirmacionPage({
               </p>
             )}
 
-            <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-left text-sm text-gray-700">
+            <div className="mt-4 rounded-lg border border-[var(--line-soft)] bg-[var(--surface-soft)] px-4 py-3 text-left text-sm text-gray-700">
               {hasSecureOrder && <p><span className="font-semibold">Estado comercial:</span> {estadoComercial}</p>}
               {hasSecureOrder && <p><span className="font-semibold">Estado de pago:</span> {estadoPago}</p>}
               {hasSecureOrder && isIzipay && <p><span className="font-semibold">Firma webhook valida:</span> {paymentSignatureValid ? 'si' : 'no / pendiente'}</p>}
@@ -269,7 +269,7 @@ export default async function ConfirmacionPage({
             </div>
 
             {!hasSecureOrder && (
-              <p className="mt-4 text-xs text-orange-600">
+              <p className="mt-4 text-xs text-accent-dark">
                 No se pudo validar la orden en servidor con la referencia recibida. Verifica el codigo de pedido.
               </p>
             )}
@@ -280,9 +280,9 @@ export default async function ConfirmacionPage({
             <p className="text-sm leading-relaxed">{paymentCopy.body}</p>
           </div>
 
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-[var(--line-soft)] bg-white p-6 shadow-sm">
             <h3 className="mb-4 text-base font-bold">Metodo de pago: {infoPago.label}</h3>
-            <p className="rounded-lg border border-orange-200 bg-orange-50 p-4 text-sm leading-relaxed text-gray-700">
+            <p className="rounded-lg border border-accent/25 bg-accent/10 p-4 text-sm leading-relaxed text-gray-700">
               {infoPago.instruccion}
             </p>
           </div>

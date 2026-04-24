@@ -152,10 +152,10 @@ export default function ProductDetailView({ producto }: { producto: ProductoDeta
               <p className="text-sm font-semibold text-gray-400 line-through">{formatMoney(producto.precioAnterior, currencySymbol)}</p>
             ) : null}
             {descuento ? (
-              <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">-{descuento}%</span>
+              <span className="rounded-full bg-accent-dark px-2 py-0.5 text-xs font-bold text-white">-{descuento}%</span>
             ) : null}
           </div>
-          <p className={`mt-2 text-sm font-semibold ${stockDisponible > 0 || producto.stock > 0 ? 'text-green-700' : 'text-red-600'}`}>
+          <p className={`mt-2 text-sm font-semibold ${stockDisponible > 0 || producto.stock > 0 ? 'text-primary-dark' : 'text-accent-dark'}`}>
             {stockDisponible > 0 || producto.stock > 0 ? 'Stock disponible' : 'Sin stock por ahora'}
           </p>
         </div>
@@ -215,9 +215,9 @@ export default function ProductDetailView({ producto }: { producto: ProductoDeta
           disabled={stockDisponible <= 0 && producto.stock <= 0}
           className={`mt-5 w-full rounded-xl py-3 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors ${
             agregado
-              ? 'bg-green-600'
+              ? 'bg-primary'
               : stockDisponible <= 0 && producto.stock <= 0
-                ? 'cursor-not-allowed bg-gray-400'
+                ? 'cursor-not-allowed bg-black/35'
                 : 'bg-accent hover:bg-orange-700'
           }`}
         >

@@ -13,9 +13,11 @@
   --color-acento-dark: #e65100;
   --color-fondo: #ffffff;
   --surface-strong: #ffffff;
-  --surface-soft: #f5f7fb;
-  --text-soft: #5f6675;
-  --line-soft: #e7ebf3;
+  --surface-soft: #f4f7ff;
+  --surface-muted: #edf2ff;
+  --text-strong: #0f172a;
+  --text-soft: #576076;
+  --line-soft: #dde5f5;
 }
 
 * {
@@ -26,7 +28,7 @@
 
 body {
   font-family: var(--font-base);
-  color: #111827;
+  color: var(--text-strong);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--color-acento) 14%, transparent), transparent 42%),
     radial-gradient(circle at -10% 20%, color-mix(in srgb, var(--color-primario) 16%, transparent), transparent 44%),
@@ -71,6 +73,7 @@ a {
 .store-panel {
   @apply rounded-2xl border bg-white shadow-sm;
   border-color: var(--line-soft);
+  box-shadow: 0 18px 45px -38px color-mix(in srgb, var(--color-primario) 40%, transparent);
 }
 
 .store-button-primary {
@@ -90,7 +93,8 @@ a {
 }
 
 .store-button-secondary:hover {
-  background: color-mix(in srgb, var(--color-primario) 6%, white);
+  background: color-mix(in srgb, var(--color-acento) 7%, white);
+  border-color: color-mix(in srgb, var(--color-acento) 36%, white);
 }
 
 .store-chip {
@@ -103,6 +107,7 @@ a {
 .store-empty-state {
   @apply rounded-3xl border border-dashed bg-white p-10 text-center;
   border-color: color-mix(in srgb, var(--color-primario) 25%, white);
+  background: linear-gradient(180deg, white 0%, color-mix(in srgb, var(--surface-soft) 72%, white) 100%);
 }
 
 .store-empty-state h3 {
@@ -162,7 +167,7 @@ a {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f0f2f7;
+  background: #ecf0fb;
 }
 
 ::-webkit-scrollbar-thumb {

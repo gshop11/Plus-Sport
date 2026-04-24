@@ -24,7 +24,7 @@ export default function FormSuscribir() {
 
   if (estado === 'ok') {
     return (
-      <p className="mt-4 rounded-lg border-2 border-primary bg-blue-50 px-6 py-4 text-lg font-semibold text-primary">
+      <p className="mt-4 rounded-lg border-2 border-primary/25 bg-[var(--surface-soft)] px-6 py-4 text-lg font-semibold text-primary-dark">
         ✅ ¡Listo! Te avisaremos por WhatsApp con las mejores ofertas.
       </p>
     )
@@ -49,13 +49,13 @@ export default function FormSuscribir() {
         className={`whitespace-nowrap rounded-lg px-6 py-4 font-bold transition-all ${
           canSubmit
             ? 'bg-accent text-white shadow-lg shadow-accent/30 hover:bg-accent-dark hover:shadow-xl hover:shadow-accent/40'
-            : 'cursor-not-allowed bg-gray-300 text-gray-500'
+            : 'cursor-not-allowed bg-black/15 text-black/50'
         }`}
       >
         {estado === 'loading' ? 'ENVIANDO...' : 'ENVIAR'}
       </button>
       {estado === 'error' && (
-        <p className="w-full text-center text-sm text-red-400">Hubo un error. Intenta de nuevo.</p>
+        <p className="w-full text-center text-sm text-accent-dark">Hubo un error. Intenta de nuevo.</p>
       )}
     </form>
   )

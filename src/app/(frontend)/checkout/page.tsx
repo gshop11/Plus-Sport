@@ -484,7 +484,7 @@ export default function CheckoutPage() {
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-black transition-colors ${
                       p.n < paso
-                        ? 'bg-green-500 text-white'
+                        ? 'bg-accent text-white'
                         : p.n === paso
                           ? 'bg-primary text-white shadow-lg shadow-primary/30'
                           : 'bg-gray-200 text-gray-400'
@@ -494,14 +494,14 @@ export default function CheckoutPage() {
                   </div>
                   <span
                     className={`mt-1 hidden text-xs font-semibold sm:block ${
-                      p.n === paso ? 'text-primary' : p.n < paso ? 'text-green-600' : 'text-gray-400'
+                      p.n === paso ? 'text-primary' : p.n < paso ? 'text-accent' : 'text-gray-400'
                     }`}
                   >
                     {p.label}
                   </span>
                 </div>
                 {i < PASOS.length - 1 && (
-                  <div className={`mx-2 h-0.5 w-12 sm:w-20 ${p.n < paso ? 'bg-green-400' : 'bg-gray-200'}`} />
+                  <div className={`mx-2 h-0.5 w-12 sm:w-20 ${p.n < paso ? 'bg-accent/70' : 'bg-gray-200'}`} />
                 )}
               </div>
             ))}
@@ -515,7 +515,7 @@ export default function CheckoutPage() {
               <div className="store-panel">
                 <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso > 2 ? 'bg-green-500 text-white' : 'bg-primary text-white'}`}>
+                    <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso > 2 ? 'bg-accent text-white' : 'bg-primary text-white'}`}>
                       {paso > 2 ? '✓' : '1'}
                     </span>
                     <h2 className="font-bold text-gray-900">Datos Personales</h2>
@@ -580,7 +580,7 @@ export default function CheckoutPage() {
               <div className="store-panel">
                 <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso > 3 ? 'bg-green-500 text-white' : paso === 3 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'}`}>
+                    <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black ${paso > 3 ? 'bg-accent text-white' : paso === 3 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'}`}>
                       {paso > 3 ? '✓' : '2'}
                     </span>
                     <h2 className={`font-bold ${paso >= 3 ? 'text-gray-900' : 'text-gray-400'}`}>Datos de entrega</h2>
@@ -714,71 +714,71 @@ export default function CheckoutPage() {
                         <div className="grid gap-3 sm:grid-cols-2">
 
                           {pagosConfig.tarjeta.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'tarjeta' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'tarjeta' ? 'border-primary bg-[var(--surface-soft)]' : 'border-gray-200 hover:border-primary/30'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="tarjeta" checked={metodoPago === 'tarjeta'}
                                   onChange={() => setMetodoPago('tarjeta')} className="accent-primary" />
                                 <span className="text-sm font-semibold text-gray-700">{pagosConfig.tarjeta.nombre || 'Visa / Mastercard'}</span>
                               </span>
                               <span className="flex items-center gap-1">
-                                <span className="rounded bg-[#1a1f71] px-1.5 py-0.5 text-[9px] font-black text-white">VISA</span>
-                                <span className="text-lg font-black text-red-500">•</span>
+                                <span className="rounded bg-primary px-1.5 py-0.5 text-[9px] font-black text-white">VISA</span>
+                                <span className="text-lg font-black text-accent">•</span>
                               </span>
                             </label>
                           )}
 
                           {pagosConfig.yape.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'yape' ? 'border-[#6b21a8] bg-purple-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'yape' ? 'border-accent bg-[var(--surface-soft)]' : 'border-gray-200 hover:border-accent/40'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="yape" checked={metodoPago === 'yape'}
-                                  onChange={() => setMetodoPago('yape')} className="accent-[#6b21a8]" />
+                                  onChange={() => setMetodoPago('yape')} className="accent-accent" />
                                 <span className="text-sm font-semibold text-gray-700">{pagosConfig.yape.nombre || 'Yape'}</span>
                               </span>
-                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#6b21a8] text-xs font-black text-white">Y</span>
+                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-black text-white">Y</span>
                             </label>
                           )}
 
                           {pagosConfig.plin.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'plin' ? 'border-[#00b4d8] bg-cyan-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'plin' ? 'border-primary bg-[var(--surface-soft)]' : 'border-gray-200 hover:border-primary/30'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="plin" checked={metodoPago === 'plin'}
-                                  onChange={() => setMetodoPago('plin')} className="accent-[#00b4d8]" />
+                                  onChange={() => setMetodoPago('plin')} className="accent-primary" />
                                 <span className="text-sm font-semibold text-gray-700">{pagosConfig.plin.nombre || 'Plin'}</span>
                               </span>
-                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#00b4d8] text-xs font-black text-white">P</span>
+                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-black text-white">P</span>
                             </label>
                           )}
 
                           {pagosConfig.bcp.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'bcp' ? 'border-[#003087] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'bcp' ? 'border-primary bg-[var(--surface-soft)]' : 'border-gray-200 hover:border-primary/30'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="bcp" checked={metodoPago === 'bcp'}
-                                  onChange={() => setMetodoPago('bcp')} className="accent-[#003087]" />
+                                  onChange={() => setMetodoPago('bcp')} className="accent-primary" />
                                 <span className="text-sm font-semibold text-gray-700">{pagosConfig.bcp.nombre || 'Transferencia BCP'}</span>
                               </span>
-                              <span className="rounded bg-[#003087] px-2 py-0.5 text-[10px] font-black text-white">BCP</span>
+                              <span className="rounded bg-primary px-2 py-0.5 text-[10px] font-black text-white">BCP</span>
                             </label>
                           )}
 
                           {pagosConfig.interbank.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'interbank' ? 'border-[#00843d] bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'interbank' ? 'border-primary bg-[var(--surface-soft)]' : 'border-gray-200 hover:border-primary/30'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="interbank" checked={metodoPago === 'interbank'}
-                                  onChange={() => setMetodoPago('interbank')} className="accent-[#00843d]" />
+                                  onChange={() => setMetodoPago('interbank')} className="accent-primary" />
                                 <span className="text-sm font-semibold text-gray-700">{pagosConfig.interbank.nombre || 'Transferencia Interbank'}</span>
                               </span>
-                              <span className="rounded bg-[#00843d] px-2 py-0.5 text-[10px] font-black text-white">IBK</span>
+                              <span className="rounded bg-primary px-2 py-0.5 text-[10px] font-black text-white">IBK</span>
                             </label>
                           )}
 
                           {pagosConfig.efectivo.activo && (
-                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'efectivo' ? 'border-gray-700 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                            <label className={`flex cursor-pointer items-center justify-between rounded-lg border-2 px-4 py-3 transition-colors ${metodoPago === 'efectivo' ? 'border-black/70 bg-black/5' : 'border-gray-200 hover:border-black/40'}`}>
                               <span className="flex items-center gap-3">
                                 <input type="radio" name="metodoPago" value="efectivo" checked={metodoPago === 'efectivo'}
-                                  onChange={() => setMetodoPago('efectivo')} className="accent-gray-700" />
+                                  onChange={() => setMetodoPago('efectivo')} className="accent-primary" />
                                 <span className="text-sm font-semibold text-gray-700">{pagosConfig.efectivo.nombre || 'Pago en Efectivo'}</span>
                               </span>
-                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-700 text-xs font-black text-white">$</span>
+                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-xs font-black text-white">$</span>
                             </label>
                           )}
 
@@ -788,11 +788,11 @@ export default function CheckoutPage() {
                         {metodoPago === 'tarjeta' && (
                           <div className="mt-4 space-y-4 rounded-xl border border-gray-200 bg-white p-5">
                             <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">
-                              <span className="rounded bg-[#1a1f71] px-1.5 py-0.5 text-[9px] font-black text-white">VISA</span>
-                              <span className="rounded bg-[#eb001b] px-1.5 py-0.5 text-[9px] font-black text-white">MC</span>
+                              <span className="rounded bg-primary px-1.5 py-0.5 text-[9px] font-black text-white">VISA</span>
+                              <span className="rounded bg-accent px-1.5 py-0.5 text-[9px] font-black text-white">MC</span>
                               Checkout seguro Izipay Sandbox
                             </div>
-                            <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                            <div className="rounded-lg border border-primary/25 bg-[var(--surface-soft)] px-4 py-3 text-sm text-primary-dark">
                               Los datos de tarjeta no se capturan en este formulario. El cobro se procesa en la pasarela oficial de Izipay.
                             </div>
                             <ul className="space-y-2 text-sm text-gray-700">
@@ -808,23 +808,23 @@ export default function CheckoutPage() {
 
                         {metodoPago === 'yape' && (
                           <div className="mt-4 rounded-xl border border-gray-200 bg-white p-5">
-                            <div className="mb-4 rounded-xl border border-[#e8daf7] bg-[#fbf8ff] p-5">
-                              <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#6b21a8] text-lg font-black text-white">
+                            <div className="mb-4 rounded-xl border border-primary/20 bg-[var(--surface-soft)] p-5">
+                              <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-lg font-black text-white">
                                 Y
                               </div>
                               <p className="text-center text-2xl font-black text-gray-900">Paga con Yape</p>
                               <p className="mb-4 text-center text-2xl font-black text-gray-900">en pocos minutos!</p>
                               <ul className="space-y-3 text-sm text-gray-700">
                                 <li className="flex items-start gap-3">
-                                  <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-[#efe4fb] text-xs font-black text-[#6b21a8]">1</span>
+                                  <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-accent/15 text-xs font-black text-accent-dark">1</span>
                                   <span>Al continuar, te aparecera un formulario para completar tus datos.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                  <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-[#efe4fb] text-xs font-black text-[#6b21a8]">2</span>
+                                  <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-accent/15 text-xs font-black text-accent-dark">2</span>
                                   <span>Ingresa el celular asociado a Yape y pega el codigo de aprobacion desde la app.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                  <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-[#efe4fb] text-xs font-black text-[#6b21a8]">3</span>
+                                  <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-accent/15 text-xs font-black text-accent-dark">3</span>
                                   <span>Confirma tu pago y listo.</span>
                                 </li>
                               </ul>
@@ -836,14 +836,14 @@ export default function CheckoutPage() {
                             )}
                             {false && pagosConfig.yape.numero && (
                               <p className="mb-3 text-center text-sm font-semibold text-gray-700">
-                                Numero: <span className="font-black text-[#6b21a8]">{pagosConfig.yape.numero}</span>
+                                Numero: <span className="font-black text-primary">{pagosConfig.yape.numero}</span>
                               </p>
                             )}
                             {false && <div className="mb-4">
                               <label className="mb-1 block text-sm font-semibold text-gray-700">Celular desde el que yapeas</label>
                               <input type="tel" placeholder="9XXXXXXXX" value={yapeData.celular}
                                 onChange={(e) => setYapeData((p) => ({ ...p, celular: e.target.value.replace(/\D/g, '').slice(0, 9) }))}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#6b21a8] focus:ring-2 focus:ring-[#6b21a8]/20" />
+                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
                             </div>}
                             {false && <div className="mb-3">
                               <label className="mb-1 block text-sm font-semibold text-gray-700">Codigo de aprobacion</label>
@@ -857,7 +857,7 @@ export default function CheckoutPage() {
                                         if (prev) (prev as HTMLInputElement).focus()
                                       }
                                     }}
-                                    className="h-12 w-full rounded-lg border-2 border-gray-300 text-center text-lg font-black outline-none focus:border-[#6b21a8] focus:ring-2 focus:ring-[#6b21a8]/20" />
+                                    className="h-12 w-full rounded-lg border-2 border-gray-300 text-center text-lg font-black outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
                                 ))}
                               </div>
                               <p className="mt-1 text-xs text-gray-400">Encuentralo en el menu de Yape.</p>
@@ -870,8 +870,8 @@ export default function CheckoutPage() {
 
                         {/* Detalle Plin */}
                         {metodoPago === 'plin' && (
-                          <div className="mt-4 rounded-xl border-2 border-[#00b4d8]/20 bg-cyan-50 p-5">
-                            <p className="mb-3 text-center text-base font-black text-[#00b4d8]">Paga {formatMoney(total, currencySymbol)} con Plin</p>
+                          <div className="mt-4 rounded-xl border-2 border-primary/20 bg-[var(--surface-soft)] p-5">
+                            <p className="mb-3 text-center text-base font-black text-primary">Paga {formatMoney(total, currencySymbol)} con Plin</p>
                             {pagosConfig.plin.qr && (
                               <div className="mb-4 flex justify-center">
                                 <img src={pagosConfig.plin.qr} alt="QR Plin" className="h-40 w-40 rounded-xl object-contain shadow" />
@@ -879,14 +879,14 @@ export default function CheckoutPage() {
                             )}
                             {pagosConfig.plin.numero && (
                               <p className="mb-3 text-center text-sm font-semibold text-gray-700">
-                                Numero: <span className="font-black text-[#00b4d8]">{pagosConfig.plin.numero}</span>
+                                Numero: <span className="font-black text-primary">{pagosConfig.plin.numero}</span>
                               </p>
                             )}
                             <div>
                               <label className="mb-1 block text-sm font-semibold text-gray-700">Celular desde el que pagas</label>
                               <input type="tel" placeholder="9XXXXXXXX" value={plinData.celular}
                                 onChange={(e) => setPlinData({ celular: e.target.value.replace(/\D/g, '').slice(0, 9) })}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#00b4d8] focus:ring-2 focus:ring-[#00b4d8]/20" />
+                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
                             </div>
                             <p className="mt-3 text-xs text-gray-500">
                               {pagosConfig.plin.instruccion ?? 'Disponible con BBVA, Interbank, Scotiabank y Caja Arequipa.'}
@@ -896,8 +896,8 @@ export default function CheckoutPage() {
 
                         {/* Detalle BCP */}
                         {metodoPago === 'bcp' && (
-                          <div className="mt-4 rounded-xl border-2 border-[#003087]/20 bg-blue-50 p-5 text-sm text-gray-700">
-                            <p className="mb-3 font-black text-[#003087]">Datos para transferencia BCP</p>
+                          <div className="mt-4 rounded-xl border-2 border-primary/20 bg-[var(--surface-soft)] p-5 text-sm text-gray-700">
+                            <p className="mb-3 font-black text-primary">Datos para transferencia BCP</p>
                             {pagosConfig.bcp.qr && (
                               <div className="mb-3 flex justify-center">
                                 <img src={pagosConfig.bcp.qr} alt="QR BCP" className="h-40 w-40 rounded-xl object-contain shadow" />
@@ -915,8 +915,8 @@ export default function CheckoutPage() {
 
                         {/* Detalle Interbank */}
                         {metodoPago === 'interbank' && (
-                          <div className="mt-4 rounded-xl border-2 border-[#00843d]/20 bg-green-50 p-5 text-sm text-gray-700">
-                            <p className="mb-3 font-black text-[#00843d]">Datos para transferencia Interbank</p>
+                          <div className="mt-4 rounded-xl border-2 border-primary/20 bg-[var(--surface-soft)] p-5 text-sm text-gray-700">
+                            <p className="mb-3 font-black text-primary">Datos para transferencia Interbank</p>
                             {pagosConfig.interbank.qr && (
                               <div className="mb-3 flex justify-center">
                                 <img src={pagosConfig.interbank.qr} alt="QR Interbank" className="h-40 w-40 rounded-xl object-contain shadow" />
@@ -976,12 +976,12 @@ export default function CheckoutPage() {
                 {descuento > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Descuento</span>
-                    <span className="font-semibold text-green-600">-{formatMoney(descuento, currencySymbol)}</span>
+                    <span className="font-semibold text-accent-dark">-{formatMoney(descuento, currencySymbol)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Gastos de envio</span>
-                  <span className={costoEnvioFinal === 0 ? 'font-semibold text-green-600' : 'text-accent font-semibold'}>
+                  <span className={costoEnvioFinal === 0 ? 'font-semibold text-primary' : 'text-accent font-semibold'}>
                     {costoEnvioFinal === 0 ? 'Gratis ✓' : formatMoney(costoEnvioFinal, currencySymbol)}
                   </span>
                 </div>

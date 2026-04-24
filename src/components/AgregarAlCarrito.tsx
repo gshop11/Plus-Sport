@@ -98,7 +98,7 @@ export default function AgregarAlCarrito({
         onClick={handleAgregar}
         className={`w-full rounded-lg py-2.5 text-sm font-bold text-white transition-all ${
           agregado
-            ? 'bg-green-500 text-green-100'
+            ? 'bg-primary text-white'
             : 'bg-accent hover:bg-orange-700'
         }`}
       >
