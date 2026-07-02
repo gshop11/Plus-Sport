@@ -10,8 +10,8 @@ Guia para desplegar PlusSport en Ubuntu con Next.js, Payload CMS y PostgreSQL.
 ## Requisitos recomendados
 
 - Ubuntu 22.04 LTS o 24.04 LTS.
-- Node.js 20 LTS o superior compatible con `package.json`.
-- npm 10 o superior.
+- Node.js 24.x compatible con `package.json`.
+- npm 11.x.
 - PostgreSQL 15 o superior.
 - nginx.
 - Certbot para SSL.
@@ -25,10 +25,10 @@ sudo apt upgrade -y
 sudo apt install -y curl git build-essential nginx postgresql postgresql-contrib
 ```
 
-Instalar Node.js 20 LTS con NodeSource:
+Instalar Node.js 24.x con NodeSource:
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt install -y nodejs
 node -v
 npm -v

@@ -37,8 +37,8 @@ scripts/next-workflow.ps1       # Flujo de dev/build/start en Windows
 
 ## Requisitos
 
-- Node.js 20 LTS recomendado (minimo `20.9.0`)
-- npm 10+
+- Node.js 24.x recomendado
+- npm 11.x
 
 Usa `.nvmrc` si quieres alinear rapido el runtime local.
 
