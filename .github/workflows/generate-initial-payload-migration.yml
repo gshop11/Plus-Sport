@@ -5,6 +5,8 @@ on:
     branches:
       - stabilize/next16-payload385
     paths:
+      - package.json
+      - postcss.config.cjs
       - .github/workflows/generate-initial-payload-migration.yml
 
 permissions:

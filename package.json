@@ -1,6 +1,7 @@
 {
   "name": "plussport-template",
   "version": "1.0.0",
+  "type": "module",
   "description": "Plantilla de tienda deportiva reutilizable con panel admin",
   "scripts": {
     "dev": "next dev",
