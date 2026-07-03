@@ -53,6 +53,22 @@ export type HomeSlide = {
   imagenUrl?: string | null
 }
 
+export type HomeBrand = {
+  id: string
+  nombre: string
+  slug: string
+  logoUrl: string | null
+}
+
+export type HomeCategory = {
+  id: string
+  nombre: string
+  icono: string
+  descripcion: string
+  imagenUrl: string | null
+  slug: string
+}
+
 export type StoreIdentity = {
   name: string
   tagline: string
@@ -107,4 +123,20 @@ export type StorefrontConfig = {
     codigoISO: string
   }
   homeSections: HomeSectionConfig[]
+}
+
+export type HomeData = {
+  banners: HomeSlide[]
+  featuredProducts: ProductoCard[]
+  promotionalProducts: ProductoCard[]
+  newArrivalProducts: ProductoCard[]
+  mainCategories: HomeCategory[]
+  generalCategories: HomeCategory[]
+  brands: HomeBrand[]
+  config: StorefrontConfig
+  slides: HomeSlide[]
+  productos: ProductoCard[]
+  categorias: HomeCategory[]
+  marcas: HomeBrand[]
+  storefront: StorefrontConfig
 }

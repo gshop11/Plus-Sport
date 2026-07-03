@@ -35,12 +35,19 @@ const segmentCards = [
 ] as const
 
 export default async function HomePage() {
-  const { slides, productos, marcas, categorias, storefront } = await getHomeData()
+  const {
+    banners,
+    featuredProducts,
+    promotionalProducts,
+    newArrivalProducts,
+    mainCategories,
+    brands,
+    config,
+  } = await getHomeData()
 
-  const novedades = productos.slice(0, 4)
-  const ofertas = productos.filter((item) => item.etiqueta === 'oferta' || Number(item.precioAnterior || 0) > Number(item.precio || 0)).slice(0, 4)
-  const ofertasVisibles = ofertas.length > 0 ? ofertas : productos.slice(4, 8)
-  const previewImages = productos.map((item) => item.imagenUrl).filter(Boolean) as string[]
+  const novedades = newArrivalProducts.slice(0, 4)
+  const ofertasVisibles = promotionalProducts.slice(0, 4)
+  const previewImages = [...newArrivalProducts, ...featuredProducts, ...promotionalProducts].map((item) => item.imagenUrl).filter(Boolean) as string[]
   const segmentPreviewByKey = {
     hombre: previewImages[0],
     mujer: previewImages[1] ?? previewImages[0],
@@ -51,7 +58,7 @@ export default async function HomePage() {
     <>
       <Header />
       <main>
-        <HeroSlider slides={slides} />
+        <HeroSlider slides={banners} />
 
         <section className="bg-white pb-6 pt-4 sm:pb-8 sm:pt-5">
           <div className="section-shell">
@@ -148,11 +155,11 @@ export default async function HomePage() {
           </section>
         ) : null}
 
-        {storefront.homeSections
+        {config.homeSections
           .filter((section) => section.mostrar)
           .sort((a, b) => a.orden - b.orden)
           .map((section) => {
-            if (section.key === 'categorias' && categorias.length > 0) {
+            if (section.key === 'categorias' && mainCategories.length > 0) {
               return (
                 <section key={section.key} className="bg-[var(--surface-soft)] py-9">
                   <div className="section-shell">
@@ -161,7 +168,7 @@ export default async function HomePage() {
                     <p className="section-copy mb-5 max-w-2xl">Compra por deporte con paneles de alto impacto para reducir sensacion de pantalla vacia.</p>
 
                     <div className="grid auto-rows-[168px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      {categorias.map(({ nombre, slug, descripcion, imagenUrl }, index) => (
+                      {mainCategories.map(({ nombre, slug, descripcion, imagenUrl }, index) => (
                         <a
                           href={`/categoria/${slug}`}
                           key={slug}
@@ -192,7 +199,7 @@ export default async function HomePage() {
               )
             }
 
-            if (section.key === 'marcas' && marcas.length > 0) {
+            if (section.key === 'marcas' && brands.length > 0) {
               return (
                 <section key={section.key} className="bg-white py-9">
                   <div className="section-shell">
@@ -201,7 +208,7 @@ export default async function HomePage() {
                     <p className="section-copy mb-5 max-w-2xl">Muro de marcas top para orientar el browse de sneaker/sport fashion.</p>
 
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      {marcas.map(({ nombre, id, slug, logoUrl }) => (
+                      {brands.map(({ nombre, id, slug, logoUrl }) => (
                         <a
                           key={id}
                           href={`/productos?marca=${slug}`}
@@ -221,7 +228,7 @@ export default async function HomePage() {
               )
             }
 
-            if (section.key === 'destacados' && productos.length > 0) {
+            if (section.key === 'destacados' && featuredProducts.length > 0) {
               return (
                 <section key={section.key} className="bg-[var(--surface-soft)] py-9">
                   <div className="section-shell">
@@ -236,7 +243,7 @@ export default async function HomePage() {
                       </a>
                     </div>
                     <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
-                      {productos.map((producto, index) => (
+                      {featuredProducts.map((producto, index) => (
                         <TarjetaProducto key={producto.id} producto={producto} index={index} />
                       ))}
                     </div>

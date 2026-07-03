@@ -3,10 +3,34 @@ import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import { resolveMediaURL } from './media'
-import type { HeaderMenuItem, HomeSectionConfig, ProductoCard, ProductoDetalle, StoreIdentity, StorefrontConfig } from './storefront-types'
-export type { HeaderMenuItem, HomeSectionConfig, ProductoCard, ProductoDetalle, StoreIdentity, StorefrontConfig } from './storefront-types'
+import type { HeaderMenuItem, HomeBrand, HomeCategory, HomeData, HomeSectionConfig, ProductoCard, ProductoDetalle, StoreIdentity, StorefrontConfig } from './storefront-types'
+export type { HeaderMenuItem, HomeBrand, HomeCategory, HomeData, HomeSectionConfig, ProductoCard, ProductoDetalle, StoreIdentity, StorefrontConfig } from './storefront-types'
 
 export const PRODUCTS_PER_PAGE = 24
+const HOME_PRODUCT_LIMIT = 8
+const HOME_PROMOTION_FALLBACK_LIMIT = 24
+const HOME_NEW_ARRIVAL_FALLBACK_LIMIT = 16
+const HOME_MAIN_CATEGORY_LIMIT = 6
+const HOME_CATEGORY_LIMIT = 24
+const HOME_BRAND_LIMIT = 20
+const HOME_BANNER_LIMIT = 10
+
+type HomeBrandDoc = Record<string, unknown> & {
+  id?: string | number
+  nombre?: string
+  slug?: string
+  logo?: Record<string, unknown> | null
+}
+
+type HomeCategoryDoc = Record<string, unknown> & {
+  id?: string | number
+  nombre?: string
+  slug?: string
+  icono?: string
+  descripcion?: string
+  imagen?: Record<string, unknown> | null
+  categoriaPadre?: string | number | { id?: string | number | null } | null
+}
 
 const defaultMenu: HeaderMenuItem[] = [
   { etiqueta: 'Catalogo', url: '/productos' },
@@ -91,6 +115,59 @@ const mapProductoToCard = (doc: any): ProductoCard => ({
   tallas: Array.isArray(doc.tallas) ? doc.tallas.map((t: any) => t.talla) : [],
   etiqueta: (doc.etiqueta as ProductoCard['etiqueta']) ?? '',
 })
+
+const uniqueProductsById = (products: ProductoCard[], limit: number): ProductoCard[] => {
+  const seen = new Set<string>()
+  const unique: ProductoCard[] = []
+
+  for (const product of products) {
+    if (seen.has(product.id)) continue
+    seen.add(product.id)
+    unique.push(product)
+    if (unique.length >= limit) break
+  }
+
+  return unique
+}
+
+const hasDiscountPrice = (product: ProductoCard) => Number(product.precioAnterior || 0) > Number(product.precio || 0)
+
+const mapBrandToHomeBrand = (brand: HomeBrandDoc): HomeBrand => ({
+  id: String(brand.id),
+  nombre: brand.nombre ?? '',
+  slug: brand.slug ?? '',
+  logoUrl: resolveMediaURL(brand.logo),
+})
+
+const mapCategoryToHomeCategory = (category: HomeCategoryDoc): HomeCategory => ({
+  id: String(category.id),
+  nombre: category.nombre ?? '',
+  icono: category.icono ?? 'X',
+  descripcion: category.descripcion ?? '',
+  imagenUrl: resolveMediaURL(category.imagen),
+  slug: normalizeCategorySlug(category.slug ?? category.nombre ?? ''),
+})
+
+const getCategoryParentId = (category: HomeCategoryDoc): string | null => {
+  const parent = category?.categoriaPadre
+  if (!parent) return null
+  if (typeof parent === 'number' || typeof parent === 'string') return String(parent)
+  if (typeof parent === 'object' && parent.id !== undefined && parent.id !== null) return String(parent.id)
+  return null
+}
+
+const splitHomeCategories = (categories: HomeCategoryDoc[]) => {
+  const primaryDocs = categories.filter((category) => !getCategoryParentId(category))
+  const primaryPool = primaryDocs.length > 0 ? primaryDocs : categories
+  const mainCategoryDocs = primaryPool.slice(0, HOME_MAIN_CATEGORY_LIMIT)
+  const mainIds = new Set(mainCategoryDocs.map((category) => String(category.id)))
+  const generalCategoryDocs = categories.filter((category) => !mainIds.has(String(category.id)))
+
+  return {
+    mainCategories: mainCategoryDocs.map(mapCategoryToHomeCategory),
+    generalCategories: generalCategoryDocs.map(mapCategoryToHomeCategory),
+  }
+}
 
 const getRelationshipId = (value: any) => {
   if (typeof value === 'number' || typeof value === 'string') return String(value)
@@ -306,15 +383,41 @@ export const getStorefrontConfig = unstable_cache(
 )
 
 export const getHomeData = unstable_cache(
-  async () => {
+  async (): Promise<HomeData> => {
     const payload = await getPayloadClient()
 
-    const [productosRes, marcasRes, bannersRes, categoriasRes, storefront] = await Promise.all([
+    const [
+      featuredProductsRes,
+      promotionalProductsRes,
+      newArrivalProductsRes,
+      marcasRes,
+      bannersRes,
+      categoriasRes,
+      storefront,
+    ] = await Promise.all([
       payload
         .find({
           collection: 'productos',
           where: { activo: { equals: true }, destacado: { equals: true } },
-          limit: 8,
+          limit: HOME_PRODUCT_LIMIT,
+          depth: 1,
+          sort: '-createdAt',
+        })
+        .catch(() => ({ docs: [] as any[] })),
+      payload
+        .find({
+          collection: 'productos',
+          where: { activo: { equals: true }, etiqueta: { equals: 'oferta' } },
+          limit: HOME_PRODUCT_LIMIT,
+          depth: 1,
+          sort: '-createdAt',
+        })
+        .catch(() => ({ docs: [] as any[] })),
+      payload
+        .find({
+          collection: 'productos',
+          where: { activo: { equals: true }, nuevoIngreso: { equals: true } },
+          limit: HOME_PRODUCT_LIMIT,
           depth: 1,
           sort: '-createdAt',
         })
@@ -323,7 +426,7 @@ export const getHomeData = unstable_cache(
         .find({
           collection: 'marcas',
           where: { activa: { equals: true } },
-          limit: 20,
+          limit: HOME_BRAND_LIMIT,
           depth: 0,
           sort: 'nombre',
         })
@@ -333,7 +436,7 @@ export const getHomeData = unstable_cache(
           collection: 'banners',
           where: { activo: { equals: true } },
           sort: 'orden',
-          limit: 10,
+          limit: HOME_BANNER_LIMIT,
           depth: 1,
         })
         .catch(() => ({ docs: [] as any[] })),
@@ -342,14 +445,55 @@ export const getHomeData = unstable_cache(
           collection: 'categorias',
           where: { activa: { equals: true } },
           sort: 'orden',
-          limit: 12,
-          depth: 0,
+          limit: HOME_CATEGORY_LIMIT,
+          depth: 1,
         })
         .catch(() => ({ docs: [] as any[] })),
       getStorefrontConfig(),
     ])
 
-    const slides = await Promise.all(
+    const featuredProducts = uniqueProductsById(featuredProductsRes.docs.map(mapProductoToCard), HOME_PRODUCT_LIMIT)
+
+    let promotionalProducts = uniqueProductsById(promotionalProductsRes.docs.map(mapProductoToCard), HOME_PRODUCT_LIMIT)
+    if (promotionalProducts.length < HOME_PRODUCT_LIMIT) {
+      const discountedProductsRes = await payload
+        .find({
+          collection: 'productos',
+          where: { activo: { equals: true }, precioAnterior: { exists: true } },
+          limit: HOME_PROMOTION_FALLBACK_LIMIT,
+          depth: 1,
+          sort: '-createdAt',
+        })
+        .catch(() => ({ docs: [] as any[] }))
+
+      const discountedProducts = discountedProductsRes.docs.map(mapProductoToCard).filter(hasDiscountPrice)
+      promotionalProducts = uniqueProductsById([...promotionalProducts, ...discountedProducts], HOME_PRODUCT_LIMIT)
+    }
+
+    let newArrivalProducts = uniqueProductsById(newArrivalProductsRes.docs.map(mapProductoToCard), HOME_PRODUCT_LIMIT)
+    if (newArrivalProducts.length < HOME_PRODUCT_LIMIT) {
+      const recentProductsRes = await payload
+        .find({
+          collection: 'productos',
+          where: { activo: { equals: true } },
+          limit: HOME_NEW_ARRIVAL_FALLBACK_LIMIT,
+          depth: 1,
+          sort: '-createdAt',
+        })
+        .catch(() => ({ docs: [] as any[] }))
+
+      const recentProducts = recentProductsRes.docs
+        .map(mapProductoToCard)
+        .sort((a, b) => {
+          const aIsNew = a.etiqueta === 'nuevo' ? 1 : 0
+          const bIsNew = b.etiqueta === 'nuevo' ? 1 : 0
+          return bIsNew - aIsNew
+        })
+
+      newArrivalProducts = uniqueProductsById([...newArrivalProducts, ...recentProducts], HOME_PRODUCT_LIMIT)
+    }
+
+    const banners = await Promise.all(
       bannersRes.docs.map(async (doc: any) => {
         let imagenUrl: string | null = null
         if (doc.imagen) {
@@ -374,22 +518,23 @@ export const getHomeData = unstable_cache(
       }),
     )
 
+    const brands = marcasRes.docs.map(mapBrandToHomeBrand)
+    const { mainCategories, generalCategories } = splitHomeCategories(categoriasRes.docs)
+    const categories = [...mainCategories, ...generalCategories]
+
     return {
-      slides,
-      productos: productosRes.docs.map(mapProductoToCard),
-      marcas: marcasRes.docs.map((m: any) => ({
-        nombre: m.nombre ?? '',
-        id: String(m.id),
-        slug: m.slug ?? '',
-        logoUrl: resolveMediaURL(m.logo),
-      })),
-      categorias: categoriasRes.docs.map((c: any) => ({
-        nombre: c.nombre ?? '',
-        icono: c.icono ?? 'X',
-        descripcion: c.descripcion ?? '',
-        imagenUrl: resolveMediaURL(c.imagen),
-        slug: normalizeCategorySlug(c.slug ?? c.nombre ?? ''),
-      })),
+      banners,
+      featuredProducts,
+      promotionalProducts,
+      newArrivalProducts,
+      mainCategories,
+      generalCategories,
+      brands,
+      config: storefront,
+      slides: banners,
+      productos: featuredProducts,
+      marcas: brands,
+      categorias: categories,
       storefront,
     }
   },
