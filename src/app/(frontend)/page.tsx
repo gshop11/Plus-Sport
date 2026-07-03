@@ -67,24 +67,28 @@ export default async function HomePage() {
   return (
     <>
       <Header />
-      <main>
-        <section className="border-b border-primary/10 bg-[var(--surface-soft)]">
-          <div className="section-shell flex flex-col gap-3 py-3 text-sm text-primary-dark sm:flex-row sm:items-center sm:justify-between">
+      <main className="store-home-shell">
+        <section className="store-promo-strip">
+          <div className="store-home-container store-promo-strip__inner">
             <p className="font-semibold">{TEMP_PROMO_BAR.message}</p>
-            <a href={TEMP_PROMO_BAR.href} className="store-button-secondary w-fit px-4 py-2 text-xs">
+            <a href={TEMP_PROMO_BAR.href} className="store-section-cta">
               {TEMP_PROMO_BAR.cta}
             </a>
           </div>
         </section>
 
-        <HeroSlider slides={banners} />
+        <section className="store-hero-section">
+          <HeroSlider slides={banners} />
+        </section>
 
         {mainCategories.length > 0 ? (
-          <section className="bg-[var(--surface-soft)] py-9">
-            <div className="section-shell">
-              <span className="section-eyebrow">Categorias principales</span>
-              <h2 className="section-heading mb-1">Compra por categoria</h2>
-              <p className="section-copy mb-5 max-w-2xl">Accesos principales para orientar la navegacion del home.</p>
+          <section className="store-section store-section--soft">
+            <div className="store-home-container">
+              <div className="store-section-header">
+                <span className="store-section-eyebrow">Categorias principales</span>
+                <h2 className="store-section-title">Compra por categoria</h2>
+                <p className="store-section-copy">Accesos principales para orientar la navegacion del home.</p>
+              </div>
 
               <div className="grid auto-rows-[168px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {mainCategories.map(renderCategoryCard)}
@@ -94,11 +98,13 @@ export default async function HomePage() {
         ) : null}
 
         {brands.length > 0 ? (
-          <section className="bg-white py-9">
-            <div className="section-shell">
-              <span className="section-eyebrow">Marcas</span>
-              <h2 className="section-heading mb-1">Elige por marca</h2>
-              <p className="section-copy mb-5 max-w-2xl">Accesos de marca conectados al catalogo.</p>
+          <section className="store-section">
+            <div className="store-home-container">
+              <div className="store-section-header">
+                <span className="store-section-eyebrow">Marcas</span>
+                <h2 className="store-section-title">Elige por marca</h2>
+                <p className="store-section-copy">Accesos de marca conectados al catalogo.</p>
+              </div>
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {brands.map(({ nombre, id, slug, logoUrl }) => (
@@ -121,15 +127,15 @@ export default async function HomePage() {
         ) : null}
 
         {visiblePromotions.length > 0 ? (
-          <section className="bg-[var(--surface-soft)] py-9">
-            <div className="section-shell">
-              <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <section className="store-section store-section--soft">
+            <div className="store-home-container">
+              <div className="store-section-header store-section-header--split">
                 <div>
-                  <span className="section-eyebrow">Promociones</span>
-                  <h2 className="section-heading mb-1">Productos promocionales</h2>
-                  <p className="section-copy">Seleccion conectada a la regla comercial de promociones.</p>
+                  <span className="store-section-eyebrow">Promociones</span>
+                  <h2 className="store-section-title">Productos promocionales</h2>
+                  <p className="store-section-copy">Seleccion conectada a la regla comercial de promociones.</p>
                 </div>
-                <a href="/productos?oferta=1" className="store-button-secondary">
+                <a href="/productos?oferta=1" className="store-section-cta">
                   Ver promociones
                 </a>
               </div>
@@ -143,15 +149,15 @@ export default async function HomePage() {
         ) : null}
 
         {visibleNewArrivals.length > 0 ? (
-          <section className="bg-white py-9">
-            <div className="section-shell">
-              <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <section className="store-section">
+            <div className="store-home-container">
+              <div className="store-section-header store-section-header--split">
                 <div>
-                  <span className="section-eyebrow">Nuevos ingresos</span>
-                  <h2 className="section-heading mb-1">Recien llegados</h2>
-                  <p className="section-copy">Productos conectados al dataset semantico de novedades.</p>
+                  <span className="store-section-eyebrow">Nuevos ingresos</span>
+                  <h2 className="store-section-title">Recien llegados</h2>
+                  <p className="store-section-copy">Productos conectados al dataset semantico de novedades.</p>
                 </div>
-                <a href="/productos?sort=newest" className="store-button-secondary">
+                <a href="/productos?sort=newest" className="store-section-cta">
                   Ver novedades
                 </a>
               </div>
@@ -165,11 +171,13 @@ export default async function HomePage() {
         ) : null}
 
         {generalCategories.length > 0 ? (
-          <section className="bg-[var(--surface-soft)] py-9">
-            <div className="section-shell">
-              <span className="section-eyebrow">Mas categorias</span>
-              <h2 className="section-heading mb-1">Explora el catalogo</h2>
-              <p className="section-copy mb-5 max-w-2xl">Categorias activas adicionales sin repetir las principales.</p>
+          <section className="store-section store-section--soft">
+            <div className="store-home-container">
+              <div className="store-section-header">
+                <span className="store-section-eyebrow">Mas categorias</span>
+                <h2 className="store-section-title">Explora el catalogo</h2>
+                <p className="store-section-copy">Categorias activas adicionales sin repetir las principales.</p>
+              </div>
 
               <div className="grid auto-rows-[168px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {generalCategories.map(renderCategoryCard)}
@@ -179,8 +187,8 @@ export default async function HomePage() {
         ) : null}
 
         {subscriptionSection.mostrar ? (
-          <section className="py-9">
-            <div className="section-shell">
+          <section className="store-section store-section--subscription">
+            <div className="store-home-container">
               <div className="store-panel overflow-hidden bg-gradient-to-br from-primary to-primary-dark text-white">
                 <div className="grid gap-4 px-6 py-8 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:items-center">
                   <div>

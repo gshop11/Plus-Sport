@@ -70,6 +70,83 @@ a {
   color: var(--text-soft);
 }
 
+.store-home-shell {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-soft) 64%, white) 0%, #fff 22rem),
+    var(--color-fondo);
+  overflow-x: clip;
+}
+
+.store-home-container {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.store-promo-strip {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primario) 12%, white);
+  background: color-mix(in srgb, var(--surface-soft) 78%, white);
+}
+
+.store-promo-strip__inner {
+  @apply flex flex-col gap-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between;
+  color: var(--color-primario-dark);
+}
+
+.store-hero-section {
+  @apply bg-white;
+}
+
+.store-section {
+  @apply bg-white py-10 sm:py-12 lg:py-16;
+}
+
+.store-section--soft {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-soft) 86%, white) 0%, color-mix(in srgb, var(--surface-soft) 58%, white) 100%);
+}
+
+.store-section--subscription {
+  @apply bg-white pb-12 pt-10 sm:pb-16 sm:pt-12 lg:pb-20 lg:pt-16;
+}
+
+.store-section-header {
+  @apply mb-6 max-w-3xl sm:mb-7;
+}
+
+.store-section-header--split {
+  @apply flex max-w-none flex-col gap-4 sm:flex-row sm:items-end sm:justify-between;
+}
+
+.store-section-eyebrow {
+  @apply mb-3 inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase sm:text-[11px];
+  color: color-mix(in srgb, var(--color-primario) 92%, white);
+  border-color: color-mix(in srgb, var(--color-primario) 26%, white);
+  background: color-mix(in srgb, var(--color-primario) 8%, white);
+  letter-spacing: 0.12em;
+}
+
+.store-section-title {
+  @apply text-2xl font-black leading-tight sm:text-3xl lg:text-4xl;
+  color: color-mix(in srgb, var(--color-primario) 92%, black);
+  letter-spacing: 0;
+}
+
+.store-section-copy {
+  @apply mt-2 max-w-2xl text-sm leading-6 sm:text-base;
+  color: var(--text-soft);
+}
+
+.store-section-cta {
+  @apply inline-flex w-fit items-center justify-center rounded-xl border px-4 py-2 text-xs font-semibold transition-colors sm:px-5 sm:py-3 sm:text-sm;
+  border-color: color-mix(in srgb, var(--color-primario) 30%, white);
+  color: color-mix(in srgb, var(--color-primario) 88%, black);
+  background: color-mix(in srgb, var(--surface-soft) 48%, white);
+}
+
+.store-section-cta:hover {
+  background: color-mix(in srgb, var(--color-acento) 7%, white);
+  border-color: color-mix(in srgb, var(--color-acento) 36%, white);
+}
+
 .store-panel {
   @apply rounded-2xl border bg-white shadow-sm;
   border-color: var(--line-soft);
