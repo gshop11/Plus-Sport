@@ -5,7 +5,7 @@
   "description": "Plantilla de tienda deportiva reutilizable con panel admin",
   "scripts": {
     "dev": "next dev",
-    "build": "npm run payload -- migrate && next build",
+    "build": "next build",
     "typecheck": "tsc --noEmit",
     "start": "next start",
     "reset": "node -e \"require('fs').rmSync('.next', { recursive: true, force: true })\"",
