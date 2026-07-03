@@ -160,7 +160,7 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
             <div className="relative min-h-[320px] overflow-hidden rounded-3xl border border-[var(--line-soft)] bg-primary shadow-[0_26px_52px_-34px_rgba(13,23,87,0.72)] sm:min-h-[400px]">
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: heroBackground }} />
               <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-transparent to-accent/20" />
-              <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-accent/30 blur-2xl" />
+              <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-accent/30 blur-2xl lg:-right-12 lg:-top-12 lg:h-44 lg:w-44" />
               <div className="absolute bottom-4 left-4 rounded-full border border-white/35 bg-black/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
                 SNEAKER / SPORTWEAR
               </div>

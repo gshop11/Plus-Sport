@@ -321,16 +321,16 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
             </div>
           </div>
 
-          <div className="mx-auto mt-4 md:hidden">
-            <form onSubmit={handleSearch} className="flex items-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm">
+          <div className="mx-auto mt-4 min-w-0 md:hidden">
+            <form onSubmit={handleSearch} className="flex min-w-0 items-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm">
               <input
                 type="text"
                 placeholder="Buscar productos..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                className="flex-1 bg-transparent px-4 py-3 text-sm text-gray-800 outline-none"
+                className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-gray-800 outline-none"
               />
-              <button type="submit" className="store-button-primary rounded-none px-4 py-3 text-xs">Buscar</button>
+              <button type="submit" className="store-button-primary shrink-0 rounded-none px-4 py-3 text-xs">Buscar</button>
             </form>
           </div>
         </div>

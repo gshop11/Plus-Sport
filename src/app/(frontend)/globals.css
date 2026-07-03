@@ -106,7 +106,7 @@ a {
 }
 
 .store-empty-state {
-  @apply rounded-3xl border border-dashed bg-white p-10 text-center;
+  @apply rounded-3xl border border-dashed bg-white p-6 text-center sm:p-10;
   border-color: color-mix(in srgb, var(--color-primario) 25%, white);
   background: linear-gradient(180deg, white 0%, color-mix(in srgb, var(--surface-soft) 82%, white) 100%);
 }

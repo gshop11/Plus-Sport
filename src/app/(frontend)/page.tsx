@@ -85,7 +85,7 @@ export default async function HomePage() {
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
-                    <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-accent/28 blur-2xl" />
+                    <div className="absolute right-0 top-0 h-20 w-20 rounded-full bg-accent/28 blur-2xl lg:-right-10 lg:-top-10 lg:h-28 lg:w-28" />
 
                     <div className="relative flex h-full flex-col justify-end p-5 text-white">
                       <span className="mb-2 inline-flex w-fit rounded-full border border-white/35 bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.13em]">
@@ -110,7 +110,7 @@ export default async function HomePage() {
               href="/productos?sort=newest"
               className="group relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary to-primary-dark p-5 text-white shadow-[0_24px_48px_-30px_rgba(16,24,77,0.8)]"
             >
-              <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
+              <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-white/10 lg:-right-10 lg:-top-10 lg:h-40 lg:w-40" />
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/70">Nuevos ingresos</p>
               <h2 className="mb-2 text-2xl font-black sm:text-3xl">Los pares que estan entrando esta semana</h2>
               <p className="mb-4 max-w-xl text-sm text-white/80">Modelos nuevos de running, lifestyle y training listos para rotacion comercial.</p>
@@ -122,7 +122,7 @@ export default async function HomePage() {
               href="/productos?oferta=1"
               className="group relative overflow-hidden rounded-3xl border border-accent/30 bg-gradient-to-br from-accent to-accent-dark p-5 text-white shadow-[0_24px_48px_-30px_rgba(212,85,0,0.65)]"
             >
-              <div className="absolute -bottom-8 -right-8 h-28 w-28 rounded-full bg-white/15" />
+              <div className="absolute bottom-0 right-0 h-20 w-20 rounded-full bg-white/15 lg:-bottom-8 lg:-right-8 lg:h-28 lg:w-28" />
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/70">Oferta destacada</p>
               <h2 className="mb-2 text-xl font-black sm:text-2xl">Precios con descuento real</h2>
               <p className="mb-4 text-sm text-white/85">Ahorro visible por producto para mejorar conversion.</p>
