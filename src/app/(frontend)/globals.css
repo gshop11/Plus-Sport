@@ -340,6 +340,120 @@ a {
   background: color-mix(in srgb, var(--color-primario) 7%, white);
 }
 
+.store-catalog-filters {
+  @apply rounded-2xl border bg-white p-4 sm:p-5;
+  border-color: var(--line-soft);
+  box-shadow: 0 22px 48px -42px color-mix(in srgb, var(--color-primario) 58%, transparent);
+}
+
+.store-catalog-filters__header {
+  @apply mb-4 flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between;
+  border-color: var(--line-soft);
+}
+
+.store-catalog-filters__eyebrow {
+  @apply mb-1 text-[10px] font-semibold uppercase text-gray-500;
+  letter-spacing: 0.14em;
+}
+
+.store-catalog-filters__title {
+  @apply text-xl font-black text-primary-dark sm:text-2xl;
+  letter-spacing: 0;
+}
+
+.store-catalog-filters__body {
+  @apply grid gap-4 md:grid-cols-2 xl:grid-cols-[1.05fr_1fr_0.65fr_1.6fr];
+}
+
+.store-catalog-filter-group {
+  @apply min-w-0 rounded-xl border p-3;
+  border-color: color-mix(in srgb, var(--line-soft) 76%, white);
+  background: color-mix(in srgb, var(--surface-soft) 38%, white);
+}
+
+.store-catalog-filter-group--wide {
+  @apply md:col-span-2 xl:col-span-1;
+}
+
+.store-catalog-filter-group__label {
+  @apply mb-2 text-[11px] font-black uppercase text-gray-500;
+  letter-spacing: 0.12em;
+}
+
+.store-catalog-filter-options {
+  @apply flex min-w-0 flex-wrap gap-2;
+}
+
+.store-catalog-filter-chip,
+.store-catalog-filter-reset {
+  @apply inline-flex min-h-9 max-w-full items-center justify-center rounded-full border px-3 py-2 text-[11px] font-bold uppercase leading-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  letter-spacing: 0.08em;
+}
+
+.store-catalog-filter-chip {
+  border-color: color-mix(in srgb, var(--color-primario) 22%, white);
+  color: color-mix(in srgb, var(--color-primario) 86%, black);
+  background: #fff;
+}
+
+.store-catalog-filter-chip:hover {
+  border-color: color-mix(in srgb, var(--color-primario) 44%, white);
+  background: color-mix(in srgb, var(--surface-soft) 78%, white);
+}
+
+.store-catalog-filter-chip--active {
+  @apply font-black;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.store-catalog-filter-chip--primary {
+  border-color: var(--color-primario);
+  color: #fff;
+  background: var(--color-primario);
+}
+
+.store-catalog-filter-chip--accent {
+  border-color: var(--color-acento);
+  color: #fff;
+  background: var(--color-acento);
+}
+
+.store-catalog-filter-reset {
+  @apply w-fit;
+  border-color: color-mix(in srgb, var(--color-acento) 34%, white);
+  color: color-mix(in srgb, var(--color-acento-dark) 92%, black);
+  background: color-mix(in srgb, var(--color-acento) 8%, white);
+}
+
+.store-catalog-filter-reset:hover {
+  border-color: color-mix(in srgb, var(--color-acento) 56%, white);
+  background: color-mix(in srgb, var(--color-acento) 13%, white);
+}
+
+.store-catalog-sort {
+  @apply mb-6 flex flex-col gap-3 rounded-2xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between;
+  border-color: var(--line-soft);
+  background: color-mix(in srgb, var(--surface-soft) 70%, white);
+}
+
+.store-catalog-sort__form {
+  @apply flex flex-wrap items-center gap-2;
+}
+
+.store-catalog-sort__label {
+  @apply text-xs font-semibold uppercase text-gray-500;
+  letter-spacing: 0.12em;
+}
+
+.store-catalog-sort__select {
+  @apply rounded-lg border bg-white px-3 py-2 text-sm text-gray-700 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  border-color: color-mix(in srgb, var(--color-primario) 22%, white);
+}
+
+.store-catalog-sort__select:focus {
+  border-color: var(--color-primario);
+}
+
 .store-empty-state {
   @apply rounded-3xl border border-dashed bg-white p-6 text-center sm:p-10;
   border-color: color-mix(in srgb, var(--color-primario) 25%, white);
