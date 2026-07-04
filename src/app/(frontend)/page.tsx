@@ -2,6 +2,7 @@ import Footer from '@/components/Footer'
 import FormSuscribir from '@/components/FormSuscribir'
 import Header from '@/components/Header'
 import HeroSlider from '@/components/HeroSlider'
+import StoreRail from '@/components/StoreRail'
 import TarjetaProducto from '@/components/TarjetaProducto'
 import { getHomeData } from '@/lib/storefront'
 import type { HomeCategory, HomeSectionConfig } from '@/lib/storefront-types'
@@ -81,6 +82,36 @@ export default async function HomePage() {
           <HeroSlider slides={banners} />
         </section>
 
+        {brands.length > 0 ? (
+          <section className="store-section store-section--brand">
+            <div className="store-home-container">
+              <div className="store-section-header">
+                <span className="store-section-eyebrow">Marcas</span>
+                <h2 className="store-section-title">Elige por marca</h2>
+                <p className="store-section-copy">Accesos de marca conectados al catalogo.</p>
+              </div>
+
+              <StoreRail
+                ariaLabel="Marcas disponibles"
+                previousLabel="Ver marcas anteriores"
+                nextLabel="Ver mas marcas"
+                staticThreshold={3}
+                className="store-brand-rail"
+              >
+                {brands.map(({ nombre, id, slug, logoUrl }) => (
+                  <a key={id} href={`/productos?marca=${slug}`} className="store-brand-card">
+                    <span className="store-brand-card__logo" aria-hidden={!logoUrl}>
+                      {logoUrl ? <img src={logoUrl} alt={`Logo de ${nombre}`} /> : <span>{nombre}</span>}
+                    </span>
+                    <span className="store-brand-card__name">{nombre}</span>
+                    <span className="store-brand-card__action">Ver coleccion</span>
+                  </a>
+                ))}
+              </StoreRail>
+            </div>
+          </section>
+        ) : null}
+
         {mainCategories.length > 0 ? (
           <section className="store-section store-section--soft">
             <div className="store-home-container">
@@ -92,35 +123,6 @@ export default async function HomePage() {
 
               <div className="grid auto-rows-[168px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {mainCategories.map(renderCategoryCard)}
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        {brands.length > 0 ? (
-          <section className="store-section">
-            <div className="store-home-container">
-              <div className="store-section-header">
-                <span className="store-section-eyebrow">Marcas</span>
-                <h2 className="store-section-title">Elige por marca</h2>
-                <p className="store-section-copy">Accesos de marca conectados al catalogo.</p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {brands.map(({ nombre, id, slug, logoUrl }) => (
-                  <a
-                    key={id}
-                    href={`/productos?marca=${slug}`}
-                    className="group relative overflow-hidden rounded-3xl border border-[var(--line-soft)] bg-gradient-to-br from-white to-[var(--surface-soft)] p-5 shadow-[0_20px_42px_-36px_rgba(13,23,87,0.6)] transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_28px_52px_-35px_rgba(13,23,87,0.75)]"
-                  >
-                    <div className="absolute right-0 top-0 h-16 w-16 rounded-full bg-primary/10 blur-lg lg:-right-8 lg:-top-8 lg:h-20 lg:w-20" />
-                    <div className="relative z-10 flex min-h-[120px] flex-col items-center justify-center gap-2 text-center">
-                      {logoUrl ? <img src={logoUrl} alt={nombre} className="h-8 w-auto object-contain" /> : <span className="store-chip">Marca</span>}
-                      <p className="text-base font-black uppercase tracking-[0.14em] text-gray-900">{nombre}</p>
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.11em] text-gray-500">Ver coleccion</span>
-                    </div>
-                  </a>
-                ))}
               </div>
             </div>
           </section>

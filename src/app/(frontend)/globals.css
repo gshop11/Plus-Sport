@@ -262,6 +262,10 @@ a {
     linear-gradient(180deg, color-mix(in srgb, var(--surface-soft) 86%, white) 0%, color-mix(in srgb, var(--surface-soft) 58%, white) 100%);
 }
 
+.store-section--brand {
+  @apply bg-white py-8 sm:py-10 lg:py-12;
+}
+
 .store-section--subscription {
   @apply bg-white pb-12 pt-10 sm:pb-16 sm:pt-12 lg:pb-20 lg:pt-16;
 }
@@ -338,6 +342,110 @@ a {
   border-color: color-mix(in srgb, var(--color-primario) 26%, white);
   color: color-mix(in srgb, var(--color-primario) 88%, black);
   background: color-mix(in srgb, var(--color-primario) 7%, white);
+}
+
+.store-rail {
+  @apply relative min-w-0;
+}
+
+.store-rail__controls {
+  @apply mb-3 flex items-center justify-end gap-2;
+}
+
+.store-rail__button {
+  @apply inline-flex h-10 w-10 items-center justify-center rounded-full border text-2xl font-bold leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35;
+  border-color: color-mix(in srgb, var(--color-primario) 28%, white);
+  color: var(--color-primario-dark);
+  background: #fff;
+}
+
+.store-rail__button:not(:disabled):hover {
+  border-color: color-mix(in srgb, var(--color-acento) 42%, white);
+  background: color-mix(in srgb, var(--color-acento) 8%, white);
+}
+
+.store-rail__track {
+  @apply min-w-0;
+}
+
+.store-rail--static .store-rail__track {
+  @apply grid gap-3 sm:grid-cols-2 lg:grid-cols-3;
+}
+
+.store-rail--static .store-rail__item {
+  @apply min-w-0;
+}
+
+.store-rail--scrollable .store-rail__track {
+  @apply flex gap-3 overflow-x-auto pb-3 pl-1 pr-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: 0.25rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.store-rail--scrollable .store-rail__track::-webkit-scrollbar {
+  height: 0.45rem;
+}
+
+.store-rail--scrollable .store-rail__track::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primario) 24%, transparent);
+}
+
+.store-rail--scrollable .store-rail__item {
+  @apply flex-none;
+  inline-size: min(78vw, 15.5rem);
+  scroll-snap-align: start;
+}
+
+.store-brand-rail .store-rail__item {
+  @apply flex;
+}
+
+.store-brand-card {
+  @apply flex min-h-[8.75rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border bg-white p-4 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  border-color: color-mix(in srgb, var(--line-soft) 88%, white);
+  box-shadow: 0 18px 38px -34px color-mix(in srgb, var(--color-primario) 62%, transparent);
+}
+
+.store-brand-card:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-acento) 32%, white);
+  box-shadow: 0 22px 42px -34px color-mix(in srgb, var(--color-primario) 72%, transparent);
+}
+
+.store-brand-card__logo {
+  @apply flex h-12 w-full max-w-[10rem] items-center justify-center rounded-xl border px-3 py-2 text-sm font-black uppercase;
+  border-color: color-mix(in srgb, var(--line-soft) 70%, white);
+  color: color-mix(in srgb, var(--color-primario) 88%, black);
+  background: color-mix(in srgb, var(--surface-soft) 48%, white);
+}
+
+.store-brand-card__logo img {
+  @apply max-h-full max-w-full object-contain;
+}
+
+.store-brand-card__name {
+  @apply max-w-full break-words text-sm font-black uppercase text-gray-900;
+  letter-spacing: 0.08em;
+}
+
+.store-brand-card__action {
+  @apply text-[11px] font-semibold uppercase text-gray-500;
+  letter-spacing: 0.1em;
+}
+
+@media (min-width: 640px) {
+  .store-rail--scrollable .store-rail__item {
+    inline-size: 13.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .store-rail--scrollable .store-rail__item {
+    inline-size: 14.5rem;
+  }
 }
 
 .store-catalog-filters {
