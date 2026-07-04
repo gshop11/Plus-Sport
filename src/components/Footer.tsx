@@ -36,6 +36,8 @@ const trustItems = [
   'Soporte postventa',
 ]
 
+const normalizeFooterHref = (href: string) => (href === '/ofertas' ? '/productos?oferta=1' : href)
+
 export default function Footer() {
   const [metodosFooter, setMetodosFooter] = useState<string[]>(['BCP', 'Yape', 'Interbank'])
   const [footerConfig, setFooterConfig] = useState<StorefrontConfig['footer']>(fallbackFooter)
@@ -119,7 +121,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-blue-200/90">
               {footerConfig.linksRapidos.map((link) => (
                 <li key={`${link.url}-${link.etiqueta}`}>
-                  <Link href={link.url} className="transition-colors hover:text-white">
+                  <Link href={normalizeFooterHref(link.url)} className="transition-colors hover:text-white">
                     {link.etiqueta}
                   </Link>
                 </li>
