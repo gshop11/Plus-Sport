@@ -61,7 +61,6 @@ export default async function HomePage() {
     config,
   } = await getHomeData()
 
-  const visiblePromotions = promotionalProducts.slice(0, 4)
   const visibleNewArrivals = newArrivalProducts.slice(0, 4)
   const subscriptionSection = config.homeSections.find((section) => section.key === 'suscripcion' && section.mostrar) ?? defaultSubscriptionSection
 
@@ -112,23 +111,7 @@ export default async function HomePage() {
           </section>
         ) : null}
 
-        {mainCategories.length > 0 ? (
-          <section className="store-section store-section--soft">
-            <div className="store-home-container">
-              <div className="store-section-header">
-                <span className="store-section-eyebrow">Categorias principales</span>
-                <h2 className="store-section-title">Compra por categoria</h2>
-                <p className="store-section-copy">Accesos principales para orientar la navegacion del home.</p>
-              </div>
-
-              <div className="grid auto-rows-[168px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {mainCategories.map(renderCategoryCard)}
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        {visiblePromotions.length > 0 ? (
+        {promotionalProducts.length > 0 ? (
           <section className="store-section store-section--soft">
             <div className="store-home-container">
               <div className="store-section-header store-section-header--split">
@@ -141,10 +124,32 @@ export default async function HomePage() {
                   Ver promociones
                 </a>
               </div>
-              <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
-                {visiblePromotions.map((producto, index) => (
+              <StoreRail
+                ariaLabel="Productos en oferta"
+                previousLabel="Ver ofertas anteriores"
+                nextLabel="Ver mas ofertas"
+                staticThreshold={3}
+                className="store-product-rail"
+              >
+                {promotionalProducts.map((producto, index) => (
                   <TarjetaProducto key={`promocion-${producto.id}`} producto={producto} index={index} />
                 ))}
+              </StoreRail>
+            </div>
+          </section>
+        ) : null}
+
+        {mainCategories.length > 0 ? (
+          <section className="store-section store-section--soft">
+            <div className="store-home-container">
+              <div className="store-section-header">
+                <span className="store-section-eyebrow">Categorias principales</span>
+                <h2 className="store-section-title">Compra por categoria</h2>
+                <p className="store-section-copy">Accesos principales para orientar la navegacion del home.</p>
+              </div>
+
+              <div className="grid auto-rows-[168px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {mainCategories.map(renderCategoryCard)}
               </div>
             </div>
           </section>

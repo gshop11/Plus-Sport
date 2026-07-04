@@ -403,6 +403,22 @@ a {
   @apply flex;
 }
 
+.store-product-rail.store-rail--static .store-rail__track {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
+
+.store-product-rail .store-rail__item {
+  @apply flex items-stretch;
+}
+
+.store-product-rail .store-rail__item > * {
+  @apply w-full;
+}
+
+.store-product-rail.store-rail--scrollable .store-rail__item {
+  inline-size: min(82vw, 18rem);
+}
+
 .store-brand-card {
   @apply flex min-h-[8.75rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border bg-white p-4 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
   border-color: color-mix(in srgb, var(--line-soft) 88%, white);
@@ -440,11 +456,19 @@ a {
   .store-rail--scrollable .store-rail__item {
     inline-size: 13.75rem;
   }
+
+  .store-product-rail.store-rail--scrollable .store-rail__item {
+    inline-size: 16rem;
+  }
 }
 
 @media (min-width: 1024px) {
   .store-rail--scrollable .store-rail__item {
     inline-size: 14.5rem;
+  }
+
+  .store-product-rail.store-rail--scrollable .store-rail__item {
+    inline-size: 16.75rem;
   }
 }
 
