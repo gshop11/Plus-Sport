@@ -399,6 +399,36 @@ a {
   scroll-snap-align: start;
 }
 
+.store-rail--cyclic-active {
+  @apply px-11 sm:px-12;
+}
+
+.store-rail--cyclic-active .store-rail__controls {
+  @apply pointer-events-none absolute inset-x-0 top-1/2 z-10 mb-0 flex -translate-y-1/2 justify-between;
+}
+
+.store-rail--cyclic-active .store-rail__button {
+  @apply pointer-events-auto shadow-lg;
+}
+
+.store-rail--cyclic-active .store-rail__track {
+  @apply flex gap-3 overflow-x-auto pb-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: 0;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.store-rail--cyclic-active .store-rail__track::-webkit-scrollbar {
+  display: none;
+}
+
+.store-rail--cyclic-active .store-rail__item {
+  @apply flex flex-none;
+  inline-size: calc((100% - (var(--store-rail-visible) - 1) * 0.75rem) / var(--store-rail-visible));
+  scroll-snap-align: start;
+}
+
 .store-brand-rail .store-rail__item {
   @apply flex;
 }

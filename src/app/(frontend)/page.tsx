@@ -96,6 +96,10 @@ export default async function HomePage() {
                 nextLabel="Ver mas marcas"
                 staticThreshold={3}
                 className="store-brand-rail"
+                mode="cyclic"
+                autoplay
+                autoplayInterval={5500}
+                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
               >
                 {brands.map(({ nombre, id, slug, logoUrl }) => (
                   <a key={id} href={`/productos?marca=${slug}`} className="store-brand-card">
