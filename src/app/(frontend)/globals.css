@@ -95,6 +95,164 @@ a {
   @apply bg-white;
 }
 
+.store-hero {
+  @apply relative overflow-hidden bg-white;
+}
+
+.store-hero__surface {
+  @apply relative bg-white;
+}
+
+.store-hero__inner {
+  @apply relative py-5 sm:py-7 lg:py-10;
+}
+
+.store-hero__grid {
+  @apply grid items-stretch gap-4 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.9fr)] lg:gap-6;
+}
+
+.store-hero__content {
+  @apply flex flex-col justify-center rounded-2xl border bg-white p-5 sm:p-7 lg:p-10;
+  border-color: color-mix(in srgb, var(--color-primario) 14%, white);
+  box-shadow: 0 24px 54px -44px color-mix(in srgb, var(--color-primario) 72%, transparent);
+}
+
+.store-hero__eyebrow {
+  @apply mb-4 inline-flex w-fit max-w-full items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase text-primary sm:text-[11px];
+  border-color: color-mix(in srgb, var(--color-primario) 24%, white);
+  background: color-mix(in srgb, var(--surface-soft) 82%, white);
+  letter-spacing: 0.12em;
+}
+
+.store-hero__title {
+  @apply mb-4 leading-none;
+  letter-spacing: 0;
+}
+
+.store-hero__title-line {
+  @apply block text-[2rem] font-black uppercase sm:text-[3.2rem] lg:text-[4.35rem];
+  letter-spacing: 0;
+}
+
+.store-hero__title-line--primary {
+  color: var(--color-primario);
+}
+
+.store-hero__title-line--accent {
+  @apply mt-1;
+  color: var(--color-acento);
+}
+
+.store-hero__copy {
+  @apply mb-6 max-w-xl text-sm leading-6 sm:text-base;
+  color: color-mix(in srgb, var(--color-primario-dark) 90%, white);
+}
+
+.store-hero__actions {
+  @apply mb-5 flex flex-wrap gap-3;
+}
+
+.store-hero__cta {
+  @apply inline-flex min-h-11 items-center justify-center rounded-xl px-5 py-3 text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+}
+
+.store-hero__cta--primary {
+  @apply text-white;
+  background: linear-gradient(135deg, var(--color-acento-dark), var(--color-acento));
+}
+
+.store-hero__cta--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px -20px color-mix(in srgb, var(--color-acento) 82%, transparent);
+}
+
+.store-hero__cta--secondary {
+  @apply border bg-white text-primary hover:bg-[var(--surface-soft)];
+  border-color: color-mix(in srgb, var(--color-primario) 48%, white);
+}
+
+.store-hero__benefits {
+  @apply grid grid-cols-2 gap-2;
+}
+
+.store-hero__benefit {
+  @apply inline-flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2 text-[11px] font-semibold uppercase leading-4 text-primary-dark;
+  border-color: var(--line-soft);
+  background: color-mix(in srgb, var(--surface-soft) 82%, white);
+  letter-spacing: 0.08em;
+}
+
+.store-hero__benefit-dot {
+  @apply h-1.5 w-1.5 shrink-0 rounded-full bg-accent;
+}
+
+.store-hero__media {
+  @apply relative min-h-[260px] overflow-hidden rounded-2xl border bg-primary sm:min-h-[400px] lg:min-h-[460px];
+  border-color: var(--line-soft);
+  box-shadow: 0 28px 56px -38px color-mix(in srgb, var(--color-primario) 72%, transparent);
+}
+
+.store-hero__image,
+.store-hero__overlay {
+  @apply absolute inset-0;
+}
+
+.store-hero__image {
+  @apply bg-cover bg-center;
+}
+
+.store-hero__overlay {
+  background:
+    linear-gradient(35deg, rgba(0, 0, 0, 0.42), transparent 58%),
+    linear-gradient(145deg, transparent 34%, color-mix(in srgb, var(--color-acento) 24%, transparent) 100%);
+}
+
+.store-hero__glow {
+  @apply absolute right-4 top-4 h-24 w-24 rounded-full blur-2xl sm:h-32 sm:w-32 lg:-right-8 lg:-top-8 lg:h-44 lg:w-44;
+  background: color-mix(in srgb, var(--color-acento) 30%, transparent);
+}
+
+.store-hero__media-label {
+  @apply absolute bottom-4 left-4 max-w-[calc(100%-2rem)] rounded-full border px-3 py-1 text-[10px] font-semibold uppercase text-white backdrop-blur-sm;
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.32);
+  letter-spacing: 0.12em;
+}
+
+.store-hero__indicator-shell {
+  @apply pb-3 sm:pb-4;
+}
+
+.store-hero__indicators {
+  @apply flex items-center justify-center gap-2;
+}
+
+.store-hero__indicator {
+  @apply h-8 w-8 rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  border-color: color-mix(in srgb, var(--color-primario) 18%, white);
+  background: color-mix(in srgb, var(--color-primario) 18%, white);
+}
+
+.store-hero__indicator::after {
+  @apply mx-auto block h-2 w-2 rounded-full content-[''];
+  background: color-mix(in srgb, var(--color-primario) 45%, white);
+}
+
+.store-hero__indicator:hover {
+  border-color: color-mix(in srgb, var(--color-primario) 36%, white);
+  background: color-mix(in srgb, var(--color-primario) 24%, white);
+}
+
+.store-hero__indicator--active {
+  @apply w-12;
+  border-color: color-mix(in srgb, var(--color-primario) 78%, white);
+  background: var(--color-primario);
+}
+
+.store-hero__indicator--active::after {
+  background: #fff;
+}
+
 .store-section {
   @apply bg-white py-10 sm:py-12 lg:py-16;
 }

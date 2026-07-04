@@ -108,60 +108,60 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
 
   return (
     <section
-      className="relative overflow-hidden"
+      className="store-hero"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="relative bg-white">
-        <div className="section-shell relative py-6 sm:py-8 lg:py-10">
-          <div className="grid items-stretch gap-5 lg:grid-cols-[1.06fr_0.94fr] lg:gap-6">
-            <div className="store-panel animate-fadeIn border-primary/15 bg-white p-6 sm:p-8 lg:p-10">
-              <span className="mb-4 inline-flex items-center rounded-full border border-primary/25 bg-[var(--surface-soft)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.17em] text-primary">
+      <div className="store-hero__surface">
+        <div className="store-home-container store-hero__inner">
+          <div className="store-hero__grid">
+            <div className="store-hero__content animate-fadeIn">
+              <span className="store-hero__eyebrow">
                 {slide.subtitulo || 'NUEVA TEMPORADA'}
               </span>
 
-              <h1 className="font-display mb-4 leading-[0.9]">
-                <span className="block text-[2.3rem] font-black uppercase tracking-[-0.03em] text-primary sm:text-[3.2rem] lg:text-[4.4rem]">
+              <h1 className="store-hero__title font-display" aria-label={slide.titulo}>
+                <span className="store-hero__title-line store-hero__title-line--primary">
                   {headline.lead}
                 </span>
-                <span className="mt-1 block text-[2.3rem] font-black uppercase tracking-[-0.02em] text-accent sm:text-[3.2rem] lg:text-[4.2rem]">
+                <span className="store-hero__title-line store-hero__title-line--accent">
                   {headline.accent}
                 </span>
               </h1>
 
-              <p className="mb-6 max-w-xl text-sm text-primary-dark/90 sm:text-base">
+              <p className="store-hero__copy">
                 {slide.descripcion || 'Estabilidad, grip y respuesta para entrenar mejor, todos los dias.'}
               </p>
 
-              <div className="mb-5 flex flex-wrap gap-3">
-                <a href={slide.btn1Url} className="store-button-primary">
+              <div className="store-hero__actions">
+                <a href={slide.btn1Url} className="store-hero__cta store-hero__cta--primary">
                   {slide.btn1Text || 'VER NOVEDADES'}
                 </a>
                 {slide.btn2Text ? (
                   <a
                     href={slide.btn2Url || '/productos'}
-                    className="inline-flex items-center justify-center rounded-xl border border-primary bg-white px-5 py-3 text-sm font-semibold text-primary transition-colors hover:bg-[var(--surface-soft)]"
+                    className="store-hero__cta store-hero__cta--secondary"
                   >
                     {slide.btn2Text}
                   </a>
                 ) : null}
               </div>
 
-              <div className="grid gap-2 text-[11px] font-semibold uppercase tracking-[0.11em] text-primary-dark sm:grid-cols-2">
+              <div className="store-hero__benefits">
                 {heroBenefits.map((benefit) => (
-                  <p key={benefit} className="inline-flex items-center gap-2 rounded-lg border border-[var(--line-soft)] bg-[var(--surface-soft)] px-3 py-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                  <p key={benefit} className="store-hero__benefit">
+                    <span className="store-hero__benefit-dot" />
                     {benefit}
                   </p>
                 ))}
               </div>
             </div>
 
-            <div className="relative min-h-[320px] overflow-hidden rounded-3xl border border-[var(--line-soft)] bg-primary shadow-[0_26px_52px_-34px_rgba(13,23,87,0.72)] sm:min-h-[400px]">
-              <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: heroBackground }} />
-              <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-transparent to-accent/20" />
-              <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-accent/30 blur-2xl lg:-right-12 lg:-top-12 lg:h-44 lg:w-44" />
-              <div className="absolute bottom-4 left-4 rounded-full border border-white/35 bg-black/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
+            <div className="store-hero__media">
+              <div className="store-hero__image" style={{ backgroundImage: heroBackground }} />
+              <div className="store-hero__overlay" />
+              <div className="store-hero__glow" />
+              <div className="store-hero__media-label">
                 SNEAKER / SPORTWEAR
               </div>
             </div>
@@ -169,15 +169,16 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
         </div>
 
         {data.length > 1 && (
-          <div className="section-shell pb-2">
-            <div className="flex items-center justify-center gap-2 pt-2">
+          <div className="store-home-container store-hero__indicator-shell">
+            <div className="store-hero__indicators">
               {data.map((item, index) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => setCurrent(index)}
                   aria-label={`Ver slide ${index + 1}`}
-                  className={`h-2 rounded-full transition-all ${index === current ? 'w-12 bg-primary' : 'w-5 bg-primary/35 hover:bg-primary/55'}`}
+                  aria-current={index === current ? 'true' : undefined}
+                  className={`store-hero__indicator ${index === current ? 'store-hero__indicator--active' : ''}`}
                 />
               ))}
             </div>
