@@ -9,7 +9,7 @@ export type { HeaderMenuItem, HomeBrand, HomeCategory, HomeData, HomeSectionConf
 export const PRODUCTS_PER_PAGE = 24
 const HOME_PRODUCT_LIMIT = 8
 const HOME_PROMOTION_FALLBACK_LIMIT = 24
-const HOME_NEW_ARRIVAL_FALLBACK_LIMIT = 16
+const HOME_NEW_ARRIVAL_LIMIT = 24
 const HOME_MAIN_CATEGORY_LIMIT = 6
 const HOME_CATEGORY_LIMIT = 24
 const HOME_BRAND_LIMIT = 20
@@ -417,7 +417,7 @@ export const getHomeData = unstable_cache(
         .find({
           collection: 'productos',
           where: { activo: { equals: true }, nuevoIngreso: { equals: true } },
-          limit: HOME_PRODUCT_LIMIT,
+          limit: HOME_NEW_ARRIVAL_LIMIT,
           depth: 1,
           sort: '-createdAt',
         })
@@ -470,28 +470,7 @@ export const getHomeData = unstable_cache(
       promotionalProducts = uniqueProductsById([...promotionalProducts, ...discountedProducts], HOME_PRODUCT_LIMIT)
     }
 
-    let newArrivalProducts = uniqueProductsById(newArrivalProductsRes.docs.map(mapProductoToCard), HOME_PRODUCT_LIMIT)
-    if (newArrivalProducts.length < HOME_PRODUCT_LIMIT) {
-      const recentProductsRes = await payload
-        .find({
-          collection: 'productos',
-          where: { activo: { equals: true } },
-          limit: HOME_NEW_ARRIVAL_FALLBACK_LIMIT,
-          depth: 1,
-          sort: '-createdAt',
-        })
-        .catch(() => ({ docs: [] as any[] }))
-
-      const recentProducts = recentProductsRes.docs
-        .map(mapProductoToCard)
-        .sort((a, b) => {
-          const aIsNew = a.etiqueta === 'nuevo' ? 1 : 0
-          const bIsNew = b.etiqueta === 'nuevo' ? 1 : 0
-          return bIsNew - aIsNew
-        })
-
-      newArrivalProducts = uniqueProductsById([...newArrivalProducts, ...recentProducts], HOME_PRODUCT_LIMIT)
-    }
+    const newArrivalProducts = uniqueProductsById(newArrivalProductsRes.docs.map(mapProductoToCard), HOME_NEW_ARRIVAL_LIMIT)
 
     const banners = await Promise.all(
       bannersRes.docs.map(async (doc: any) => {

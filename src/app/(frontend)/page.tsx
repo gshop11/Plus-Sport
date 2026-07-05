@@ -78,7 +78,6 @@ export default async function HomePage() {
     config,
   } = await getHomeData()
 
-  const visibleNewArrivals = newArrivalProducts.slice(0, 4)
   const subscriptionSection = config.homeSections.find((section) => section.key === 'suscripcion' && section.mostrar) ?? defaultSubscriptionSection
 
   return (
@@ -190,7 +189,7 @@ export default async function HomePage() {
           </section>
         ) : null}
 
-        {visibleNewArrivals.length > 0 ? (
+        {newArrivalProducts.length > 0 ? (
           <section className="store-section">
             <div className="store-home-container">
               <div className="store-section-header store-section-header--split">
@@ -203,11 +202,21 @@ export default async function HomePage() {
                   Ver novedades
                 </a>
               </div>
-              <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
-                {visibleNewArrivals.map((producto, index) => (
+              <StoreRail
+                ariaLabel="Nuevos ingresos"
+                previousLabel="Ver novedades anteriores"
+                nextLabel="Ver mas novedades"
+                staticThreshold={3}
+                className="store-product-rail store-new-arrivals-rail"
+                mode="cyclic"
+                autoplay
+                autoplayInterval={7100}
+                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
+              >
+                {newArrivalProducts.map((producto, index) => (
                   <TarjetaProducto key={`nuevo-${producto.id}`} producto={producto} index={index} />
                 ))}
-              </div>
+              </StoreRail>
             </div>
           </section>
         ) : null}
