@@ -46,7 +46,6 @@ export default function TarjetaProducto({
   variant?: 'default' | 'homeOffer' | 'homeNewArrival'
 }) {
   const currencySymbol = useCurrencySymbol()
-  const tallas = producto.tallas ?? []
   const descuento = producto.precioAnterior
     ? Math.round(((producto.precioAnterior - producto.precio) / producto.precioAnterior) * 100)
     : null
@@ -54,20 +53,21 @@ export default function TarjetaProducto({
   const etiqueta = producto.etiqueta ? etiquetaConfig[producto.etiqueta] : null
   const imageSrc = producto.imagenUrl || PLACEHOLDER_IMAGE
   const isAboveFold = index < 4
-  const ahorro = producto.precioAnterior ? Math.max(0, producto.precioAnterior - producto.precio) : 0
   const productHref = producto.slug ? `/producto/${encodeURIComponent(producto.slug)}` : '/productos'
 
   if (variant === 'homeOffer' || variant === 'homeNewArrival') {
+    // Recien llegados communicates novelty, not discount, even if the product also carries offer data.
     const isNewArrival = variant === 'homeNewArrival'
     const showPreviousPrice = !isNewArrival && Boolean(producto.precioAnterior)
     const showDiscountBadge = !isNewArrival && Boolean(descuento)
+    const showEtiquetaBadge = isNewArrival ? producto.etiqueta === 'nuevo' : Boolean(etiqueta)
 
     return (
       <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--line-soft)] bg-white shadow-[0_14px_30px_-26px_rgba(13,23,87,0.5)] transition-all duration-200 hover:-translate-y-[3px] hover:border-primary/30 hover:shadow-[0_20px_38px_-26px_rgba(13,23,87,0.62)]">
         <Link href={productHref} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2" aria-label={`Ver detalle de ${producto.nombre}`}>
-          <div className="relative overflow-hidden bg-[var(--surface-soft)] pt-[92%]">
+          <div className="relative overflow-hidden bg-white pt-[80%]">
             <div className="absolute right-2 top-2 z-10 flex flex-wrap items-center justify-end gap-1">
-              {etiqueta ? (
+              {showEtiquetaBadge && etiqueta ? (
                 <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ${etiqueta.className}`}>{etiqueta.texto}</span>
               ) : null}
               {showDiscountBadge ? <span className="rounded-full bg-accent px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-white">-{descuento}%</span> : null}
@@ -76,22 +76,22 @@ export default function TarjetaProducto({
               src={imageSrc}
               alt={producto.nombre}
               fill
-              className="object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+              className="object-contain p-3 transition-transform duration-200 group-hover:scale-[1.03]"
               sizes="(max-width: 768px) 48vw, (max-width: 1200px) 33vw, 20vw"
               priority={isAboveFold}
               loading={isAboveFold ? 'eager' : 'lazy'}
             />
           </div>
-          <div className="px-3 pt-2">
-            <h3 className="line-clamp-2 min-h-[2.4rem] text-[13px] font-bold leading-[1.15rem] text-gray-900 transition-colors group-hover:text-primary">{producto.nombre}</h3>
-            <p className="mt-0.5 truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-dark/70">{producto.categoria || ' '}</p>
+          <div className="px-3 pt-1.5">
+            <h3 className="line-clamp-2 text-[13px] font-bold leading-[1.1rem] text-gray-900 transition-colors group-hover:text-primary">{producto.nombre}</h3>
+            <p className="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-dark/70">{producto.categoria || ' '}</p>
           </div>
         </Link>
 
-        <div className="mt-auto flex items-center justify-between gap-2 px-3 pb-2.5 pt-1.5">
+        <div className="mt-auto flex items-center justify-between gap-2 px-3 pb-2 pt-1">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-base font-black text-primary sm:text-lg">{formatMoney(producto.precio, currencySymbol)}</span>
-            {showPreviousPrice ? <span className="text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior!, currencySymbol)}</span> : null}
+            <span className="whitespace-nowrap text-base font-black text-primary sm:text-lg">{formatMoney(producto.precio, currencySymbol)}</span>
+            {showPreviousPrice ? <span className="whitespace-nowrap text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior!, currencySymbol)}</span> : null}
           </div>
           <Link
             href={productHref}
@@ -106,83 +106,44 @@ export default function TarjetaProducto({
   }
 
   return (
-    <Link
-      href={productHref}
-      className="group block h-full rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
-      aria-label={`Ver detalle de ${producto.nombre}`}
-    >
-      <article className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--line-soft)] bg-white shadow-[0_20px_44px_-34px_rgba(13,23,87,0.55)] transition-[transform,box-shadow,border-color] duration-300 group-hover:-translate-y-1 group-hover:border-primary/35 group-hover:shadow-[0_28px_58px_-34px_rgba(13,23,87,0.7)]">
-        <div className="absolute right-3 top-3 z-20 flex flex-wrap items-center justify-end gap-1.5">
-          {etiqueta ? (
-            <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${etiqueta.className}`}>
-              {etiqueta.texto}
-            </span>
-          ) : null}
-          {descuento ? (
-            <span className="rounded-full bg-accent px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
-              -{descuento}%
-            </span>
-          ) : null}
-        </div>
-
-        <div className="relative block overflow-hidden bg-[var(--surface-soft)] pt-[108%]">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--line-soft)] bg-white shadow-[0_14px_30px_-26px_rgba(13,23,87,0.5)] transition-all duration-200 hover:-translate-y-[3px] hover:border-primary/30 hover:shadow-[0_20px_38px_-26px_rgba(13,23,87,0.62)]">
+      <Link href={productHref} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2" aria-label={`Ver detalle de ${producto.nombre}`}>
+        <div className="relative overflow-hidden bg-white pt-[100%]">
+          <div className="absolute right-2 top-2 z-10 flex flex-wrap items-center justify-end gap-1">
+            {etiqueta ? (
+              <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ${etiqueta.className}`}>{etiqueta.texto}</span>
+            ) : null}
+            {descuento ? <span className="rounded-full bg-accent px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-white">-{descuento}%</span> : null}
+          </div>
           <Image
             src={imageSrc}
             alt={producto.nombre}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            className="object-contain p-4 transition-transform duration-200 group-hover:scale-[1.03]"
             sizes="(max-width: 768px) 48vw, (max-width: 1200px) 33vw, 25vw"
             priority={isAboveFold}
             loading={isAboveFold ? 'eager' : 'lazy'}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-85 transition-opacity duration-300 group-hover:opacity-95" />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/18 via-transparent to-accent/14 opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
         </div>
-
-        <div className="flex flex-1 flex-col p-4 sm:p-5">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-dark/80">{producto.marca || 'Marca'}</p>
-          <h3 className="line-clamp-2 min-h-[2.8rem] text-[15px] font-bold leading-5 text-gray-900 transition-colors group-hover:text-primary">
-            {producto.nombre}
-          </h3>
-
-          {tallas.length > 0 ? (
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {tallas.slice(0, 5).map((talla) => (
-                <span key={talla} className="rounded-full border border-primary/20 bg-[var(--surface-soft)] px-2 py-0.5 text-[11px] font-semibold text-primary-dark/80">
-                  {talla}
-                </span>
-              ))}
-              {tallas.length > 5 ? <span className="rounded-full border border-primary/20 px-2 py-0.5 text-[11px] text-primary-dark/75">+{tallas.length - 5}</span> : null}
-            </div>
-          ) : null}
-
-          <div className="mt-3.5 rounded-xl border border-[var(--line-soft)] bg-[var(--surface-soft)] px-3 py-2.5">
-            <div className="flex items-end justify-between gap-2">
-              <div>
-                <p className="text-xl font-black text-primary">{formatMoney(producto.precio, currencySymbol)}</p>
-                {producto.precioAnterior ? <p className="text-xs text-gray-500 line-through">{formatMoney(producto.precioAnterior, currencySymbol)}</p> : <p className="text-xs text-gray-500">Precio regular</p>}
-              </div>
-              {ahorro > 0 ? (
-                <p className="text-right text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-dark">
-                  Ahorras
-                  <br />
-                  {formatMoney(ahorro, currencySymbol)}
-                </p>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="mt-3 flex items-center justify-between border-t border-[var(--line-soft)] pt-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-dark/75">
-              {tallas.length > 0 ? `${tallas.length} tallas` : 'Stock online'}
-            </p>
-            <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-primary transition-colors group-hover:text-accent">
-              Ver detalle
-              <span aria-hidden="true">{'>'}</span>
-            </span>
-          </div>
+        <div className="px-3 pt-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-dark/70">{producto.marca || 'Marca'}</p>
+          <h3 className="line-clamp-2 text-sm font-bold leading-[1.2rem] text-gray-900 transition-colors group-hover:text-primary">{producto.nombre}</h3>
         </div>
-      </article>
-    </Link>
+      </Link>
+
+      <div className="mt-auto flex items-center justify-between gap-2 px-3 pb-2.5 pt-1.5">
+        <div className="flex items-baseline gap-1.5">
+          <span className="whitespace-nowrap text-base font-black text-primary">{formatMoney(producto.precio, currencySymbol)}</span>
+          {producto.precioAnterior ? <span className="whitespace-nowrap text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior, currencySymbol)}</span> : null}
+        </div>
+        <Link
+          href={productHref}
+          aria-label={`Seleccionar talla de ${producto.nombre}`}
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-transparent text-primary-dark transition-colors hover:bg-[var(--surface-soft)] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
+        >
+          <CartIcon />
+        </Link>
+      </div>
+    </article>
   )
 }

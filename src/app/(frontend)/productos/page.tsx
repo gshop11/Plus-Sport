@@ -2,7 +2,15 @@ import CatalogFilters, { type CatalogFilterGroup } from '@/components/CatalogFil
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import TarjetaProducto from '@/components/TarjetaProducto'
-import { getCategoriaBySlug, getMarcasData, getProductList, PRODUCTS_PER_PAGE, type ProductSort } from '@/lib/storefront'
+import {
+  getCategoriaBySlug,
+  getCategoriasData,
+  getMarcasData,
+  getProductList,
+  getTallasDisponibles,
+  PRODUCTS_PER_PAGE,
+  type ProductSort,
+} from '@/lib/storefront'
 
 export const revalidate = 60
 
@@ -34,9 +42,14 @@ type SegmentKey = keyof typeof segmentMeta
 interface ProductosPageProps {
   searchParams: Promise<{
     segmento?: string
+    categoria?: string
     coleccion?: string
     marca?: string
+    talla?: string
+    precioMin?: string
+    precioMax?: string
     oferta?: string
+    disponible?: string
     page?: string
     search?: string
     sort?: string
@@ -47,6 +60,13 @@ const parsePage = (value?: string) => {
   const parsed = Number(value)
   if (Number.isNaN(parsed) || parsed < 1) return 1
   return Math.floor(parsed)
+}
+
+const parsePrecio = (value?: string): number | undefined => {
+  if (!value) return undefined
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed < 0) return undefined
+  return parsed
 }
 
 const allowedSorts: ProductSort[] = ['newest', 'price_asc', 'price_desc', 'name_asc']
@@ -71,26 +91,59 @@ const buildHref = (params: URLSearchParams, updates?: Record<string, string | nu
   return query ? `/productos?${query}` : '/productos'
 }
 
+const priceRanges = [
+  { label: 'Hasta S/ 100', min: undefined as number | undefined, max: 100 },
+  { label: 'S/ 100 a S/ 200', min: 100, max: 200 },
+  { label: 'S/ 200 a S/ 300', min: 200, max: 300 },
+  { label: 'S/ 300 a S/ 500', min: 300, max: 500 },
+  { label: 'Mas de S/ 500', min: 500, max: undefined as number | undefined },
+]
+
 export default async function ProductosPage({ searchParams }: ProductosPageProps) {
-  const { segmento, coleccion, marca, oferta, page, search, sort } = await searchParams
+  const { segmento, categoria, coleccion, marca, talla, precioMin, precioMax, oferta, disponible, page, search, sort } = await searchParams
   const currentPage = parsePage(page)
   const normalizedSegmento = segmento && segmento in segmentMeta ? (segmento as SegmentKey) : undefined
   const onlyOffers = oferta === '1'
+  const onlyAvailable = disponible === '1'
   const sortValue = parseSort(sort)
-  const categoriaCalzado = coleccion === 'calzado' ? await getCategoriaBySlug('calzado') : null
   const searchTerm = search?.trim() || undefined
-  const marcas = await getMarcasData()
+  const tallaParam = talla?.trim() || undefined
+
+  // Canonical filter param is `categoria=<slug>`. `coleccion=<slug>` (legacy links) is
+  // still read here for backward compatibility, but every generated link below uses
+  // `categoria` only - there is no special-cased "calzado" logic anymore.
+  const categoriaSlugParam = (categoria || coleccion || '').trim() || undefined
+
+  let precioMinValue = parsePrecio(precioMin)
+  let precioMaxValue = parsePrecio(precioMax)
+  if (precioMinValue !== undefined && precioMaxValue !== undefined && precioMinValue > precioMaxValue) {
+    precioMinValue = undefined
+    precioMaxValue = undefined
+  }
+
+  const [categoriaDoc, categorias, marcas, tallasDisponibles] = await Promise.all([
+    categoriaSlugParam ? getCategoriaBySlug(categoriaSlugParam) : Promise.resolve(null),
+    getCategoriasData(),
+    getMarcasData(),
+    getTallasDisponibles(),
+  ])
 
   const { productos, totalDocs, totalPages, hasPrevPage, hasNextPage } = await getProductList({
     page: currentPage,
     limit: PRODUCTS_PER_PAGE,
     segmento: normalizedSegmento,
     marcaSlug: marca,
-    categoriaId: categoriaCalzado ? String(categoriaCalzado.id) : undefined,
+    categoriaId: categoriaDoc ? String(categoriaDoc.id) : undefined,
+    talla: tallaParam,
+    precioMin: precioMinValue,
+    precioMax: precioMaxValue,
     onlyOffers,
+    onlyAvailable,
     search: searchTerm,
     sort: sortValue,
   })
+
+  const categoriaNombre = categoriaDoc ? String(categoriaDoc.nombre || '') : ''
 
   const heroContent = searchTerm
     ? {
@@ -112,11 +165,11 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
               titleAccent: 'Oferta',
               description: 'Precios especiales en productos seleccionados.',
             }
-          : coleccion === 'calzado'
+          : categoriaDoc
             ? {
                 titleLead: 'Coleccion',
-                titleAccent: 'Calzado',
-                description: 'Modelos deportivos para uso diario y entrenamiento.',
+                titleAccent: categoriaNombre || 'Categoria',
+                description: `Explora productos de la categoria ${categoriaNombre || 'seleccionada'}.`,
               }
             : {
                 titleLead: 'Todo el',
@@ -126,16 +179,41 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
 
   const query = new URLSearchParams()
   if (segmento) query.set('segmento', segmento)
-  if (coleccion) query.set('coleccion', coleccion)
+  if (categoriaSlugParam) query.set('categoria', categoriaSlugParam)
   if (marca) query.set('marca', marca)
+  if (tallaParam) query.set('talla', tallaParam)
+  if (precioMinValue !== undefined) query.set('precioMin', String(precioMinValue))
+  if (precioMaxValue !== undefined) query.set('precioMax', String(precioMaxValue))
   if (onlyOffers) query.set('oferta', '1')
+  if (onlyAvailable) query.set('disponible', '1')
   if (searchTerm) query.set('search', searchTerm)
   if (sort) query.set('sort', sortValue)
 
-  const quickBrandFilters = marca ? marcas.filter((item) => item.slug === marca) : marcas.slice(0, 6)
-  const hasActiveFilters = Boolean(normalizedSegmento || coleccion || marca || onlyOffers || searchTerm || sort)
+  const hasActiveFilters = Boolean(
+    normalizedSegmento ||
+      categoriaSlugParam ||
+      marca ||
+      tallaParam ||
+      precioMinValue !== undefined ||
+      precioMaxValue !== undefined ||
+      onlyOffers ||
+      onlyAvailable ||
+      searchTerm ||
+      sort,
+  )
 
   const filterGroups: CatalogFilterGroup[] = [
+    {
+      label: 'Categoria',
+      options: [
+        { label: 'Todas las categorias', href: buildHref(query, { categoria: null, page: null }), active: !categoriaSlugParam },
+        ...categorias.map((cat) => ({
+          label: cat.nombre,
+          href: buildHref(query, { categoria: cat.slug, page: null }),
+          active: categoriaSlugParam === cat.slug,
+        })),
+      ],
+    },
     {
       label: 'Publico',
       options: [
@@ -143,37 +221,84 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
         { label: 'Hombre', href: buildHref(query, { segmento: 'hombre', page: null }), active: segmento === 'hombre' },
         { label: 'Mujer', href: buildHref(query, { segmento: 'mujer', page: null }), active: segmento === 'mujer' },
         { label: 'Ninos', href: buildHref(query, { segmento: 'ninos', page: null }), active: segmento === 'ninos' },
-      ],
-    },
-    {
-      label: 'Categoria',
-      options: [
-        { label: 'Todas las categorias', href: buildHref(query, { coleccion: null, page: null }), active: !coleccion },
-        { label: 'Calzado', href: buildHref(query, { coleccion: 'calzado', page: null }), active: coleccion === 'calzado' },
-      ],
-    },
-    {
-      label: 'Promocion',
-      options: [
-        {
-          label: onlyOffers ? 'Quitar ofertas' : 'Solo ofertas',
-          href: buildHref(query, { oferta: onlyOffers ? null : '1', page: null }),
-          active: onlyOffers,
-        },
+        { label: 'Unisex', href: buildHref(query, { segmento: 'unisex', page: null }), active: segmento === 'unisex' },
       ],
     },
   ]
 
-  if (quickBrandFilters.length > 0) {
+  if (marcas.length > 0) {
     filterGroups.push({
       label: 'Marca',
-      options: quickBrandFilters.map((brand) => ({
-        label: brand.nombre,
-        href: buildHref(query, { marca: brand.slug, page: null }),
-        active: marca === brand.slug,
-      })),
+      collapseAfter: 8,
+      options: [
+        { label: 'Todas las marcas', href: buildHref(query, { marca: null, page: null }), active: !marca },
+        ...marcas.map((brand) => ({
+          label: brand.nombre,
+          href: buildHref(query, { marca: brand.slug, page: null }),
+          active: marca === brand.slug,
+        })),
+      ],
     })
   }
+
+  if (tallasDisponibles.length > 0) {
+    filterGroups.push({
+      label: 'Talla',
+      collapseAfter: 8,
+      options: [
+        { label: 'Todas las tallas', href: buildHref(query, { talla: null, page: null }), active: !tallaParam },
+        ...tallasDisponibles.map((size) => ({
+          label: size,
+          href: buildHref(query, { talla: size, page: null }),
+          active: tallaParam === size,
+        })),
+      ],
+    })
+  }
+
+  filterGroups.push({
+    label: 'Precio',
+    options: [
+      {
+        label: 'Cualquier precio',
+        href: buildHref(query, { precioMin: null, precioMax: null, page: null }),
+        active: precioMinValue === undefined && precioMaxValue === undefined,
+      },
+      ...priceRanges.map((range) => ({
+        label: range.label,
+        href: buildHref(query, {
+          precioMin: range.min !== undefined ? String(range.min) : null,
+          precioMax: range.max !== undefined ? String(range.max) : null,
+          page: null,
+        }),
+        active: precioMinValue === range.min && precioMaxValue === range.max,
+      })),
+    ],
+  })
+
+  filterGroups.push({
+    label: 'Promociones',
+    variant: 'checkbox',
+    options: [
+      {
+        label: 'Solo ofertas',
+        href: buildHref(query, { oferta: onlyOffers ? null : '1', page: null }),
+        active: onlyOffers,
+      },
+    ],
+  })
+
+  filterGroups.push({
+    label: 'Disponibilidad',
+    variant: 'checkbox',
+    options: [
+      {
+        label: 'Solo productos con stock',
+        href: buildHref(query, { disponible: onlyAvailable ? null : '1', page: null }),
+        active: onlyAvailable,
+      },
+    ],
+  })
 
   return (
     <>
@@ -204,9 +329,13 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
                   </p>
                   <form action="/productos" method="get" className="store-catalog-sort__form">
                     {segmento ? <input type="hidden" name="segmento" value={segmento} /> : null}
-                    {coleccion ? <input type="hidden" name="coleccion" value={coleccion} /> : null}
+                    {categoriaSlugParam ? <input type="hidden" name="categoria" value={categoriaSlugParam} /> : null}
                     {marca ? <input type="hidden" name="marca" value={marca} /> : null}
+                    {tallaParam ? <input type="hidden" name="talla" value={tallaParam} /> : null}
+                    {precioMinValue !== undefined ? <input type="hidden" name="precioMin" value={precioMinValue} /> : null}
+                    {precioMaxValue !== undefined ? <input type="hidden" name="precioMax" value={precioMaxValue} /> : null}
                     {onlyOffers ? <input type="hidden" name="oferta" value="1" /> : null}
+                    {onlyAvailable ? <input type="hidden" name="disponible" value="1" /> : null}
                     {searchTerm ? <input type="hidden" name="search" value={searchTerm} /> : null}
                     <label htmlFor="sort" className="store-catalog-sort__label">
                       Ordenar
@@ -237,36 +366,36 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
                     </div>
 
                     <div className="mt-8 flex items-center justify-center gap-3">
-                  {hasPrevPage ? (
-                    <a href={buildHref(query, { page: String(currentPage - 1) })} className="store-button-secondary px-4 py-2">
-                      Anterior
-                    </a>
-                  ) : (
-                    <span className="cursor-not-allowed rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">Anterior</span>
-                  )}
+                      {hasPrevPage ? (
+                        <a href={buildHref(query, { page: String(currentPage - 1) })} className="store-button-secondary px-4 py-2">
+                          Anterior
+                        </a>
+                      ) : (
+                        <span className="cursor-not-allowed rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">Anterior</span>
+                      )}
 
-                  <span className="text-sm font-semibold text-gray-700">
-                    Pagina {currentPage} de {Math.max(totalPages, 1)}
-                  </span>
+                      <span className="text-sm font-semibold text-gray-700">
+                        Pagina {currentPage} de {Math.max(totalPages, 1)}
+                      </span>
 
-                  {hasNextPage ? (
-                    <a href={buildHref(query, { page: String(currentPage + 1) })} className="store-button-secondary px-4 py-2">
-                      Siguiente
+                      {hasNextPage ? (
+                        <a href={buildHref(query, { page: String(currentPage + 1) })} className="store-button-secondary px-4 py-2">
+                          Siguiente
+                        </a>
+                      ) : (
+                        <span className="cursor-not-allowed rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">Siguiente</span>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="store-empty-state">
+                    <h3>No encontramos productos con estos filtros.</h3>
+                    <p>Prueba ajustando los filtros para encontrar mas resultados.</p>
+                    <a href="/productos" className="store-button-primary">
+                      Ver catalogo completo
                     </a>
-                  ) : (
-                    <span className="cursor-not-allowed rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-300">Siguiente</span>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="store-empty-state">
-                <h3>No encontramos productos para este filtro</h3>
-                <p>Prueba cambiando segmento, marca u oferta para encontrar mas resultados.</p>
-                <a href="/productos" className="store-button-primary">
-                  Ver catalogo completo
-                </a>
-              </div>
-            )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

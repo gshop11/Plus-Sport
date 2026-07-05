@@ -558,6 +558,40 @@ export const getCategoriasData = unstable_cache(
   { revalidate: 120 },
 )
 
+const compareTallas = (a: string, b: string) => {
+  const numA = Number(a)
+  const numB = Number(b)
+  const isNumA = a.trim() !== '' && Number.isFinite(numA)
+  const isNumB = b.trim() !== '' && Number.isFinite(numB)
+
+  if (isNumA && isNumB) return numA - numB
+  if (isNumA) return -1
+  if (isNumB) return 1
+  return a.localeCompare(b, 'es', { sensitivity: 'base' })
+}
+
+export const getTallasDisponibles = unstable_cache(
+  async (): Promise<string[]> => {
+    const payload = await getPayloadClient()
+
+    const result = await payload
+      .findDistinct({
+        collection: 'productos',
+        field: 'tallas.talla',
+        where: { activo: { equals: true } },
+      })
+      .catch(() => ({ values: [] as Record<string, unknown>[] }))
+
+    const tallas = result.values
+      .map((row) => String((row as Record<string, unknown>)['tallas.talla'] ?? '').trim())
+      .filter((talla) => talla.length > 0)
+
+    return [...new Set(tallas)].sort(compareTallas)
+  },
+  ['store-tallas-data'],
+  { revalidate: 120 },
+)
+
 export const getMarcasData = unstable_cache(
   async () => {
     const payload = await getPayloadClient()
@@ -591,7 +625,11 @@ export type ProductListInput = {
   segmento?: string
   marcaSlug?: string
   categoriaId?: string
+  talla?: string
+  precioMin?: number
+  precioMax?: number
   onlyOffers?: boolean
+  onlyAvailable?: boolean
   search?: string
   sort?: ProductSort
 }
@@ -602,38 +640,62 @@ export const getProductList = async ({
   segmento,
   marcaSlug,
   categoriaId,
+  talla,
+  precioMin,
+  precioMax,
   onlyOffers,
+  onlyAvailable,
   search,
   sort = 'newest',
 }: ProductListInput) => {
   const payload = await getPayloadClient()
 
-  const where: any = {
-    activo: { equals: true },
-  }
+  // Built as an explicit AND array (Change 13) so independent OR clauses
+  // (search, disponibilidad) never overwrite one another.
+  const and: any[] = [{ activo: { equals: true } }]
 
   if (segmento) {
-    where.segmento = { in: [segmento, 'unisex'] }
+    and.push({ segmento: { in: [segmento, 'unisex'] } })
   }
 
   if (categoriaId) {
-    where.categoria = { equals: categoriaId }
-  }
-
-  if (onlyOffers) {
-    where.etiqueta = { equals: 'oferta' }
+    and.push({ categoria: { equals: categoriaId } })
   }
 
   if (marcaSlug) {
     const marcas = await getMarcasData()
     const marca = marcas.find((m) => m.slug === marcaSlug)
     if (marca) {
-      where.marca = { equals: marca.id }
+      and.push({ marca: { equals: marca.id } })
     }
   }
 
+  if (typeof precioMin === 'number') {
+    and.push({ precio: { greater_than: precioMin } })
+  }
+
+  if (typeof precioMax === 'number') {
+    and.push({ precio: { less_than_equal: precioMax } })
+  }
+
+  if (talla) {
+    // Both conditions resolve to the same joined "tallas" row (Postgres relational
+    // adapter), so this requires stock > 0 on the specific selected talla, not just
+    // anywhere in the array.
+    and.push({ 'tallas.talla': { equals: talla } })
+    and.push({ 'tallas.stock': { greater_than: 0 } })
+  }
+
+  if (onlyOffers) {
+    and.push({ etiqueta: { equals: 'oferta' } })
+  }
+
   if (search && search.trim()) {
-    where.or = [{ nombre: { contains: search.trim() } }, { slug: { contains: search.trim() } }]
+    and.push({ or: [{ nombre: { contains: search.trim() } }, { slug: { contains: search.trim() } }] })
+  }
+
+  if (onlyAvailable) {
+    and.push({ or: [{ stock: { greater_than: 0 } }, { 'tallas.stock': { greater_than: 0 } }] })
   }
 
   const sortMap: Record<ProductSort, string> = {
@@ -646,7 +708,7 @@ export const getProductList = async ({
   const res = await payload
     .find({
       collection: 'productos',
-      where,
+      where: { and },
       page,
       limit,
       depth: 1,

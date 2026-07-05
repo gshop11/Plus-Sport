@@ -430,7 +430,7 @@ a {
 }
 
 .store-brand-card {
-  @apply flex min-h-[6.5rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl bg-white p-3 text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  @apply flex min-h-[4.5rem] w-full flex-col items-center justify-center gap-1 rounded-2xl bg-white p-3 text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
   box-shadow:
     0 14px 30px -22px color-mix(in srgb, var(--color-primario) 46%, transparent),
     0 2px 8px -4px color-mix(in srgb, var(--color-primario) 24%, transparent);
@@ -441,17 +441,6 @@ a {
   box-shadow:
     0 20px 40px -22px color-mix(in srgb, var(--color-primario) 58%, transparent),
     0 4px 12px -4px color-mix(in srgb, var(--color-acento) 30%, transparent);
-}
-
-.store-brand-card__logo {
-  @apply flex h-9 w-full max-w-[8rem] items-center justify-center rounded-lg border px-2.5 py-1.5 text-xs font-black uppercase;
-  border-color: color-mix(in srgb, var(--line-soft) 70%, white);
-  color: color-mix(in srgb, var(--color-primario) 88%, black);
-  background: color-mix(in srgb, var(--surface-soft) 48%, white);
-}
-
-.store-brand-card__logo img {
-  @apply max-h-full max-w-full object-contain;
 }
 
 .store-brand-card__name {
@@ -540,56 +529,77 @@ a {
 }
 
 .store-catalog-filter-group {
-  @apply min-w-0 rounded-xl border p-3;
-  border-color: color-mix(in srgb, var(--line-soft) 76%, white);
-  background: color-mix(in srgb, var(--surface-soft) 38%, white);
+  @apply min-w-0 border-b py-3.5 first:pt-0 last:border-b-0 last:pb-0;
+  border-color: color-mix(in srgb, var(--line-soft) 80%, white);
 }
 
 .store-catalog-filter-group__label {
-  @apply mb-2 text-[11px] font-black uppercase text-gray-500;
+  @apply mb-1.5 text-[11px] font-black uppercase text-gray-500;
   letter-spacing: 0.12em;
 }
 
-.store-catalog-filter-options {
-  @apply flex min-w-0 flex-wrap gap-2;
+.store-catalog-filter-list {
+  @apply flex min-w-0 flex-col;
 }
 
-.store-catalog-filter-chip,
-.store-catalog-filter-reset {
-  @apply inline-flex min-h-9 max-w-full items-center justify-center rounded-full border px-3 py-2 text-[11px] font-bold uppercase leading-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
-  letter-spacing: 0.08em;
+.store-catalog-filter-row {
+  @apply flex min-h-9 items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-sm text-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
 }
 
-.store-catalog-filter-chip {
-  border-color: color-mix(in srgb, var(--color-primario) 22%, white);
-  color: color-mix(in srgb, var(--color-primario) 86%, black);
+.store-catalog-filter-row:hover {
+  background: color-mix(in srgb, var(--surface-soft) 70%, white);
+  color: var(--color-primario-dark);
+}
+
+.store-catalog-filter-row--active {
+  @apply font-bold;
+  color: var(--color-primario-dark);
+}
+
+.store-catalog-filter-row__indicator {
+  @apply h-4 w-4 shrink-0 border transition-colors;
+  border-color: color-mix(in srgb, var(--color-primario) 40%, white);
   background: #fff;
 }
 
-.store-catalog-filter-chip:hover {
-  border-color: color-mix(in srgb, var(--color-primario) 44%, white);
-  background: color-mix(in srgb, var(--surface-soft) 78%, white);
+.store-catalog-filter-row__indicator--radio {
+  @apply rounded-full;
 }
 
-.store-catalog-filter-chip--active {
-  @apply font-black;
-  box-shadow: inset 0 0 0 1px currentColor;
+.store-catalog-filter-row__indicator--checkbox {
+  @apply rounded-[4px];
 }
 
-.store-catalog-filter-chip--primary {
+.store-catalog-filter-row--active .store-catalog-filter-row__indicator {
   border-color: var(--color-primario);
-  color: #fff;
+  background:
+    radial-gradient(circle, var(--color-primario) 42%, transparent 46%),
+    #fff;
+}
+
+.store-catalog-filter-row--active .store-catalog-filter-row__indicator--checkbox {
   background: var(--color-primario);
 }
 
-.store-catalog-filter-chip--accent {
-  border-color: var(--color-acento);
-  color: #fff;
-  background: var(--color-acento);
+.store-catalog-filter-more {
+  @apply mt-1;
+}
+
+.store-catalog-filter-more__summary {
+  @apply flex min-h-9 cursor-pointer list-none items-center rounded-lg px-1.5 py-1.5 text-xs font-bold uppercase tracking-[0.06em] text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+}
+
+.store-catalog-filter-more__summary::-webkit-details-marker {
+  display: none;
+}
+
+.store-catalog-filter-more__summary:hover {
+  background: color-mix(in srgb, var(--surface-soft) 70%, white);
 }
 
 .store-catalog-filter-reset {
-  @apply w-fit;
+  @apply inline-flex min-h-9 w-fit items-center justify-center rounded-full border px-3 py-2 text-[11px] font-bold uppercase leading-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  letter-spacing: 0.08em;
   border-color: color-mix(in srgb, var(--color-acento) 34%, white);
   color: color-mix(in srgb, var(--color-acento-dark) 92%, black);
   background: color-mix(in srgb, var(--color-acento) 8%, white);

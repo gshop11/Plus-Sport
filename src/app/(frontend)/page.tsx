@@ -100,11 +100,8 @@ export default async function HomePage() {
                 autoplayInterval={3200}
                 visibleItems={{ mobile: 2, tablet: 4, desktop: 6 }}
               >
-                {brands.map(({ nombre, id, slug, logoUrl }) => (
+                {brands.map(({ nombre, id, slug }) => (
                   <a key={id} href={`/productos?marca=${slug}`} className="store-brand-card">
-                    <span className="store-brand-card__logo" aria-hidden={!logoUrl}>
-                      {logoUrl ? <img src={logoUrl} alt={`Logo de ${nombre}`} /> : <span>{nombre}</span>}
-                    </span>
                     <span className="store-brand-card__name">{nombre}</span>
                     <span className="store-brand-card__action">Ver coleccion</span>
                   </a>

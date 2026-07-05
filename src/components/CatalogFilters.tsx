@@ -10,7 +10,9 @@ export type CatalogFilterOption = {
 
 export type CatalogFilterGroup = {
   label: string
+  variant?: 'radio' | 'checkbox'
   options: CatalogFilterOption[]
+  collapseAfter?: number
 }
 
 type CatalogFiltersProps = {
@@ -19,26 +21,49 @@ type CatalogFiltersProps = {
   resetHref: string
 }
 
+function FilterRow({ option, variant }: { option: CatalogFilterOption; variant: 'radio' | 'checkbox' }) {
+  return (
+    <a
+      href={option.href}
+      className={`store-catalog-filter-row ${option.active ? 'store-catalog-filter-row--active' : ''}`}
+      aria-current={option.active ? 'page' : undefined}
+    >
+      <span className={`store-catalog-filter-row__indicator store-catalog-filter-row__indicator--${variant}`} aria-hidden="true" />
+      <span className="store-catalog-filter-row__label">{option.label}</span>
+    </a>
+  )
+}
+
 function FilterGroupsList({ groups }: { groups: CatalogFilterGroup[] }) {
   return (
-    <div className="flex flex-col gap-4">
-      {groups.map((group) => (
-        <div key={group.label} className="store-catalog-filter-group">
-          <p className="store-catalog-filter-group__label">{group.label}</p>
-          <div className="store-catalog-filter-options">
-            {group.options.map((option) => (
-              <a
-                key={`${group.label}-${option.label}`}
-                href={option.href}
-                className={`store-catalog-filter-chip ${option.active ? 'store-catalog-filter-chip--active store-catalog-filter-chip--primary' : ''}`}
-                aria-current={option.active ? 'page' : undefined}
-              >
-                {option.label}
-              </a>
-            ))}
+    <div className="flex flex-col">
+      {groups.map((group) => {
+        const variant = group.variant ?? 'radio'
+        const collapseAfter = group.collapseAfter
+        const visibleOptions = collapseAfter ? group.options.slice(0, collapseAfter) : group.options
+        const restOptions = collapseAfter ? group.options.slice(collapseAfter) : []
+
+        return (
+          <div key={group.label} className="store-catalog-filter-group">
+            <p className="store-catalog-filter-group__label">{group.label}</p>
+            <div className="store-catalog-filter-list">
+              {visibleOptions.map((option) => (
+                <FilterRow key={`${group.label}-${option.label}`} option={option} variant={variant} />
+              ))}
+              {restOptions.length > 0 ? (
+                <details className="store-catalog-filter-more">
+                  <summary className="store-catalog-filter-more__summary">Ver mas ({restOptions.length})</summary>
+                  <div className="store-catalog-filter-list">
+                    {restOptions.map((option) => (
+                      <FilterRow key={`${group.label}-${option.label}`} option={option} variant={variant} />
+                    ))}
+                  </div>
+                </details>
+              ) : null}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
