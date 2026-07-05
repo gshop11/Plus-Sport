@@ -24,31 +24,22 @@ const defaultSubscriptionSection: HomeSectionConfig = {
   orden: 9,
 }
 
-const renderCategoryCard = ({ nombre, slug, descripcion, imagenUrl }: HomeCategory, index: number) => (
-  <a
-    href={`/categoria/${slug}`}
-    key={slug}
-    className={`group relative overflow-hidden rounded-3xl border border-[var(--line-soft)] bg-white shadow-[0_18px_44px_-34px_rgba(13,23,87,0.62)] transition-all hover:-translate-y-1 hover:shadow-[0_28px_54px_-36px_rgba(13,23,87,0.7)] ${
-      index === 0 ? 'sm:col-span-2 lg:col-span-2 lg:row-span-2' : ''
-    }`}
-  >
-    <div
-      className="absolute inset-0"
-      style={{
-        backgroundImage: imagenUrl
-          ? `linear-gradient(156deg, rgba(13,23,87,0.82), rgba(13,23,87,0.3)), url(${imagenUrl})`
-          : 'linear-gradient(156deg, rgba(13,23,87,0.82), rgba(13,23,87,0.4))',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    />
-    <div className="relative flex h-full flex-col justify-end p-4 text-white">
-      <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">Categoria</p>
-      <p className="mb-1 text-2xl font-black uppercase">{nombre}</p>
-      <p className="line-clamp-2 text-sm text-white/80">{descripcion || 'Modelos y ropa para esta categoria.'}</p>
-    </div>
-  </a>
-)
+const getCategoryDedupeKeys = ({ id, slug }: HomeCategory) => [id, slug, `/categoria/${slug}`].filter(Boolean)
+
+const mergeHomeCategories = (mainCategories: HomeCategory[], generalCategories: HomeCategory[]) => {
+  const seen = new Set<string>()
+  const categories: HomeCategory[] = []
+
+  for (const category of [...mainCategories, ...generalCategories]) {
+    const keys = getCategoryDedupeKeys(category)
+
+    if (keys.some((key) => seen.has(key))) continue
+    keys.forEach((key) => seen.add(key))
+    categories.push(category)
+  }
+
+  return categories
+}
 
 const renderMainCategoryCard = ({ nombre, slug, descripcion, imagenUrl }: HomeCategory) => (
   <a
@@ -79,6 +70,7 @@ export default async function HomePage() {
   } = await getHomeData()
 
   const subscriptionSection = config.homeSections.find((section) => section.key === 'suscripcion' && section.mostrar) ?? defaultSubscriptionSection
+  const homeCategories = mergeHomeCategories(mainCategories, generalCategories)
 
   return (
     <>
@@ -131,6 +123,32 @@ export default async function HomePage() {
           </section>
         ) : null}
 
+        {homeCategories.length > 0 ? (
+          <section className="store-section store-section--soft">
+            <div className="store-home-container">
+              <div className="store-section-header">
+                <span className="store-section-eyebrow">Categorias</span>
+                <h2 className="store-section-title">Compra por categoria</h2>
+                <p className="store-section-copy">Accesos activos del catalogo reunidos en un solo carrusel.</p>
+              </div>
+
+              <StoreRail
+                ariaLabel="Categorias"
+                previousLabel="Ver categorias anteriores"
+                nextLabel="Ver mas categorias"
+                staticThreshold={3}
+                className="store-main-category-rail"
+                mode="cyclic"
+                autoplay
+                autoplayInterval={7600}
+                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
+              >
+                {homeCategories.map(renderMainCategoryCard)}
+              </StoreRail>
+            </div>
+          </section>
+        ) : null}
+
         {promotionalProducts.length > 0 ? (
           <section className="store-section store-section--soft">
             <div className="store-home-container">
@@ -158,32 +176,6 @@ export default async function HomePage() {
                 {promotionalProducts.map((producto, index) => (
                   <TarjetaProducto key={`promocion-${producto.id}`} producto={producto} index={index} />
                 ))}
-              </StoreRail>
-            </div>
-          </section>
-        ) : null}
-
-        {mainCategories.length > 0 ? (
-          <section className="store-section store-section--soft">
-            <div className="store-home-container">
-              <div className="store-section-header">
-                <span className="store-section-eyebrow">Categorias principales</span>
-                <h2 className="store-section-title">Compra por categoria</h2>
-                <p className="store-section-copy">Accesos principales para orientar la navegacion del home.</p>
-              </div>
-
-              <StoreRail
-                ariaLabel="Categorias principales"
-                previousLabel="Ver categorias anteriores"
-                nextLabel="Ver mas categorias"
-                staticThreshold={3}
-                className="store-main-category-rail"
-                mode="cyclic"
-                autoplay
-                autoplayInterval={7600}
-                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
-              >
-                {mainCategories.map(renderMainCategoryCard)}
               </StoreRail>
             </div>
           </section>
@@ -217,22 +209,6 @@ export default async function HomePage() {
                   <TarjetaProducto key={`nuevo-${producto.id}`} producto={producto} index={index} />
                 ))}
               </StoreRail>
-            </div>
-          </section>
-        ) : null}
-
-        {generalCategories.length > 0 ? (
-          <section className="store-section store-section--soft">
-            <div className="store-home-container">
-              <div className="store-section-header">
-                <span className="store-section-eyebrow">Mas categorias</span>
-                <h2 className="store-section-title">Explora el catalogo</h2>
-                <p className="store-section-copy">Categorias activas adicionales sin repetir las principales.</p>
-              </div>
-
-              <div className="grid auto-rows-[168px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {generalCategories.map(renderCategoryCard)}
-              </div>
             </div>
           </section>
         ) : null}
