@@ -517,7 +517,7 @@ export const getHomeData = unstable_cache(
       storefront,
     }
   },
-  ['store-home-data'],
+  ['store-home-data-v2'],
   { revalidate: 60 },
 )
 
