@@ -51,13 +51,6 @@ const SLIDES_DEFAULT: SlideData[] = [
   },
 ]
 
-const heroBenefits = [
-  'Envio express',
-  'Cambios faciles',
-  'Ofertas reales',
-  'Compra segura',
-]
-
 export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
   const validSlides = slides?.filter((slide) => slide.titulo && slide.titulo.trim().length > 5) ?? []
   const data = validSlides.length > 0 ? validSlides : SLIDES_DEFAULT
@@ -65,29 +58,6 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
   const slide = data[current]
-
-  const headline = useMemo(() => {
-    const words = String(slide.titulo || '')
-      .toUpperCase()
-      .replace(/[^\p{L}\p{N} ]/gu, ' ')
-      .split(/\s+/)
-      .filter(Boolean)
-
-    if (words.length === 0) {
-      return { lead: 'TRAINING', accent: 'Y GYM' }
-    }
-
-    if (words.length === 1) {
-      return { lead: words[0], accent: 'Y GYM' }
-    }
-
-    const splitIndex = Math.ceil(words.length / 2)
-
-    return {
-      lead: words.slice(0, splitIndex).join(' '),
-      accent: words.slice(splitIndex).join(' '),
-    }
-  }, [slide.titulo])
 
   useEffect(() => {
     if (paused || data.length <= 1) return
@@ -107,6 +77,9 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
   return (
     <section
       className="store-hero"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Carrusel visual de Plus Sport"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -115,53 +88,10 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
         style={{
           backgroundImage: heroBackground,
         }}
+        role="img"
+        aria-label={slide.titulo}
       >
         <div className="store-hero__backdrop" aria-hidden="true" />
-        <div className="store-hero__glow" aria-hidden="true" />
-
-        <div className="store-home-container store-hero__inner">
-          <div className="store-hero__content animate-fadeIn">
-            <span className="store-hero__eyebrow">
-              {slide.subtitulo || 'NUEVA TEMPORADA'}
-            </span>
-
-            <h1 className="store-hero__title font-display" aria-label={slide.titulo}>
-              <span className="store-hero__title-line store-hero__title-line--primary">
-                {headline.lead}
-              </span>
-              <span className="store-hero__title-line store-hero__title-line--accent">
-                {headline.accent}
-              </span>
-            </h1>
-
-            <p className="store-hero__copy">
-              {slide.descripcion || 'Estabilidad, grip y respuesta para entrenar mejor, todos los dias.'}
-            </p>
-
-            <div className="store-hero__actions">
-              <a href={slide.btn1Url} className="store-hero__cta store-hero__cta--primary">
-                {slide.btn1Text || 'VER NOVEDADES'}
-              </a>
-              {slide.btn2Text ? (
-                <a
-                  href={slide.btn2Url || '/productos'}
-                  className="store-hero__cta store-hero__cta--secondary"
-                >
-                  {slide.btn2Text}
-                </a>
-              ) : null}
-            </div>
-
-            <div className="store-hero__benefits">
-              {heroBenefits.map((benefit) => (
-                <p key={benefit} className="store-hero__benefit">
-                  <span className="store-hero__benefit-dot" aria-hidden="true" />
-                  {benefit}
-                </p>
-              ))}
-            </div>
-          </div>
-        </div>
 
         {data.length > 1 && (
           <div className="store-home-container store-hero__indicator-shell">
