@@ -100,42 +100,45 @@ a {
 }
 
 .store-hero__surface {
-  @apply relative bg-white;
+  @apply relative isolate min-h-[500px] overflow-hidden bg-primary bg-cover bg-center bg-no-repeat sm:min-h-[540px] lg:min-h-[590px];
 }
 
 .store-hero__inner {
-  @apply relative py-5 sm:py-7 lg:py-10;
+  @apply relative z-[2] flex min-h-[500px] items-center py-16 sm:min-h-[540px] sm:py-20 lg:min-h-[590px] lg:py-24;
 }
 
-.store-hero__grid {
-  @apply grid items-stretch gap-4 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.9fr)] lg:gap-6;
+.store-hero__backdrop {
+  @apply absolute inset-0 z-[1];
+  background:
+    linear-gradient(90deg, rgba(4, 8, 28, 0.9) 0%, rgba(4, 8, 28, 0.74) 42%, rgba(4, 8, 28, 0.42) 72%, rgba(4, 8, 28, 0.62) 100%),
+    linear-gradient(0deg, rgba(4, 8, 28, 0.48), rgba(4, 8, 28, 0.08) 42%, rgba(4, 8, 28, 0.46));
 }
 
 .store-hero__content {
-  @apply flex flex-col justify-center rounded-2xl border bg-white p-5 sm:p-7 lg:p-10;
-  border-color: color-mix(in srgb, var(--color-primario) 14%, white);
-  box-shadow: 0 24px 54px -44px color-mix(in srgb, var(--color-primario) 72%, transparent);
+  @apply max-w-[42rem] text-white;
 }
 
 .store-hero__eyebrow {
-  @apply mb-4 inline-flex w-fit max-w-full items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase text-primary sm:text-[11px];
-  border-color: color-mix(in srgb, var(--color-primario) 24%, white);
-  background: color-mix(in srgb, var(--surface-soft) 82%, white);
+  @apply mb-4 inline-flex w-fit max-w-full items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase text-white sm:text-[11px];
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
   letter-spacing: 0.12em;
 }
 
 .store-hero__title {
-  @apply mb-4 leading-none;
+  @apply mb-4 max-w-[13ch] leading-none;
   letter-spacing: 0;
+  text-shadow: 0 18px 38px rgba(0, 0, 0, 0.34);
 }
 
 .store-hero__title-line {
-  @apply block text-[2rem] font-black uppercase sm:text-[3.2rem] lg:text-[4.35rem];
+  @apply block break-words text-[2.85rem] font-black uppercase sm:text-[4.3rem] lg:text-[5.8rem];
   letter-spacing: 0;
 }
 
 .store-hero__title-line--primary {
-  color: var(--color-primario);
+  color: #fff;
 }
 
 .store-hero__title-line--accent {
@@ -144,8 +147,8 @@ a {
 }
 
 .store-hero__copy {
-  @apply mb-6 max-w-xl text-sm leading-6 sm:text-base;
-  color: color-mix(in srgb, var(--color-primario-dark) 90%, white);
+  @apply mb-6 max-w-xl text-sm leading-6 text-white/90 sm:text-lg sm:leading-7;
+  text-shadow: 0 8px 22px rgba(0, 0, 0, 0.34);
 }
 
 .store-hero__actions {
@@ -153,7 +156,7 @@ a {
 }
 
 .store-hero__cta {
-  @apply inline-flex min-h-11 items-center justify-center rounded-xl px-5 py-3 text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  @apply inline-flex min-h-11 items-center justify-center rounded-xl px-5 py-3 text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950;
 }
 
 .store-hero__cta--primary {
@@ -167,18 +170,21 @@ a {
 }
 
 .store-hero__cta--secondary {
-  @apply border bg-white text-primary hover:bg-[var(--surface-soft)];
-  border-color: color-mix(in srgb, var(--color-primario) 48%, white);
+  @apply border text-white hover:bg-white/20;
+  border-color: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .store-hero__benefits {
-  @apply grid grid-cols-2 gap-2;
+  @apply flex max-w-2xl flex-wrap gap-2;
 }
 
 .store-hero__benefit {
-  @apply inline-flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2 text-[11px] font-semibold uppercase leading-4 text-primary-dark;
-  border-color: var(--line-soft);
-  background: color-mix(in srgb, var(--surface-soft) 82%, white);
+  @apply inline-flex min-w-0 items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-semibold uppercase leading-4 text-white sm:text-[11px];
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
   letter-spacing: 0.08em;
 }
 
@@ -186,71 +192,85 @@ a {
   @apply h-1.5 w-1.5 shrink-0 rounded-full bg-accent;
 }
 
-.store-hero__media {
-  @apply relative min-h-[260px] overflow-hidden rounded-2xl border bg-primary sm:min-h-[400px] lg:min-h-[460px];
-  border-color: var(--line-soft);
-  box-shadow: 0 28px 56px -38px color-mix(in srgb, var(--color-primario) 72%, transparent);
-}
-
-.store-hero__image,
-.store-hero__overlay {
-  @apply absolute inset-0;
-}
-
-.store-hero__image {
-  @apply bg-cover bg-center;
-}
-
-.store-hero__overlay {
-  background:
-    linear-gradient(35deg, rgba(0, 0, 0, 0.42), transparent 58%),
-    linear-gradient(145deg, transparent 34%, color-mix(in srgb, var(--color-acento) 24%, transparent) 100%);
-}
-
 .store-hero__glow {
-  @apply absolute right-4 top-4 h-24 w-24 rounded-full blur-2xl sm:h-32 sm:w-32 lg:-right-8 lg:-top-8 lg:h-44 lg:w-44;
-  background: color-mix(in srgb, var(--color-acento) 30%, transparent);
-}
-
-.store-hero__media-label {
-  @apply absolute bottom-4 left-4 max-w-[calc(100%-2rem)] rounded-full border px-3 py-1 text-[10px] font-semibold uppercase text-white backdrop-blur-sm;
-  border-color: rgba(255, 255, 255, 0.35);
-  background: rgba(0, 0, 0, 0.32);
-  letter-spacing: 0.12em;
+  @apply pointer-events-none absolute right-[8%] top-[14%] z-[1] h-40 w-40 rounded-full blur-3xl sm:h-56 sm:w-56 lg:h-72 lg:w-72;
+  background: color-mix(in srgb, var(--color-acento) 26%, transparent);
 }
 
 .store-hero__indicator-shell {
-  @apply pb-3 sm:pb-4;
+  @apply absolute inset-x-0 bottom-5 z-[3];
 }
 
 .store-hero__indicators {
-  @apply flex items-center justify-center gap-2;
+  @apply flex items-center justify-start gap-2;
 }
 
 .store-hero__indicator {
-  @apply h-8 w-8 rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
-  border-color: color-mix(in srgb, var(--color-primario) 18%, white);
-  background: color-mix(in srgb, var(--color-primario) 18%, white);
+  @apply h-8 w-8 rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950;
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
 }
 
 .store-hero__indicator::after {
   @apply mx-auto block h-2 w-2 rounded-full content-[''];
-  background: color-mix(in srgb, var(--color-primario) 45%, white);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .store-hero__indicator:hover {
-  border-color: color-mix(in srgb, var(--color-primario) 36%, white);
-  background: color-mix(in srgb, var(--color-primario) 24%, white);
+  border-color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .store-hero__indicator--active {
   @apply w-12;
-  border-color: color-mix(in srgb, var(--color-primario) 78%, white);
-  background: var(--color-primario);
+  border-color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .store-hero__indicator--active::after {
-  background: #fff;
+  background: var(--color-acento);
+}
+
+@media (max-width: 767px) {
+  .store-hero__surface {
+    @apply min-h-[520px];
+    background-position: 58% center;
+  }
+
+  .store-hero__inner {
+    @apply min-h-[520px] items-end pb-20 pt-12;
+  }
+
+  .store-hero__backdrop {
+    background:
+      linear-gradient(0deg, rgba(4, 8, 28, 0.92) 0%, rgba(4, 8, 28, 0.74) 52%, rgba(4, 8, 28, 0.38) 100%),
+      linear-gradient(90deg, rgba(4, 8, 28, 0.72), rgba(4, 8, 28, 0.28));
+  }
+
+  .store-hero__title {
+    @apply max-w-[11ch];
+  }
+
+  .store-hero__title-line {
+    @apply text-[2.55rem];
+  }
+
+  .store-hero__actions {
+    @apply gap-2;
+  }
+
+  .store-hero__cta {
+    @apply min-h-10 flex-1 px-4 text-xs;
+  }
+
+  .store-hero__benefits {
+    @apply grid grid-cols-2 gap-2;
+  }
+
+  .store-hero__benefit {
+    @apply justify-center px-2 text-[9px];
+  }
 }
 
 .store-section {
