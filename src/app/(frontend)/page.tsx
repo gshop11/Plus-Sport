@@ -134,6 +134,10 @@ export default async function HomePage() {
                 nextLabel="Ver mas ofertas"
                 staticThreshold={3}
                 className="store-product-rail"
+                mode="cyclic"
+                autoplay
+                autoplayInterval={6500}
+                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
               >
                 {promotionalProducts.map((producto, index) => (
                   <TarjetaProducto key={`promocion-${producto.id}`} producto={producto} index={index} />

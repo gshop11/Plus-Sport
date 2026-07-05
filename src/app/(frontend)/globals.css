@@ -434,7 +434,15 @@ a {
 }
 
 .store-product-rail.store-rail--static .store-rail__track {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  @apply flex flex-wrap gap-3;
+}
+
+.store-product-rail.store-rail--static .store-rail__item {
+  flex: 0 0 100%;
+}
+
+.store-product-rail.store-rail--cyclic-active {
+  @apply px-10 sm:px-12 lg:px-14;
 }
 
 .store-product-rail .store-rail__item {
@@ -492,6 +500,12 @@ a {
   }
 }
 
+@media (min-width: 768px) {
+  .store-product-rail.store-rail--static .store-rail__item {
+    flex-basis: calc((100% - 0.75rem) / 2);
+  }
+}
+
 @media (min-width: 1024px) {
   .store-rail--scrollable .store-rail__item {
     inline-size: 14.5rem;
@@ -499,6 +513,10 @@ a {
 
   .store-product-rail.store-rail--scrollable .store-rail__item {
     inline-size: 16.75rem;
+  }
+
+  .store-product-rail.store-rail--static .store-rail__item {
+    flex-basis: calc((100% - 1.5rem) / 3);
   }
 }
 
