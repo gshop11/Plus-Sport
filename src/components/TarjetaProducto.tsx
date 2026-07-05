@@ -10,6 +10,7 @@ export type ProductoCard = {
   slug?: string
   nombre: string
   marca: string
+  categoria?: string
   precio: number
   precioAnterior?: number
   imagenUrl?: string | null
@@ -27,7 +28,23 @@ const etiquetaConfig = {
 
 const PLACEHOLDER_IMAGE = '/placeholder-product.svg'
 
-export default function TarjetaProducto({ producto, index = 0 }: { producto: ProductoCard; index?: number }) {
+const CartIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-[18px] w-[18px]">
+    <circle cx="9" cy="20" r="1.3" fill="currentColor" stroke="none" />
+    <circle cx="18" cy="20" r="1.3" fill="currentColor" stroke="none" />
+    <path d="M2.5 3h2.4l1.9 11.2a2 2 0 0 0 2 1.7h8.4a2 2 0 0 0 2-1.6l1.5-7.3H6.2" />
+  </svg>
+)
+
+export default function TarjetaProducto({
+  producto,
+  index = 0,
+  variant = 'default',
+}: {
+  producto: ProductoCard
+  index?: number
+  variant?: 'default' | 'homeCompact'
+}) {
   const currencySymbol = useCurrencySymbol()
   const tallas = producto.tallas ?? []
   const descuento = producto.precioAnterior
@@ -39,6 +56,50 @@ export default function TarjetaProducto({ producto, index = 0 }: { producto: Pro
   const isAboveFold = index < 4
   const ahorro = producto.precioAnterior ? Math.max(0, producto.precioAnterior - producto.precio) : 0
   const productHref = producto.slug ? `/producto/${encodeURIComponent(producto.slug)}` : '/productos'
+
+  if (variant === 'homeCompact') {
+    return (
+      <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--line-soft)] bg-white shadow-[0_16px_34px_-30px_rgba(13,23,87,0.5)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_22px_44px_-30px_rgba(13,23,87,0.65)]">
+        <Link href={productHref} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2" aria-label={`Ver detalle de ${producto.nombre}`}>
+          <div className="relative overflow-hidden bg-[var(--surface-soft)] pt-[100%]">
+            <div className="absolute right-2 top-2 z-10 flex flex-wrap items-center justify-end gap-1">
+              {etiqueta ? (
+                <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ${etiqueta.className}`}>{etiqueta.texto}</span>
+              ) : null}
+              {descuento ? <span className="rounded-full bg-accent px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-white">-{descuento}%</span> : null}
+            </div>
+            <Image
+              src={imageSrc}
+              alt={producto.nombre}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              sizes="(max-width: 768px) 48vw, (max-width: 1200px) 33vw, 20vw"
+              priority={isAboveFold}
+              loading={isAboveFold ? 'eager' : 'lazy'}
+            />
+          </div>
+          <div className="px-3 pt-2.5">
+            <h3 className="line-clamp-2 min-h-[2.4rem] text-[13px] font-bold leading-[1.15rem] text-gray-900 transition-colors group-hover:text-primary">{producto.nombre}</h3>
+            <p className="mt-0.5 truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-dark/70">{producto.categoria || ' '}</p>
+          </div>
+        </Link>
+
+        <div className="mt-auto flex items-center justify-between gap-2 px-3 pb-3 pt-2">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-base font-black text-primary sm:text-lg">{formatMoney(producto.precio, currencySymbol)}</span>
+            {producto.precioAnterior ? <span className="text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior, currencySymbol)}</span> : null}
+          </div>
+          <Link
+            href={productHref}
+            aria-label={`Seleccionar talla de ${producto.nombre}`}
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-[var(--surface-soft)] text-primary-dark transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
+          >
+            <CartIcon />
+          </Link>
+        </div>
+      </article>
+    )
+  }
 
   return (
     <Link

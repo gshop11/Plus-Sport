@@ -81,16 +81,6 @@ a {
   @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
 }
 
-.store-promo-strip {
-  border-bottom: 1px solid color-mix(in srgb, var(--color-primario) 12%, white);
-  background: color-mix(in srgb, var(--surface-soft) 78%, white);
-}
-
-.store-promo-strip__inner {
-  @apply flex flex-col gap-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between;
-  color: var(--color-primario-dark);
-}
-
 .store-hero-section {
   @apply bg-white;
 }
@@ -203,16 +193,21 @@ a {
   color: var(--text-soft);
 }
 
-.store-section-cta {
-  @apply inline-flex w-fit items-center justify-center rounded-xl border px-4 py-2 text-xs font-semibold transition-colors sm:px-5 sm:py-3 sm:text-sm;
-  border-color: color-mix(in srgb, var(--color-primario) 30%, white);
+.store-section-link {
+  @apply inline-flex w-fit items-center gap-1 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-colors sm:text-sm;
   color: color-mix(in srgb, var(--color-primario) 88%, black);
-  background: color-mix(in srgb, var(--surface-soft) 48%, white);
 }
 
-.store-section-cta:hover {
-  background: color-mix(in srgb, var(--color-acento) 7%, white);
-  border-color: color-mix(in srgb, var(--color-acento) 36%, white);
+.store-section-link:hover {
+  color: var(--color-acento);
+}
+
+.store-section-link__chevron {
+  @apply text-base leading-none transition-transform;
+}
+
+.store-section-link:hover .store-section-link__chevron {
+  transform: translateX(2px);
 }
 
 .store-panel {
@@ -339,6 +334,21 @@ a {
   @apply flex;
 }
 
+.store-brand-rail.store-rail--static .store-rail__track {
+  @apply flex flex-wrap justify-start gap-3;
+}
+
+.store-brand-rail.store-rail--static .store-rail__item {
+  flex: 0 1 auto;
+  inline-size: min(45vw, 9.5rem);
+}
+
+@media (min-width: 640px) {
+  .store-brand-rail.store-rail--static .store-rail__item {
+    inline-size: 9.5rem;
+  }
+}
+
 .store-main-category-rail.store-rail--cyclic-active {
   @apply px-10 sm:px-12 lg:px-14;
 }
@@ -352,7 +362,7 @@ a {
 }
 
 .store-main-category-card {
-  @apply flex min-h-[10.5rem] flex-col justify-end overflow-hidden rounded-2xl border bg-cover bg-center p-4 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  @apply flex min-h-[8.5rem] flex-col justify-end overflow-hidden rounded-2xl border bg-cover bg-center p-3.5 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 sm:p-4;
   border-color: color-mix(in srgb, var(--line-soft) 70%, white);
   box-shadow: 0 18px 44px -34px color-mix(in srgb, var(--color-primario) 74%, transparent);
 }
@@ -362,17 +372,13 @@ a {
   box-shadow: 0 24px 52px -36px color-mix(in srgb, var(--color-primario) 78%, transparent);
 }
 
-.store-main-category-card__eyebrow {
-  @apply mb-1 text-[11px] font-semibold uppercase text-white/70;
-  letter-spacing: 0.14em;
-}
-
 .store-main-category-card__name {
-  @apply mb-1 break-words text-2xl font-black uppercase leading-tight;
+  @apply break-words text-lg font-black uppercase leading-tight sm:text-xl;
 }
 
-.store-main-category-card__copy {
-  @apply line-clamp-2 text-sm leading-5 text-white/80;
+.store-main-category-card__action {
+  @apply mt-1 text-[11px] font-semibold uppercase text-white/75;
+  letter-spacing: 0.1em;
 }
 
 .store-product-rail.store-rail--static .store-rail__track {
@@ -400,7 +406,7 @@ a {
 }
 
 .store-brand-card {
-  @apply flex min-h-[8.75rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border bg-white p-4 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  @apply flex min-h-[6.5rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl border bg-white p-3 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
   border-color: color-mix(in srgb, var(--line-soft) 88%, white);
   box-shadow: 0 18px 38px -34px color-mix(in srgb, var(--color-primario) 62%, transparent);
 }
@@ -412,7 +418,7 @@ a {
 }
 
 .store-brand-card__logo {
-  @apply flex h-12 w-full max-w-[10rem] items-center justify-center rounded-xl border px-3 py-2 text-sm font-black uppercase;
+  @apply flex h-9 w-full max-w-[8rem] items-center justify-center rounded-lg border px-2.5 py-1.5 text-xs font-black uppercase;
   border-color: color-mix(in srgb, var(--line-soft) 70%, white);
   color: color-mix(in srgb, var(--color-primario) 88%, black);
   background: color-mix(in srgb, var(--surface-soft) 48%, white);

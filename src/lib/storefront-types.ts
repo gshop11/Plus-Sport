@@ -3,6 +3,7 @@ export type ProductoCard = {
   slug?: string
   nombre: string
   marca: string
+  categoria?: string
   precio: number
   precioAnterior?: number
   imagenUrl?: string | null

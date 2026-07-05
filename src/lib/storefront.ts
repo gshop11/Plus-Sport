@@ -109,6 +109,7 @@ const mapProductoToCard = (doc: any): ProductoCard => ({
   slug: doc.slug ?? '',
   nombre: doc.nombre ?? '',
   marca: typeof doc.marca === 'object' && doc.marca ? doc.marca.nombre ?? '' : '',
+  categoria: typeof doc.categoria === 'object' && doc.categoria ? doc.categoria.nombre ?? undefined : undefined,
   precio: doc.precio ?? 0,
   precioAnterior: doc.precioAnterior ?? undefined,
   imagenUrl: resolveImagenUrl(doc.imagenPrincipal),

@@ -9,13 +9,6 @@ import type { HomeCategory, HomeSectionConfig } from '@/lib/storefront-types'
 
 export const revalidate = 60
 
-// Temporary static promo bar until this slot is managed from content.
-const TEMP_PROMO_BAR = {
-  message: 'Explora la seleccion Plus Sport para entrenar, caminar y renovar tus esenciales.',
-  cta: 'Ver catalogo',
-  href: '/productos',
-} as const
-
 const defaultSubscriptionSection: HomeSectionConfig = {
   key: 'suscripcion',
   titulo: 'Ofertas exclusivas para ti',
@@ -41,7 +34,7 @@ const mergeHomeCategories = (mainCategories: HomeCategory[], generalCategories: 
   return categories
 }
 
-const renderMainCategoryCard = ({ nombre, slug, descripcion, imagenUrl }: HomeCategory) => (
+const renderMainCategoryCard = ({ nombre, slug, imagenUrl }: HomeCategory) => (
   <a
     href={`/categoria/${slug}`}
     key={slug}
@@ -52,9 +45,8 @@ const renderMainCategoryCard = ({ nombre, slug, descripcion, imagenUrl }: HomeCa
         : 'linear-gradient(156deg, rgba(13,23,87,0.82), rgba(13,23,87,0.42))',
     }}
   >
-    <span className="store-main-category-card__eyebrow">Categoria</span>
     <span className="store-main-category-card__name">{nombre}</span>
-    <span className="store-main-category-card__copy">{descripcion || 'Modelos y ropa para esta categoria.'}</span>
+    <span className="store-main-category-card__action">Ver coleccion</span>
   </a>
 )
 
@@ -76,15 +68,6 @@ export default async function HomePage() {
     <>
       <Header />
       <main className="store-home-shell">
-        <section className="store-promo-strip">
-          <div className="store-home-container store-promo-strip__inner">
-            <p className="font-semibold">{TEMP_PROMO_BAR.message}</p>
-            <a href={TEMP_PROMO_BAR.href} className="store-section-cta">
-              {TEMP_PROMO_BAR.cta}
-            </a>
-          </div>
-        </section>
-
         <section className="store-hero-section">
           <HeroSlider slides={banners} />
         </section>
@@ -92,10 +75,18 @@ export default async function HomePage() {
         {brands.length > 0 ? (
           <section className="store-section store-section--brand">
             <div className="store-home-container">
-              <div className="store-section-header">
-                <span className="store-section-eyebrow">Marcas</span>
-                <h2 className="store-section-title">Elige por marca</h2>
-                <p className="store-section-copy">Accesos de marca conectados al catalogo.</p>
+              <div className="store-section-header store-section-header--split">
+                <div>
+                  <span className="store-section-eyebrow">Marcas</span>
+                  <h2 className="store-section-title">Elige por marca</h2>
+                  <p className="store-section-copy">Accesos de marca conectados al catalogo.</p>
+                </div>
+                <a href="/marcas" className="store-section-link">
+                  Ver todas las marcas
+                  <span aria-hidden="true" className="store-section-link__chevron">
+                    ›
+                  </span>
+                </a>
               </div>
 
               <StoreRail
@@ -107,7 +98,7 @@ export default async function HomePage() {
                 mode="cyclic"
                 autoplay
                 autoplayInterval={5500}
-                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
+                visibleItems={{ mobile: 2, tablet: 4, desktop: 6 }}
               >
                 {brands.map(({ nombre, id, slug, logoUrl }) => (
                   <a key={id} href={`/productos?marca=${slug}`} className="store-brand-card">
@@ -126,10 +117,18 @@ export default async function HomePage() {
         {homeCategories.length > 0 ? (
           <section className="store-section store-section--soft">
             <div className="store-home-container">
-              <div className="store-section-header">
-                <span className="store-section-eyebrow">Categorias</span>
-                <h2 className="store-section-title">Compra por categoria</h2>
-                <p className="store-section-copy">Accesos activos del catalogo reunidos en un solo carrusel.</p>
+              <div className="store-section-header store-section-header--split">
+                <div>
+                  <span className="store-section-eyebrow">Categorias</span>
+                  <h2 className="store-section-title">Compra por categoria</h2>
+                  <p className="store-section-copy">Accesos activos del catalogo reunidos en un solo carrusel.</p>
+                </div>
+                <a href="/categorias" className="store-section-link">
+                  Ver todas las categorias
+                  <span aria-hidden="true" className="store-section-link__chevron">
+                    ›
+                  </span>
+                </a>
               </div>
 
               <StoreRail
@@ -141,7 +140,7 @@ export default async function HomePage() {
                 mode="cyclic"
                 autoplay
                 autoplayInterval={7600}
-                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
+                visibleItems={{ mobile: 1, tablet: 3, desktop: 5 }}
               >
                 {homeCategories.map(renderMainCategoryCard)}
               </StoreRail>
@@ -158,8 +157,11 @@ export default async function HomePage() {
                   <h2 className="store-section-title">Productos en oferta</h2>
                   <p className="store-section-copy">Productos seleccionados con precios especiales.</p>
                 </div>
-                <a href="/productos?oferta=1" className="store-section-cta">
-                  Ver ofertas
+                <a href="/productos?oferta=1" className="store-section-link">
+                  Ver todas las ofertas
+                  <span aria-hidden="true" className="store-section-link__chevron">
+                    ›
+                  </span>
                 </a>
               </div>
               <StoreRail
@@ -171,10 +173,10 @@ export default async function HomePage() {
                 mode="cyclic"
                 autoplay
                 autoplayInterval={6500}
-                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
+                visibleItems={{ mobile: 1, tablet: 3, desktop: 5 }}
               >
                 {promotionalProducts.map((producto, index) => (
-                  <TarjetaProducto key={`promocion-${producto.id}`} producto={producto} index={index} />
+                  <TarjetaProducto key={`promocion-${producto.id}`} producto={producto} index={index} variant="homeCompact" />
                 ))}
               </StoreRail>
             </div>
@@ -190,8 +192,11 @@ export default async function HomePage() {
                   <h2 className="store-section-title">Recien llegados</h2>
                   <p className="store-section-copy">Productos conectados al dataset semantico de novedades.</p>
                 </div>
-                <a href="/productos?sort=newest" className="store-section-cta">
-                  Ver novedades
+                <a href="/productos?sort=newest" className="store-section-link">
+                  Ver todas las novedades
+                  <span aria-hidden="true" className="store-section-link__chevron">
+                    ›
+                  </span>
                 </a>
               </div>
               <StoreRail
@@ -203,10 +208,10 @@ export default async function HomePage() {
                 mode="cyclic"
                 autoplay
                 autoplayInterval={7100}
-                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
+                visibleItems={{ mobile: 1, tablet: 3, desktop: 5 }}
               >
                 {newArrivalProducts.map((producto, index) => (
-                  <TarjetaProducto key={`nuevo-${producto.id}`} producto={producto} index={index} />
+                  <TarjetaProducto key={`nuevo-${producto.id}`} producto={producto} index={index} variant="homeCompact" />
                 ))}
               </StoreRail>
             </div>
