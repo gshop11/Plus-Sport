@@ -154,12 +154,12 @@ export default async function HomePage() {
             <div className="store-home-container">
               <div className="store-section-header store-section-header--split">
                 <div>
-                  <span className="store-section-eyebrow">Promociones</span>
-                  <h2 className="store-section-title">Productos promocionales</h2>
-                  <p className="store-section-copy">Seleccion conectada a la regla comercial de promociones.</p>
+                  <span className="store-section-eyebrow">Ofertas</span>
+                  <h2 className="store-section-title">Productos en oferta</h2>
+                  <p className="store-section-copy">Productos seleccionados con precios especiales.</p>
                 </div>
                 <a href="/productos?oferta=1" className="store-section-cta">
-                  Ver promociones
+                  Ver ofertas
                 </a>
               </div>
               <StoreRail
