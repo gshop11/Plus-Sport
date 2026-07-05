@@ -50,6 +50,23 @@ const renderCategoryCard = ({ nombre, slug, descripcion, imagenUrl }: HomeCatego
   </a>
 )
 
+const renderMainCategoryCard = ({ nombre, slug, descripcion, imagenUrl }: HomeCategory) => (
+  <a
+    href={`/categoria/${slug}`}
+    key={slug}
+    className="store-main-category-card"
+    style={{
+      backgroundImage: imagenUrl
+        ? `linear-gradient(156deg, rgba(13,23,87,0.82), rgba(13,23,87,0.32)), url(${imagenUrl})`
+        : 'linear-gradient(156deg, rgba(13,23,87,0.82), rgba(13,23,87,0.42))',
+    }}
+  >
+    <span className="store-main-category-card__eyebrow">Categoria</span>
+    <span className="store-main-category-card__name">{nombre}</span>
+    <span className="store-main-category-card__copy">{descripcion || 'Modelos y ropa para esta categoria.'}</span>
+  </a>
+)
+
 export default async function HomePage() {
   const {
     banners,
@@ -156,9 +173,19 @@ export default async function HomePage() {
                 <p className="store-section-copy">Accesos principales para orientar la navegacion del home.</p>
               </div>
 
-              <div className="grid auto-rows-[168px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {mainCategories.map(renderCategoryCard)}
-              </div>
+              <StoreRail
+                ariaLabel="Categorias principales"
+                previousLabel="Ver categorias anteriores"
+                nextLabel="Ver mas categorias"
+                staticThreshold={3}
+                className="store-main-category-rail"
+                mode="cyclic"
+                autoplay
+                autoplayInterval={7600}
+                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
+              >
+                {mainCategories.map(renderMainCategoryCard)}
+              </StoreRail>
             </div>
           </section>
         ) : null}

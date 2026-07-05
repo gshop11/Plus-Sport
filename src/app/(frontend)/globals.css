@@ -433,6 +433,42 @@ a {
   @apply flex;
 }
 
+.store-main-category-rail.store-rail--cyclic-active {
+  @apply px-10 sm:px-12 lg:px-14;
+}
+
+.store-main-category-rail .store-rail__item {
+  @apply flex items-stretch;
+}
+
+.store-main-category-rail .store-rail__item > * {
+  @apply w-full;
+}
+
+.store-main-category-card {
+  @apply flex min-h-[10.5rem] flex-col justify-end overflow-hidden rounded-2xl border bg-cover bg-center p-4 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  border-color: color-mix(in srgb, var(--line-soft) 70%, white);
+  box-shadow: 0 18px 44px -34px color-mix(in srgb, var(--color-primario) 74%, transparent);
+}
+
+.store-main-category-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 24px 52px -36px color-mix(in srgb, var(--color-primario) 78%, transparent);
+}
+
+.store-main-category-card__eyebrow {
+  @apply mb-1 text-[11px] font-semibold uppercase text-white/70;
+  letter-spacing: 0.14em;
+}
+
+.store-main-category-card__name {
+  @apply mb-1 break-words text-2xl font-black uppercase leading-tight;
+}
+
+.store-main-category-card__copy {
+  @apply line-clamp-2 text-sm leading-5 text-white/80;
+}
+
 .store-product-rail.store-rail--static .store-rail__track {
   @apply flex flex-wrap gap-3;
 }
