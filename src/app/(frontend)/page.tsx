@@ -97,7 +97,7 @@ export default async function HomePage() {
                 className="store-brand-rail"
                 mode="cyclic"
                 autoplay
-                autoplayInterval={5500}
+                autoplayInterval={3200}
                 visibleItems={{ mobile: 2, tablet: 4, desktop: 6 }}
               >
                 {brands.map(({ nombre, id, slug, logoUrl }) => (
@@ -139,7 +139,7 @@ export default async function HomePage() {
                 className="store-main-category-rail"
                 mode="cyclic"
                 autoplay
-                autoplayInterval={7600}
+                autoplayInterval={3600}
                 visibleItems={{ mobile: 1, tablet: 3, desktop: 5 }}
               >
                 {homeCategories.map(renderMainCategoryCard)}
@@ -172,11 +172,11 @@ export default async function HomePage() {
                 className="store-product-rail"
                 mode="cyclic"
                 autoplay
-                autoplayInterval={6500}
+                autoplayInterval={4000}
                 visibleItems={{ mobile: 1, tablet: 3, desktop: 5 }}
               >
                 {promotionalProducts.map((producto, index) => (
-                  <TarjetaProducto key={`promocion-${producto.id}`} producto={producto} index={index} variant="homeCompact" />
+                  <TarjetaProducto key={`promocion-${producto.id}`} producto={producto} index={index} variant="homeOffer" />
                 ))}
               </StoreRail>
             </div>
@@ -207,11 +207,11 @@ export default async function HomePage() {
                 className="store-product-rail store-new-arrivals-rail"
                 mode="cyclic"
                 autoplay
-                autoplayInterval={7100}
+                autoplayInterval={4200}
                 visibleItems={{ mobile: 1, tablet: 3, desktop: 5 }}
               >
                 {newArrivalProducts.map((producto, index) => (
-                  <TarjetaProducto key={`nuevo-${producto.id}`} producto={producto} index={index} variant="homeCompact" />
+                  <TarjetaProducto key={`nuevo-${producto.id}`} producto={producto} index={index} variant="homeNewArrival" />
                 ))}
               </StoreRail>
             </div>

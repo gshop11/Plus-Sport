@@ -1,3 +1,4 @@
+import CatalogFilters, { type CatalogFilterGroup } from '@/components/CatalogFilters'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import TarjetaProducto from '@/components/TarjetaProducto'
@@ -70,9 +71,6 @@ const buildHref = (params: URLSearchParams, updates?: Record<string, string | nu
   return query ? `/productos?${query}` : '/productos'
 }
 
-const filterChipClass = (active: boolean, tone: 'primary' | 'accent' = 'primary') =>
-  `store-catalog-filter-chip ${active ? `store-catalog-filter-chip--active store-catalog-filter-chip--${tone}` : ''}`
-
 export default async function ProductosPage({ searchParams }: ProductosPageProps) {
   const { segmento, coleccion, marca, oferta, page, search, sort } = await searchParams
   const currentPage = parsePage(page)
@@ -137,6 +135,46 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
   const quickBrandFilters = marca ? marcas.filter((item) => item.slug === marca) : marcas.slice(0, 6)
   const hasActiveFilters = Boolean(normalizedSegmento || coleccion || marca || onlyOffers || searchTerm || sort)
 
+  const filterGroups: CatalogFilterGroup[] = [
+    {
+      label: 'Publico',
+      options: [
+        { label: 'Todos', href: buildHref(query, { segmento: null, page: null }), active: !segmento },
+        { label: 'Hombre', href: buildHref(query, { segmento: 'hombre', page: null }), active: segmento === 'hombre' },
+        { label: 'Mujer', href: buildHref(query, { segmento: 'mujer', page: null }), active: segmento === 'mujer' },
+        { label: 'Ninos', href: buildHref(query, { segmento: 'ninos', page: null }), active: segmento === 'ninos' },
+      ],
+    },
+    {
+      label: 'Categoria',
+      options: [
+        { label: 'Todas las categorias', href: buildHref(query, { coleccion: null, page: null }), active: !coleccion },
+        { label: 'Calzado', href: buildHref(query, { coleccion: 'calzado', page: null }), active: coleccion === 'calzado' },
+      ],
+    },
+    {
+      label: 'Promocion',
+      options: [
+        {
+          label: onlyOffers ? 'Quitar ofertas' : 'Solo ofertas',
+          href: buildHref(query, { oferta: onlyOffers ? null : '1', page: null }),
+          active: onlyOffers,
+        },
+      ],
+    },
+  ]
+
+  if (quickBrandFilters.length > 0) {
+    filterGroups.push({
+      label: 'Marca',
+      options: quickBrandFilters.map((brand) => ({
+        label: brand.nombre,
+        href: buildHref(query, { marca: brand.slug, page: null }),
+        active: marca === brand.slug,
+      })),
+    })
+  }
+
   return (
     <>
       <Header />
@@ -154,128 +192,51 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
           </div>
         </section>
 
-        <section className="bg-white py-6">
+        <section className="bg-white py-6 pb-14">
           <div className="section-shell">
-            <nav className="store-catalog-filters" aria-label="Filtros locales de productos">
-              <div className="store-catalog-filters__header">
-                <div>
-                  <p className="store-catalog-filters__eyebrow">Catalogo</p>
-                  <h2 className="store-catalog-filters__title">Filtrar productos</h2>
-                </div>
-                {hasActiveFilters ? (
-                  <a href="/productos" className="store-catalog-filter-reset">
-                    Limpiar todos los filtros
-                  </a>
-                ) : null}
-              </div>
+            <div className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-8">
+              <CatalogFilters groups={filterGroups} hasActiveFilters={hasActiveFilters} resetHref="/productos" />
 
-              <div className="store-catalog-filters__body">
-                <div className="store-catalog-filter-group">
-                  <p className="store-catalog-filter-group__label">Público</p>
-                  <div className="store-catalog-filter-options">
-                    <a href={buildHref(query, { segmento: null, page: null })} className={filterChipClass(!segmento)} aria-current={!segmento ? 'page' : undefined}>
-                      Todos
-                    </a>
-                    <a href={buildHref(query, { segmento: 'hombre', page: null })} className={filterChipClass(segmento === 'hombre')} aria-current={segmento === 'hombre' ? 'page' : undefined}>
-                      Hombre
-                    </a>
-                    <a href={buildHref(query, { segmento: 'mujer', page: null })} className={filterChipClass(segmento === 'mujer')} aria-current={segmento === 'mujer' ? 'page' : undefined}>
-                      Mujer
-                    </a>
-                    <a href={buildHref(query, { segmento: 'ninos', page: null })} className={filterChipClass(segmento === 'ninos')} aria-current={segmento === 'ninos' ? 'page' : undefined}>
-                      Niños
-                    </a>
-                  </div>
-                </div>
-
-                <div className="store-catalog-filter-group">
-                  <p className="store-catalog-filter-group__label">Categoría</p>
-                  <div className="store-catalog-filter-options">
-                    <a href={buildHref(query, { coleccion: null, page: null })} className={filterChipClass(!coleccion)} aria-current={!coleccion ? 'page' : undefined}>
-                      Todas las categorías
-                    </a>
-                    <a href={buildHref(query, { coleccion: 'calzado', page: null })} className={filterChipClass(coleccion === 'calzado')} aria-current={coleccion === 'calzado' ? 'page' : undefined}>
-                      Calzado
-                    </a>
-                  </div>
-                </div>
-
-                <div className="store-catalog-filter-group">
-                  <p className="store-catalog-filter-group__label">Promoción</p>
-                  <div className="store-catalog-filter-options">
-                    <a
-                      href={buildHref(query, { oferta: onlyOffers ? null : '1', page: null })}
-                      className={filterChipClass(onlyOffers, 'accent')}
-                      aria-current={onlyOffers ? 'page' : undefined}
+              <div>
+                <div className="store-catalog-sort">
+                  <p className="text-sm text-gray-600">
+                    Mostrando <span className="font-bold text-gray-900">{productos.length}</span> de <span className="font-bold text-gray-900">{totalDocs}</span> productos
+                  </p>
+                  <form action="/productos" method="get" className="store-catalog-sort__form">
+                    {segmento ? <input type="hidden" name="segmento" value={segmento} /> : null}
+                    {coleccion ? <input type="hidden" name="coleccion" value={coleccion} /> : null}
+                    {marca ? <input type="hidden" name="marca" value={marca} /> : null}
+                    {onlyOffers ? <input type="hidden" name="oferta" value="1" /> : null}
+                    {searchTerm ? <input type="hidden" name="search" value={searchTerm} /> : null}
+                    <label htmlFor="sort" className="store-catalog-sort__label">
+                      Ordenar
+                    </label>
+                    <select
+                      id="sort"
+                      name="sort"
+                      defaultValue={sortValue}
+                      className="store-catalog-sort__select"
                     >
-                      {onlyOffers ? 'Quitar ofertas' : 'Solo ofertas'}
-                    </a>
-                  </div>
+                      <option value="newest">Mas recientes</option>
+                      <option value="price_asc">Precio: menor a mayor</option>
+                      <option value="price_desc">Precio: mayor a menor</option>
+                      <option value="name_asc">Nombre A-Z</option>
+                    </select>
+                    <button type="submit" className="store-button-secondary px-3 py-2 text-xs">
+                      Aplicar
+                    </button>
+                  </form>
                 </div>
 
-                {quickBrandFilters.length > 0 ? (
-                  <div className="store-catalog-filter-group store-catalog-filter-group--wide">
-                    <p className="store-catalog-filter-group__label">Marca</p>
-                    <div className="store-catalog-filter-options">
-                      {quickBrandFilters.map((brand) => (
-                        <a
-                          key={brand.id}
-                          href={buildHref(query, { marca: brand.slug, page: null })}
-                          className={filterChipClass(marca === brand.slug)}
-                          aria-current={marca === brand.slug ? 'page' : undefined}
-                        >
-                          {brand.nombre}
-                        </a>
+                {productos.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+                      {productos.map((producto, index) => (
+                        <TarjetaProducto key={producto.id} producto={producto} index={index} />
                       ))}
                     </div>
-                  </div>
-                ) : null}
-              </div>
-            </nav>
-          </div>
-        </section>
 
-        <section className="bg-white pb-14">
-          <div className="section-shell">
-            <div className="store-catalog-sort">
-              <p className="text-sm text-gray-600">
-                Mostrando <span className="font-bold text-gray-900">{productos.length}</span> de <span className="font-bold text-gray-900">{totalDocs}</span> productos
-              </p>
-              <form action="/productos" method="get" className="store-catalog-sort__form">
-                {segmento ? <input type="hidden" name="segmento" value={segmento} /> : null}
-                {coleccion ? <input type="hidden" name="coleccion" value={coleccion} /> : null}
-                {marca ? <input type="hidden" name="marca" value={marca} /> : null}
-                {onlyOffers ? <input type="hidden" name="oferta" value="1" /> : null}
-                {searchTerm ? <input type="hidden" name="search" value={searchTerm} /> : null}
-                <label htmlFor="sort" className="store-catalog-sort__label">
-                  Ordenar
-                </label>
-                <select
-                  id="sort"
-                  name="sort"
-                  defaultValue={sortValue}
-                  className="store-catalog-sort__select"
-                >
-                  <option value="newest">Mas recientes</option>
-                  <option value="price_asc">Precio: menor a mayor</option>
-                  <option value="price_desc">Precio: mayor a menor</option>
-                  <option value="name_asc">Nombre A-Z</option>
-                </select>
-                <button type="submit" className="store-button-secondary px-3 py-2 text-xs">
-                  Aplicar
-                </button>
-              </form>
-            </div>
-
-            {productos.length > 0 ? (
-              <>
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                  {productos.map((producto, index) => (
-                    <TarjetaProducto key={producto.id} producto={producto} index={index} />
-                  ))}
-                </div>
-
-                <div className="mt-8 flex items-center justify-center gap-3">
+                    <div className="mt-8 flex items-center justify-center gap-3">
                   {hasPrevPage ? (
                     <a href={buildHref(query, { page: String(currentPage - 1) })} className="store-button-secondary px-4 py-2">
                       Anterior
@@ -306,6 +267,8 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
                 </a>
               </div>
             )}
+              </div>
+            </div>
           </div>
         </section>
       </main>

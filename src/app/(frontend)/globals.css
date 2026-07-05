@@ -150,7 +150,7 @@ a {
 }
 
 .store-section {
-  @apply bg-white py-10 sm:py-12 lg:py-16;
+  @apply bg-white py-8 sm:py-10 lg:py-12;
 }
 
 .store-section--soft {
@@ -159,15 +159,15 @@ a {
 }
 
 .store-section--brand {
-  @apply bg-white py-8 sm:py-10 lg:py-12;
+  @apply bg-white py-6 sm:py-8 lg:py-10;
 }
 
 .store-section--subscription {
-  @apply bg-white pb-12 pt-10 sm:pb-16 sm:pt-12 lg:pb-20 lg:pt-16;
+  @apply bg-white pb-10 pt-8 sm:pb-14 sm:pt-10 lg:pb-16 lg:pt-12;
 }
 
 .store-section-header {
-  @apply mb-6 max-w-3xl sm:mb-7;
+  @apply mb-5 max-w-3xl sm:mb-6;
 }
 
 .store-section-header--split {
@@ -254,15 +254,20 @@ a {
 }
 
 .store-rail__button {
-  @apply inline-flex h-10 w-10 items-center justify-center rounded-full border text-2xl font-bold leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35;
-  border-color: color-mix(in srgb, var(--color-primario) 28%, white);
+  @apply inline-flex h-10 w-10 items-center justify-center rounded-full text-2xl font-bold leading-none transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-35;
   color: var(--color-primario-dark);
-  background: #fff;
+  background: color-mix(in srgb, white 92%, transparent);
+  box-shadow:
+    0 10px 22px -14px color-mix(in srgb, var(--color-primario) 55%, transparent),
+    0 2px 6px -2px color-mix(in srgb, var(--color-primario) 30%, transparent);
 }
 
 .store-rail__button:not(:disabled):hover {
-  border-color: color-mix(in srgb, var(--color-acento) 42%, white);
-  background: color-mix(in srgb, var(--color-acento) 8%, white);
+  color: var(--color-acento-dark);
+  background: #fff;
+  box-shadow:
+    0 14px 28px -16px color-mix(in srgb, var(--color-primario) 62%, transparent),
+    0 3px 8px -2px color-mix(in srgb, var(--color-acento) 35%, transparent);
 }
 
 .store-rail__track {
@@ -361,15 +366,26 @@ a {
   @apply w-full;
 }
 
+/*
+ * When every category fits within the visible target (e.g. 4 categories on desktop,
+ * target 5), the rail falls back to "static" mode. The generic static grid uses fixed
+ * breakpoint columns (sm:2, lg:3), which produced a "3 + 1 orphan row" layout. Using
+ * the already-clamped --store-rail-visible count instead always yields a single row.
+ */
+.store-main-category-rail.store-rail--static .store-rail__track {
+  display: grid;
+  grid-template-columns: repeat(var(--store-rail-visible, 1), minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
 .store-main-category-card {
-  @apply flex min-h-[8.5rem] flex-col justify-end overflow-hidden rounded-2xl border bg-cover bg-center p-3.5 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 sm:p-4;
-  border-color: color-mix(in srgb, var(--line-soft) 70%, white);
-  box-shadow: 0 18px 44px -34px color-mix(in srgb, var(--color-primario) 74%, transparent);
+  @apply flex min-h-[8.5rem] flex-col justify-end overflow-hidden rounded-2xl bg-cover bg-center p-3.5 text-white transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 sm:p-4;
+  box-shadow: 0 16px 36px -26px color-mix(in srgb, var(--color-primario) 58%, transparent);
 }
 
 .store-main-category-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 24px 52px -36px color-mix(in srgb, var(--color-primario) 78%, transparent);
+  transform: translateY(-3px);
+  box-shadow: 0 22px 46px -26px color-mix(in srgb, var(--color-primario) 66%, transparent);
 }
 
 .store-main-category-card__name {
@@ -393,6 +409,14 @@ a {
   @apply px-10 sm:px-12 lg:px-14;
 }
 
+.store-product-rail.store-rail--cyclic-active .store-rail__track {
+  @apply gap-2.5;
+}
+
+.store-product-rail.store-rail--static .store-rail__track {
+  @apply gap-2.5;
+}
+
 .store-product-rail .store-rail__item {
   @apply flex items-stretch;
 }
@@ -406,15 +430,17 @@ a {
 }
 
 .store-brand-card {
-  @apply flex min-h-[6.5rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl border bg-white p-3 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
-  border-color: color-mix(in srgb, var(--line-soft) 88%, white);
-  box-shadow: 0 18px 38px -34px color-mix(in srgb, var(--color-primario) 62%, transparent);
+  @apply flex min-h-[6.5rem] w-full flex-col items-center justify-center gap-1.5 rounded-2xl bg-white p-3 text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  box-shadow:
+    0 14px 30px -22px color-mix(in srgb, var(--color-primario) 46%, transparent),
+    0 2px 8px -4px color-mix(in srgb, var(--color-primario) 24%, transparent);
 }
 
 .store-brand-card:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--color-acento) 32%, white);
-  box-shadow: 0 22px 42px -34px color-mix(in srgb, var(--color-primario) 72%, transparent);
+  transform: translateY(-3px);
+  box-shadow:
+    0 20px 40px -22px color-mix(in srgb, var(--color-primario) 58%, transparent),
+    0 4px 12px -4px color-mix(in srgb, var(--color-acento) 30%, transparent);
 }
 
 .store-brand-card__logo {
@@ -468,17 +494,6 @@ a {
   }
 }
 
-.store-catalog-filters {
-  @apply rounded-2xl border bg-white p-4 sm:p-5;
-  border-color: var(--line-soft);
-  box-shadow: 0 22px 48px -42px color-mix(in srgb, var(--color-primario) 58%, transparent);
-}
-
-.store-catalog-filters__header {
-  @apply mb-4 flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between;
-  border-color: var(--line-soft);
-}
-
 .store-catalog-filters__eyebrow {
   @apply mb-1 text-[10px] font-semibold uppercase text-gray-500;
   letter-spacing: 0.14em;
@@ -489,18 +504,45 @@ a {
   letter-spacing: 0;
 }
 
-.store-catalog-filters__body {
-  @apply grid gap-4 md:grid-cols-2 xl:grid-cols-[1.05fr_1fr_0.65fr_1.6fr];
+.store-catalog-sidebar {
+  @apply rounded-2xl border bg-white p-4;
+  border-color: var(--line-soft);
+  box-shadow: 0 16px 36px -32px color-mix(in srgb, var(--color-primario) 46%, transparent);
+}
+
+.store-catalog-sidebar__header {
+  @apply mb-4 flex flex-col gap-2 border-b pb-4;
+  border-color: var(--line-soft);
+}
+
+.store-catalog-filter-trigger {
+  @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold uppercase tracking-[0.1em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  border-color: color-mix(in srgb, var(--color-primario) 26%, white);
+  color: color-mix(in srgb, var(--color-primario) 88%, black);
+  background: #fff;
+}
+
+.store-catalog-filter-trigger:hover {
+  border-color: color-mix(in srgb, var(--color-primario) 44%, white);
+  background: color-mix(in srgb, var(--surface-soft) 78%, white);
+}
+
+.store-catalog-filter-drawer {
+  @apply fixed inset-0 z-[60];
+}
+
+.store-catalog-filter-drawer__backdrop {
+  @apply absolute inset-0 bg-black/50;
+}
+
+.store-catalog-filter-drawer__panel {
+  @apply absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-2xl;
 }
 
 .store-catalog-filter-group {
   @apply min-w-0 rounded-xl border p-3;
   border-color: color-mix(in srgb, var(--line-soft) 76%, white);
   background: color-mix(in srgb, var(--surface-soft) 38%, white);
-}
-
-.store-catalog-filter-group--wide {
-  @apply md:col-span-2 xl:col-span-1;
 }
 
 .store-catalog-filter-group__label {

@@ -63,7 +63,7 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
     if (paused || data.length <= 1) return
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % data.length)
-    }, 6200)
+    }, 5000)
     return () => clearInterval(timer)
   }, [paused, data.length])
 

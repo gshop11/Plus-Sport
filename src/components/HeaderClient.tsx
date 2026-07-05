@@ -3,7 +3,7 @@
 import type { StorefrontConfig } from '@/lib/storefront-types'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import CartDrawer from './CartDrawer'
 import CartCountBadge from './CartCountBadge'
 
@@ -62,9 +62,9 @@ const fallbackConfig: StorefrontConfig = {
   ],
 }
 
-const fallbackSports = [{ etiqueta: 'Ver categorias', url: '/categorias' }]
-
 const itemKey = (url: string, index: number) => `${url}-${index}`
+
+const isDeportesLabel = (etiqueta: string) => etiqueta.toLowerCase().includes('deporte')
 
 function UserIcon() {
   return (
@@ -93,9 +93,7 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
   const [config, setConfig] = useState<StorefrontConfig>(initialConfig ?? fallbackConfig)
   const [menuOpen, setMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
-  const [deporteOpen, setDeporteOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
-  const navRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     if (initialConfig) {
@@ -124,7 +122,6 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
   }, [initialConfig])
 
   useEffect(() => {
-    setDeporteOpen(false)
     setMenuOpen(false)
   }, [pathname, searchParams])
 
@@ -136,18 +133,6 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
   }, [menuOpen, cartOpen])
 
   useEffect(() => {
-    const onOutsideClick = (event: MouseEvent) => {
-      if (!deporteOpen) return
-      if (!navRef.current?.contains(event.target as Node)) {
-        setDeporteOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', onOutsideClick)
-    return () => document.removeEventListener('mousedown', onOutsideClick)
-  }, [deporteOpen])
-
-  useEffect(() => {
     const openCart = () => setCartOpen(true)
     window.addEventListener('carrito:open', openCart)
     return () => window.removeEventListener('carrito:open', openCart)
@@ -155,19 +140,9 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
 
   const menuItems = useMemo(() => config.header.menuPrincipal ?? [], [config])
 
-  const configuredDeportes = useMemo(
-    () =>
-      menuItems.find(
-        (item) => Array.isArray(item.subItems) && item.subItems.length > 0 && item.etiqueta.toLowerCase().includes('deporte'),
-      ),
-    [menuItems],
-  )
-
-  const deportesItems = (configuredDeportes?.subItems && configuredDeportes.subItems.length > 0)
-    ? configuredDeportes.subItems
-    : fallbackSports
-
-  const navItems = menuItems.filter((item) => item !== configuredDeportes)
+  // "Deportes" may be injected dynamically by storefront.ts config normalization
+  // (never stored in Payload); it is filtered out of the visible menu here.
+  const navItems = useMemo(() => menuItems.filter((item) => !isDeportesLabel(item.etiqueta)), [menuItems])
   const leftItems = navItems.filter((item) => !item.esDestacado)
   const rightItems = navItems.filter((item) => item.esDestacado)
 
@@ -253,8 +228,6 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
     }
   }
 
-  const isDeportesActive = pathname === '/categorias' || deportesItems.some((item) => isItemActive(item.url))
-
   const [firstNamePart, ...restNameParts] = (config.identity.name || 'PlusSport').split(' ')
   const restName = restNameParts.join(' ')
 
@@ -296,7 +269,7 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
               <button
                 type="button"
                 onClick={() => setCartOpen(true)}
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 text-gray-900 transition-colors hover:border-primary hover:text-primary"
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-gray-900 transition-colors hover:bg-gray-100 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
                 aria-label="Abrir carrito"
               >
                 <CartIcon />
@@ -309,7 +282,7 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
               <button
                 type="button"
                 onClick={() => setCartOpen(true)}
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 text-gray-900 transition-colors hover:border-primary hover:text-primary"
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-gray-900 transition-colors hover:bg-gray-100 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
                 aria-label="Abrir carrito"
               >
                 <CartIcon />
@@ -335,29 +308,9 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
           </div>
         </div>
 
-        <nav ref={navRef} className="hidden border-b border-primary/15 bg-primary sm:block">
+        <nav className="hidden border-b border-primary/15 bg-primary sm:block">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-4">
             <div className="flex min-w-0 items-center">
-              <div className="relative flex-shrink-0">
-                <button
-                  onClick={() => setDeporteOpen((prev) => !prev)}
-                  className="flex items-center gap-1 whitespace-nowrap px-5 py-4 text-sm font-medium uppercase tracking-[0.08em] text-white transition-colors hover:bg-white/10"
-                  style={{ backgroundColor: isDeportesActive || deporteOpen ? 'var(--color-acento)' : 'transparent' }}
-                >
-                  DEPORTES
-                  <span className={`text-xs opacity-75 transition-transform ${deporteOpen ? 'rotate-180' : ''}`}>v</span>
-                </button>
-                {deporteOpen && (
-                  <div className="absolute left-0 top-full z-50 min-w-[220px] overflow-hidden rounded-b-xl border border-gray-200 bg-white shadow-xl">
-                    {deportesItems.map((item) => (
-                      <Link key={`deporte-${item.url}`} href={item.url} className="block px-5 py-3 text-sm font-medium text-gray-800 transition-colors hover:bg-orange-50 hover:text-accent">
-                        {item.etiqueta}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               <div className="flex items-center overflow-x-auto">
                 {leftItems.map((item, index) => {
                   const active = isItemActive(item.url)
@@ -396,17 +349,6 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
         {menuOpen && (
           <div className="animate-slideDown sm:hidden" style={{ background: 'linear-gradient(135deg, var(--color-primario) 0%, var(--color-primario-dark) 100%)' }}>
             <div className="max-h-[65vh] overflow-y-auto px-2 pb-4 pt-2">
-              <Link
-                href="/categorias"
-                className={`mb-1 flex items-center justify-between rounded-lg px-5 py-4 text-sm font-bold uppercase tracking-widest transition-all ${
-                  pathname === '/categorias' ? 'bg-accent text-white' : 'text-white/90 hover:bg-white/10 hover:text-white'
-                }`}
-                onClick={() => setMenuOpen(false)}
-              >
-                DEPORTES
-                <span className="text-xs text-white/40">{'>'}</span>
-              </Link>
-
               {[...leftItems, ...rightItems].map((item, index) => {
                 const active = isItemActive(item.url)
                 return (
