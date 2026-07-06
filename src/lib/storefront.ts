@@ -108,12 +108,16 @@ const mapProductoToCard = (doc: any): ProductoCard => ({
   id: String(doc.id),
   slug: doc.slug ?? '',
   nombre: doc.nombre ?? '',
+  sku: doc.sku ?? undefined,
   marca: typeof doc.marca === 'object' && doc.marca ? doc.marca.nombre ?? '' : '',
   categoria: typeof doc.categoria === 'object' && doc.categoria ? doc.categoria.nombre ?? undefined : undefined,
   precio: doc.precio ?? 0,
   precioAnterior: doc.precioAnterior ?? undefined,
   imagenUrl: resolveImagenUrl(doc.imagenPrincipal),
   tallas: Array.isArray(doc.tallas) ? doc.tallas.map((t: any) => t.talla) : [],
+  stock: Array.isArray(doc.tallas) && doc.tallas.length > 0
+    ? doc.tallas.reduce((total: number, item: any) => total + (Number(item?.stock) || 0), 0)
+    : Number(doc.stock || 0),
   etiqueta: (doc.etiqueta as ProductoCard['etiqueta']) ?? '',
 })
 
@@ -341,6 +345,10 @@ const normalizeStorefrontConfig = (configTienda: any, categorias: any[] = []): S
       textoCopyright:
         configTienda?.footer?.textoCopyright ??
         `© ${new Date().getFullYear()} PlusSport. Todos los derechos reservados.`,
+    },
+    whatsapp: {
+      numero: configTienda?.header?.numeroWhatsapp || configTienda?.footer?.telefono || '+51 979 705 255',
+      textoBoton: configTienda?.header?.textoBtnWhatsapp || 'Consultar disponibilidad',
     },
     colores: {
       primario: configTienda?.colores?.primario ?? '#1a237e',
@@ -796,6 +804,7 @@ export const getProductoDetalleBySlug = async (slug: string): Promise<{ producto
         id: String(doc.id),
         slug: doc.slug ?? slugValue,
         nombre: doc.nombre ?? '',
+        sku: doc.sku ?? undefined,
         marca: {
           id: marcaId,
           nombre: getRelationshipName(doc.marca, ''),

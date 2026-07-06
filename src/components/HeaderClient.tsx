@@ -45,6 +45,10 @@ const fallbackConfig: StorefrontConfig = {
     ],
     textoCopyright: '© 2026 PlusSport. Todos los derechos reservados.',
   },
+  whatsapp: {
+    numero: '+51 979 705 255',
+    textoBoton: 'Consultar disponibilidad',
+  },
   colores: {
     primario: '#1a237e',
     acento: '#ff6f00',

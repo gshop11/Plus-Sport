@@ -2,12 +2,14 @@ export type ProductoCard = {
   id: string
   slug?: string
   nombre: string
+  sku?: string
   marca: string
   categoria?: string
   precio: number
   precioAnterior?: number
   imagenUrl?: string | null
   tallas?: string[]
+  stock?: number
   etiqueta?: 'nuevo' | 'hot' | 'top' | 'oferta' | ''
 }
 
@@ -20,6 +22,7 @@ export type ProductoDetalle = {
   id: string
   slug: string
   nombre: string
+  sku?: string
   marca: {
     id: string
     nombre: string
@@ -113,6 +116,10 @@ export type StorefrontConfig = {
     }
     linksRapidos: { etiqueta: string; url: string }[]
     textoCopyright: string
+  }
+  whatsapp: {
+    numero: string
+    textoBoton: string
   }
   colores: {
     primario: string

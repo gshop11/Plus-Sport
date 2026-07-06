@@ -4,8 +4,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useCurrencySymbol } from '@/hooks/useCurrencySymbol'
+import { buildAvailabilityInquiryUrl, getProductoDetalleStock } from '@/lib/availability-inquiry'
 import { formatMoney } from '@/lib/money'
-import type { ProductoDetalle } from '@/lib/storefront-types'
+import type { ProductoDetalle, StorefrontConfig } from '@/lib/storefront-types'
 
 type CarritoItem = {
   id: string
@@ -26,7 +27,12 @@ const BENEFICIOS = [
   { titulo: 'Pago seguro', copy: 'Checkout protegido y confirmacion inmediata.' },
 ]
 
-export default function ProductDetailView({ producto }: { producto: ProductoDetalle }) {
+type ProductDetailViewProps = {
+  producto: ProductoDetalle
+  whatsapp: StorefrontConfig['whatsapp']
+}
+
+export default function ProductDetailView({ producto, whatsapp }: ProductDetailViewProps) {
   const currencySymbol = useCurrencySymbol()
   const images = (() => {
     const gallery = producto.galeriaUrls.length > 0 ? producto.galeriaUrls : []
@@ -38,6 +44,7 @@ export default function ProductDetailView({ producto }: { producto: ProductoDeta
   const [tallaSeleccionada, setTallaSeleccionada] = useState('')
   const [cantidad, setCantidad] = useState(1)
   const [agregado, setAgregado] = useState(false)
+  const [productUrl, setProductUrl] = useState('')
 
   const descuento = producto.precioAnterior
     ? Math.round(((producto.precioAnterior - producto.precio) / producto.precioAnterior) * 100)
@@ -47,6 +54,12 @@ export default function ProductDetailView({ producto }: { producto: ProductoDeta
     .split('\n\n')
     .map((line) => line.trim())
     .filter(Boolean)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setProductUrl(window.location.href)
+    }
+  }, [])
 
   useEffect(() => {
     if (producto.tallas.length === 0) return
@@ -62,7 +75,20 @@ export default function ProductDetailView({ producto }: { producto: ProductoDeta
     ? Number(producto.tallas.find((item) => item.talla === tallaSeleccionada)?.stock || 0)
     : 0
 
+  const stockTotal = getProductoDetalleStock(producto.stock, producto.tallas)
+  const isInquiryOnly = stockTotal <= 0
   const stockDisponible = producto.tallas.length > 0 ? stockSeleccionado : Number(producto.stock || 0)
+  const canAddToCart = !isInquiryOnly && stockDisponible > 0
+  const inquiryTalla = producto.tallas.length > 0 ? tallaSeleccionada || producto.tallas[0]?.talla : undefined
+  const inquiryUrl = buildAvailabilityInquiryUrl({
+    nombre: producto.nombre,
+    sku: producto.sku,
+    precio: producto.precio,
+    productUrl: productUrl || `/producto/${encodeURIComponent(producto.slug)}`,
+    talla: inquiryTalla,
+    currencySymbol,
+    whatsappNumber: whatsapp.numero,
+  })
 
   const handleAgregar = () => {
     if (producto.tallas.length > 0 && !tallaSeleccionada) {
@@ -70,7 +96,7 @@ export default function ProductDetailView({ producto }: { producto: ProductoDeta
       return
     }
 
-    if (stockDisponible <= 0) {
+    if (!canAddToCart) {
       alert('Este producto no tiene stock disponible por ahora.')
       return
     }
@@ -156,14 +182,16 @@ export default function ProductDetailView({ producto }: { producto: ProductoDeta
               <span className="rounded-full bg-accent-dark px-2 py-0.5 text-xs font-bold text-white">-{descuento}%</span>
             ) : null}
           </div>
-          <p className={`mt-2 text-sm font-semibold ${stockDisponible > 0 || producto.stock > 0 ? 'text-primary-dark' : 'text-accent-dark'}`}>
-            {stockDisponible > 0 || producto.stock > 0 ? 'Disponible para despacho inmediato' : 'Sin stock por ahora'}
+          <p className={`mt-2 text-sm font-semibold ${stockTotal > 0 ? 'text-primary-dark' : 'text-accent-dark'}`}>
+            {stockTotal > 0 ? 'Disponible para despacho inmediato' : 'Consulta disponibilidad por talla'}
           </p>
         </div>
 
         {producto.tallas.length > 0 ? (
           <div className="mt-5">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-dark/80">Tallas</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-dark/80">
+              {isInquiryOnly ? 'Tallas referenciales del catalogo' : 'Tallas'}
+            </p>
             <div className="flex flex-wrap gap-2">
               {producto.tallas.map((item) => {
                 const inStock = Number(item.stock || 0) > 0
@@ -172,22 +200,26 @@ export default function ProductDetailView({ producto }: { producto: ProductoDeta
                     key={item.talla}
                     type="button"
                     onClick={() => setTallaSeleccionada(item.talla)}
-                    disabled={!inStock}
+                    disabled={!isInquiryOnly && !inStock}
                     className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
                       tallaSeleccionada === item.talla
-                        ? 'border-primary bg-primary text-white'
-                      : inStock
+                        ? isInquiryOnly
+                          ? 'border-primary bg-[var(--surface-soft)] text-primary-dark'
+                          : 'border-primary bg-primary text-white'
+                      : isInquiryOnly
+                        ? 'border-[var(--line-soft)] bg-white text-gray-700 hover:border-primary/50'
+                        : inStock
                           ? 'border-[var(--line-soft)] bg-white text-gray-700 hover:border-primary/50'
                           : 'cursor-not-allowed border-[var(--line-soft)] bg-[var(--surface-soft)] text-gray-400'
                     }`}
-                    title={inStock ? `${item.stock} disponibles` : 'Agotado'}
+                    title={isInquiryOnly ? 'Talla referencial' : inStock ? `${item.stock} disponibles` : 'Sin stock para compra'}
                   >
                     {item.talla}
                   </button>
                 )
               })}
             </div>
-            {tallaSeleccionada ? (
+            {!isInquiryOnly && tallaSeleccionada ? (
               <p className="mt-2 text-xs text-primary-dark/80">
                 Stock talla {tallaSeleccionada}: {stockSeleccionado}
               </p>
@@ -195,41 +227,60 @@ export default function ProductDetailView({ producto }: { producto: ProductoDeta
           </div>
         ) : null}
 
-        <div className="mt-5">
-          <label htmlFor="pdp-cantidad" className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-primary-dark/80">
-            Cantidad
-          </label>
-          <input
-            id="pdp-cantidad"
-            type="number"
-            min="1"
-            max={Math.max(stockDisponible, 1)}
-            value={cantidad}
-            onChange={(event) => setCantidad(Math.max(1, Number.parseInt(event.target.value || '1', 10)))}
-            className="w-24 rounded-lg border border-[var(--line-soft)] bg-white px-3 py-2 text-sm font-semibold text-gray-800 outline-none focus:border-primary"
-          />
-        </div>
+        {isInquiryOnly ? (
+          <div className="mt-5">
+            <a
+              href={inquiryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Consultar disponibilidad por WhatsApp de ${producto.nombre}`}
+              className="store-button-primary w-full text-center"
+            >
+              Consultar disponibilidad por WhatsApp
+            </a>
+            <p className="mt-2 text-sm font-semibold text-primary-dark/80">
+              Confirma talla y disponibilidad antes de comprar
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="mt-5">
+              <label htmlFor="pdp-cantidad" className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-primary-dark/80">
+                Cantidad
+              </label>
+              <input
+                id="pdp-cantidad"
+                type="number"
+                min="1"
+                max={Math.max(stockDisponible, 1)}
+                value={cantidad}
+                onChange={(event) => setCantidad(Math.max(1, Number.parseInt(event.target.value || '1', 10)))}
+                className="w-24 rounded-lg border border-[var(--line-soft)] bg-white px-3 py-2 text-sm font-semibold text-gray-800 outline-none focus:border-primary"
+              />
+            </div>
 
-        <button
-          type="button"
-          onClick={handleAgregar}
-          disabled={stockDisponible <= 0 && producto.stock <= 0}
-          className={`mt-5 w-full rounded-xl py-3 text-sm font-bold uppercase tracking-[0.11em] text-white transition-colors ${
-            agregado
-              ? 'bg-primary'
-              : stockDisponible <= 0 && producto.stock <= 0
-                ? 'cursor-not-allowed bg-black/35'
-                : 'bg-accent hover:bg-accent-dark'
-          }`}
-        >
-          {agregado ? 'Agregado al carrito' : 'Agregar al carrito'}
-        </button>
+            <button
+              type="button"
+              onClick={handleAgregar}
+              disabled={!canAddToCart}
+              className={`mt-5 w-full rounded-xl py-3 text-sm font-bold uppercase tracking-[0.11em] text-white transition-colors ${
+                agregado
+                  ? 'bg-primary'
+                  : !canAddToCart
+                    ? 'cursor-not-allowed bg-black/35'
+                    : 'bg-accent hover:bg-accent-dark'
+              }`}
+            >
+              {agregado ? 'Agregado al carrito' : 'Agregar al carrito'}
+            </button>
 
-        <div className="mt-3">
-          <Link href="/carrito" className="store-button-secondary w-full text-center">
-            Ver carrito completo
-          </Link>
-        </div>
+            <div className="mt-3">
+              <Link href="/carrito" className="store-button-secondary w-full text-center">
+                Ver carrito completo
+              </Link>
+            </div>
+          </>
+        )}
 
         <div className="mt-6 space-y-3 rounded-2xl border border-[var(--line-soft)] bg-white p-4">
           {BENEFICIOS.map((item) => (

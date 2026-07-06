@@ -2,7 +2,7 @@ import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import ProductDetailView from '@/components/ProductDetailView'
 import TarjetaProducto from '@/components/TarjetaProducto'
-import { getProductoDetalleBySlug } from '@/lib/storefront'
+import { getProductoDetalleBySlug, getStorefrontConfig } from '@/lib/storefront'
 import { notFound } from 'next/navigation'
 
 export const revalidate = 60
@@ -22,6 +22,7 @@ export default async function ProductoDetallePage({ params }: ProductoDetallePag
   }
 
   const { producto, relacionados } = data
+  const config = await getStorefrontConfig()
   const categoriaHref = producto.categoria.slug ? `/categoria/${producto.categoria.slug}` : '/categorias'
 
   return (
@@ -46,7 +47,7 @@ export default async function ProductoDetallePage({ params }: ProductoDetallePag
 
         <section className="py-8 sm:py-10">
           <div className="section-shell">
-            <ProductDetailView producto={producto} />
+            <ProductDetailView producto={producto} whatsapp={config.whatsapp} />
           </div>
         </section>
 
