@@ -17,13 +17,13 @@ export const resolveMediaURL = (media?: MediaLike | null): string | null => {
   if (rawURL) {
     const apiMediaPrefix = '/api/media/file/'
 
-    if (rawURL.startsWith(apiMediaPrefix) || rawURL.includes(`${apiMediaPrefix}`)) {
+    if (rawURL.startsWith('http://') || rawURL.startsWith('https://')) {
+      return rawURL
+    }
+
+    if (rawURL.startsWith(apiMediaPrefix)) {
       const parsed = new URL(rawURL, 'http://localhost')
-      const prefixIndex = parsed.pathname.indexOf(apiMediaPrefix)
-      const filenameFromAPI =
-        prefixIndex >= 0
-          ? parsed.pathname.slice(prefixIndex + apiMediaPrefix.length).replace(/^\/+/, '')
-          : ''
+      const filenameFromAPI = parsed.pathname.slice(apiMediaPrefix.length).replace(/^\/+/, '')
 
       if (!filenameFromAPI) return null
 
@@ -34,10 +34,10 @@ export const resolveMediaURL = (media?: MediaLike | null): string | null => {
         return `${mediaBaseURL}/${filenameFromAPI}${queryString}`
       }
 
-      return `/media/${filenameFromAPI}${queryString}`
+      return `${apiMediaPrefix}${filenameFromAPI}${queryString}`
     }
 
-    if (rawURL.startsWith('http://') || rawURL.startsWith('https://') || rawURL.startsWith('/')) {
+    if (rawURL.startsWith('/')) {
       return rawURL
     }
 
