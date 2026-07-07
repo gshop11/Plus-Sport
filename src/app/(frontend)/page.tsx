@@ -1,18 +1,23 @@
+import type { Metadata } from 'next'
 import Footer from '@/components/Footer'
-import FormSuscribir from '@/components/FormSuscribir'
 import Header from '@/components/Header'
 import HeroSlider from '@/components/HeroSlider'
 import StoreRail from '@/components/StoreRail'
 import TarjetaProducto from '@/components/TarjetaProducto'
+import { normalizeWhatsappNumber } from '@/lib/availability-inquiry'
 import { getHomeData } from '@/lib/storefront'
 import type { HomeCategory, HomeSectionConfig } from '@/lib/storefront-types'
 
 export const revalidate = 60
 
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+}
+
 const defaultSubscriptionSection: HomeSectionConfig = {
   key: 'suscripcion',
-  titulo: 'Ofertas exclusivas para ti',
-  subtitulo: 'Dejanos tu WhatsApp y te avisamos primero.',
+  titulo: 'Atencion comercial por WhatsApp',
+  subtitulo: 'Escribenos y te ayudamos a encontrar tu talla y coordinar tu compra.',
   mostrar: true,
   orden: 9,
 }
@@ -145,22 +150,24 @@ export default async function HomePage() {
           </section>
         ) : null}
 
-        {promotionalProducts.length > 0 ? (
-          <section className="store-section store-section--soft">
-            <div className="store-home-container">
-              <div className="store-section-header store-section-header--split">
-                <div>
-                  <span className="store-section-eyebrow">Ofertas</span>
-                  <h2 className="store-section-title">Productos en oferta</h2>
-                  <p className="store-section-copy">Productos seleccionados con precios especiales.</p>
-                </div>
+        <section className="store-section store-section--soft">
+          <div className="store-home-container">
+            <div className="store-section-header store-section-header--split">
+              <div>
+                <span className="store-section-eyebrow">Ofertas</span>
+                <h2 className="store-section-title">Productos en oferta</h2>
+                <p className="store-section-copy">Productos seleccionados con precios especiales.</p>
+              </div>
+              {promotionalProducts.length > 0 ? (
                 <a href="/productos?oferta=1" className="store-section-link">
                   Ver todas las ofertas
                   <span aria-hidden="true" className="store-section-link__chevron">
                     ›
                   </span>
                 </a>
-              </div>
+              ) : null}
+            </div>
+            {promotionalProducts.length > 0 ? (
               <StoreRail
                 ariaLabel="Productos en oferta"
                 previousLabel="Ver ofertas anteriores"
@@ -176,9 +183,17 @@ export default async function HomePage() {
                   <TarjetaProducto key={`promocion-${producto.id}`} producto={producto} index={index} variant="homeOffer" />
                 ))}
               </StoreRail>
-            </div>
-          </section>
-        ) : null}
+            ) : (
+              <div className="store-empty-state">
+                <h3>No hay ofertas activas por ahora.</h3>
+                <p>Vuelve pronto o explora el catalogo completo mientras tanto.</p>
+                <a href="/productos" className="store-button-primary">
+                  Ver catalogo completo
+                </a>
+              </div>
+            )}
+          </div>
+        </section>
 
         {newArrivalProducts.length > 0 ? (
           <section className="store-section">
@@ -227,13 +242,20 @@ export default async function HomePage() {
                     <h2 className="mb-2 text-3xl font-black sm:text-4xl">{subscriptionSection.titulo}</h2>
                     {subscriptionSection.subtitulo ? <p className="max-w-xl text-sm text-white/80 sm:text-base">{subscriptionSection.subtitulo}</p> : null}
                     <div className="mt-5 flex flex-wrap gap-2">
-                      <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.11em] text-white/80">Drops semanales</span>
-                      <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.11em] text-white/80">Ofertas privadas</span>
-                      <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.11em] text-white/80">Stock primero</span>
+                      <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.11em] text-white/80">Atencion personalizada</span>
+                      <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.11em] text-white/80">Consulta de talla y stock</span>
+                      <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.11em] text-white/80">Coordinacion de entrega</span>
                     </div>
                   </div>
-                  <div className="rounded-2xl bg-white/95 p-4 text-left text-gray-800 shadow-xl">
-                    <FormSuscribir />
+                  <div className="flex items-center justify-center rounded-2xl bg-white/95 p-6 text-center shadow-xl">
+                    <a
+                      href={`https://wa.me/${normalizeWhatsappNumber(config.whatsapp.numero)}?text=${encodeURIComponent('Hola, quiero recibir informacion de productos y ofertas de Plus Sport.')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="store-button-primary w-full text-center"
+                    >
+                      {config.whatsapp.textoBoton || 'Escribir por WhatsApp'}
+                    </a>
                   </div>
                 </div>
               </div>

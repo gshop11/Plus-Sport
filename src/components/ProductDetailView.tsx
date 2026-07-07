@@ -1,36 +1,18 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useCurrencySymbol } from '@/hooks/useCurrencySymbol'
 import { buildAvailabilityInquiryUrl, getProductoDetalleStock } from '@/lib/availability-inquiry'
 import { formatMoney } from '@/lib/money'
 import type { ProductoDetalle, StorefrontConfig } from '@/lib/storefront-types'
 
-type CarritoItem = {
-  id: string
-  nombre: string
-  precio: number
-  precioAnterior?: number
-  talla: string
-  cantidad: number
-  imagenUrl?: string | null
-  marca: string
-}
-
 const PLACEHOLDER_IMAGE = '/placeholder-product.svg'
 
-const BENEFICIOS_COMPRA = [
-  { titulo: 'Envio nacional', copy: 'Despachos con seguimiento a todo Peru.' },
-  { titulo: 'Cambios sencillos', copy: 'Gestion de cambios y devoluciones sin friccion.' },
-  { titulo: 'Pago seguro', copy: 'Checkout protegido y confirmacion inmediata.' },
-]
-
-const BENEFICIOS_CONSULTA = [
-  { titulo: 'Envio nacional', copy: 'Despachos con seguimiento a todo Peru.' },
-  { titulo: 'Cambios sencillos', copy: 'Gestion de cambios y devoluciones sin friccion.' },
-  { titulo: 'Atencion directa', copy: 'Coordinamos disponibilidad y compra por WhatsApp.' },
+const BENEFICIOS = [
+  { titulo: 'Atencion por WhatsApp', copy: 'Coordinamos disponibilidad, talla y compra directamente contigo.' },
+  { titulo: 'Coordinacion de entrega', copy: 'Acordamos la forma de envio o recojo segun tu ubicacion.' },
+  { titulo: 'Consulta antes de comprar', copy: 'Resolvemos tus dudas de producto antes de confirmar el pedido.' },
 ]
 
 type ProductDetailViewProps = {
@@ -48,8 +30,6 @@ export default function ProductDetailView({ producto, whatsapp }: ProductDetailV
   })()
   const [imagenActiva, setImagenActiva] = useState(images[0] || PLACEHOLDER_IMAGE)
   const [tallaSeleccionada, setTallaSeleccionada] = useState('')
-  const [cantidad, setCantidad] = useState(1)
-  const [agregado, setAgregado] = useState(false)
   const [productUrl, setProductUrl] = useState('')
 
   const descuento = producto.precioAnterior
@@ -82,9 +62,6 @@ export default function ProductDetailView({ producto, whatsapp }: ProductDetailV
     : 0
 
   const stockTotal = getProductoDetalleStock(producto.stock, producto.tallas)
-  const isInquiryOnly = stockTotal <= 0
-  const stockDisponible = producto.tallas.length > 0 ? stockSeleccionado : Number(producto.stock || 0)
-  const canAddToCart = !isInquiryOnly && stockDisponible > 0
   const inquiryTalla = producto.tallas.length > 0 ? tallaSeleccionada || producto.tallas[0]?.talla : undefined
   const inquiryUrl = buildAvailabilityInquiryUrl({
     nombre: producto.nombre,
@@ -95,48 +72,6 @@ export default function ProductDetailView({ producto, whatsapp }: ProductDetailV
     currencySymbol,
     whatsappNumber: whatsapp.numero,
   })
-
-  const handleAgregar = () => {
-    if (producto.tallas.length > 0 && !tallaSeleccionada) {
-      alert('Selecciona una talla antes de agregar al carrito.')
-      return
-    }
-
-    if (!canAddToCart) {
-      alert('Este producto no tiene stock disponible por ahora.')
-      return
-    }
-
-    const cantidadFinal = Math.min(Math.max(1, cantidad), Math.max(stockDisponible, 1))
-
-    const carrito: CarritoItem[] = JSON.parse(localStorage.getItem('carrito') || '[]')
-
-    const existenteIndex = carrito.findIndex(
-      (item) => item.id === producto.id && item.talla === (tallaSeleccionada || ''),
-    )
-
-    if (existenteIndex >= 0) {
-      carrito[existenteIndex].cantidad += cantidadFinal
-    } else {
-      carrito.push({
-        id: producto.id,
-        nombre: producto.nombre,
-        precio: producto.precio,
-        precioAnterior: producto.precioAnterior,
-        talla: tallaSeleccionada || '',
-        cantidad: cantidadFinal,
-        imagenUrl: imagenActiva || producto.imagenUrl || PLACEHOLDER_IMAGE,
-        marca: producto.marca.nombre,
-      })
-    }
-
-    localStorage.setItem('carrito', JSON.stringify(carrito))
-    window.dispatchEvent(new Event('carrito:update'))
-    window.dispatchEvent(new Event('carrito:open'))
-
-    setAgregado(true)
-    setTimeout(() => setAgregado(false), 1800)
-  }
 
   return (
     <div className="grid gap-7 lg:grid-cols-[1.15fr_1fr] lg:gap-8">
@@ -189,43 +124,31 @@ export default function ProductDetailView({ producto, whatsapp }: ProductDetailV
             ) : null}
           </div>
           <p className={`mt-2 text-sm font-semibold ${stockTotal > 0 ? 'text-primary-dark' : 'text-accent-dark'}`}>
-            {stockTotal > 0 ? 'Disponible para despacho inmediato' : 'Consulta disponibilidad por talla'}
+            {stockTotal > 0 ? 'Disponible' : 'Consulta disponibilidad por talla'}
           </p>
         </div>
 
         {producto.tallas.length > 0 ? (
           <div className="mt-5">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-dark/80">
-              {isInquiryOnly ? 'Tallas referenciales del catalogo' : 'Tallas'}
-            </p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-dark/80">Tallas</p>
             <div className="flex flex-wrap gap-2">
-              {producto.tallas.map((item) => {
-                const inStock = Number(item.stock || 0) > 0
-                return (
-                  <button
-                    key={item.talla}
-                    type="button"
-                    onClick={() => setTallaSeleccionada(item.talla)}
-                    disabled={!isInquiryOnly && !inStock}
-                    className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
-                      tallaSeleccionada === item.talla
-                        ? isInquiryOnly
-                          ? 'border-primary bg-[var(--surface-soft)] text-primary-dark'
-                          : 'border-primary bg-primary text-white'
-                      : isInquiryOnly
-                        ? 'border-[var(--line-soft)] bg-white text-gray-700 hover:border-primary/50'
-                        : inStock
-                          ? 'border-[var(--line-soft)] bg-white text-gray-700 hover:border-primary/50'
-                          : 'cursor-not-allowed border-[var(--line-soft)] bg-[var(--surface-soft)] text-gray-400'
-                    }`}
-                    title={isInquiryOnly ? 'Talla referencial' : inStock ? `${item.stock} disponibles` : 'Sin stock para compra'}
-                  >
-                    {item.talla}
-                  </button>
-                )
-              })}
+              {producto.tallas.map((item) => (
+                <button
+                  key={item.talla}
+                  type="button"
+                  onClick={() => setTallaSeleccionada(item.talla)}
+                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+                    tallaSeleccionada === item.talla
+                      ? 'border-primary bg-[var(--surface-soft)] text-primary-dark'
+                      : 'border-[var(--line-soft)] bg-white text-gray-700 hover:border-primary/50'
+                  }`}
+                  title={Number(item.stock || 0) > 0 ? `${item.stock} disponibles` : 'Consultar disponibilidad'}
+                >
+                  {item.talla}
+                </button>
+              ))}
             </div>
-            {!isInquiryOnly && tallaSeleccionada ? (
+            {tallaSeleccionada ? (
               <p className="mt-2 text-xs text-primary-dark/80">
                 Stock talla {tallaSeleccionada}: {stockSeleccionado}
               </p>
@@ -233,63 +156,23 @@ export default function ProductDetailView({ producto, whatsapp }: ProductDetailV
           </div>
         ) : null}
 
-        {isInquiryOnly ? (
-          <div className="mt-5">
-            <a
-              href={inquiryUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Consultar disponibilidad por WhatsApp de ${producto.nombre}`}
-              className="store-button-primary w-full text-center"
-            >
-              Consultar disponibilidad por WhatsApp
-            </a>
-            <p className="mt-2 text-sm font-semibold text-primary-dark/80">
-              Confirma talla y disponibilidad antes de comprar
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="mt-5">
-              <label htmlFor="pdp-cantidad" className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-primary-dark/80">
-                Cantidad
-              </label>
-              <input
-                id="pdp-cantidad"
-                type="number"
-                min="1"
-                max={Math.max(stockDisponible, 1)}
-                value={cantidad}
-                onChange={(event) => setCantidad(Math.max(1, Number.parseInt(event.target.value || '1', 10)))}
-                className="w-24 rounded-lg border border-[var(--line-soft)] bg-white px-3 py-2 text-sm font-semibold text-gray-800 outline-none focus:border-primary"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={handleAgregar}
-              disabled={!canAddToCart}
-              className={`mt-5 w-full rounded-xl py-3 text-sm font-bold uppercase tracking-[0.11em] text-white transition-colors ${
-                agregado
-                  ? 'bg-primary'
-                  : !canAddToCart
-                    ? 'cursor-not-allowed bg-black/35'
-                    : 'bg-accent hover:bg-accent-dark'
-              }`}
-            >
-              {agregado ? 'Agregado al carrito' : 'Agregar al carrito'}
-            </button>
-
-            <div className="mt-3">
-              <Link href="/carrito" className="store-button-secondary w-full text-center">
-                Ver carrito completo
-              </Link>
-            </div>
-          </>
-        )}
+        <div className="mt-5">
+          <a
+            href={inquiryUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Consultar disponibilidad por WhatsApp de ${producto.nombre}`}
+            className="store-button-primary w-full text-center"
+          >
+            Consultar disponibilidad por WhatsApp
+          </a>
+          <p className="mt-2 text-sm font-semibold text-primary-dark/80">
+            Confirma talla y disponibilidad antes de comprar
+          </p>
+        </div>
 
         <div className="mt-6 space-y-3 rounded-2xl border border-[var(--line-soft)] bg-white p-4">
-          {(isInquiryOnly ? BENEFICIOS_CONSULTA : BENEFICIOS_COMPRA).map((item) => (
+          {BENEFICIOS.map((item) => (
             <div key={item.titulo} className="rounded-xl bg-[var(--surface-soft)] px-3 py-2">
               <p className="text-sm font-bold text-gray-900">{item.titulo}</p>
               <p className="text-xs text-primary-dark/80">{item.copy}</p>

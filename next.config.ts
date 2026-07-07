@@ -29,6 +29,16 @@ const nextConfig: NextConfig = {
       ...(customMediaPattern ? [customMediaPattern] : []),
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.plussport.pe' }],
+        destination: 'https://plussport.pe/:path*',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default withPayload(nextConfig)

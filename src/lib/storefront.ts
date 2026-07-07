@@ -8,7 +8,6 @@ export type { HeaderMenuItem, HomeBrand, HomeCategory, HomeData, HomeSectionConf
 
 export const PRODUCTS_PER_PAGE = 24
 const HOME_PRODUCT_LIMIT = 8
-const HOME_PROMOTION_FALLBACK_LIMIT = 24
 const HOME_NEW_ARRIVAL_LIMIT = 24
 const HOME_MAIN_CATEGORY_LIMIT = 6
 const HOME_CATEGORY_LIMIT = 24
@@ -134,8 +133,6 @@ const uniqueProductsById = (products: ProductoCard[], limit: number): ProductoCa
 
   return unique
 }
-
-const hasDiscountPrice = (product: ProductoCard) => Number(product.precioAnterior || 0) > Number(product.precio || 0)
 
 const mapBrandToHomeBrand = (brand: HomeBrandDoc): HomeBrand => ({
   id: String(brand.id),
@@ -325,7 +322,7 @@ const normalizeStorefrontConfig = (configTienda: any, categorias: any[] = []): S
       logoAlt: configTienda?.nombreTienda ? `${configTienda.nombreTienda} logo` : 'PlusSport logo',
     },
     header: {
-      anuncioBarra: configTienda?.header?.anuncioBarra ?? 'ENVIO GRATIS POR COMPRAS MAYORES A S/299',
+      anuncioBarra: configTienda?.header?.anuncioBarra ?? 'CATALOGO DEPORTIVO CON ATENCION POR WHATSAPP',
       mostrarAnuncio: configTienda?.header?.mostrarAnuncio !== false,
       menuPrincipal,
     },
@@ -463,21 +460,9 @@ export const getHomeData = unstable_cache(
 
     const featuredProducts = uniqueProductsById(featuredProductsRes.docs.map(mapProductoToCard), HOME_PRODUCT_LIMIT)
 
-    let promotionalProducts = uniqueProductsById(promotionalProductsRes.docs.map(mapProductoToCard), HOME_PRODUCT_LIMIT)
-    if (promotionalProducts.length < HOME_PRODUCT_LIMIT) {
-      const discountedProductsRes = await payload
-        .find({
-          collection: 'productos',
-          where: { activo: { equals: true }, precioAnterior: { exists: true } },
-          limit: HOME_PROMOTION_FALLBACK_LIMIT,
-          depth: 1,
-          sort: '-createdAt',
-        })
-        .catch(() => ({ docs: [] as any[] }))
-
-      const discountedProducts = discountedProductsRes.docs.map(mapProductoToCard).filter(hasDiscountPrice)
-      promotionalProducts = uniqueProductsById([...promotionalProducts, ...discountedProducts], HOME_PRODUCT_LIMIT)
-    }
+    // A product only counts as an offer when it carries the explicit "oferta" tag.
+    // precioAnterior alone is not a promotion signal and must never be used to infer one.
+    const promotionalProducts = uniqueProductsById(promotionalProductsRes.docs.map(mapProductoToCard), HOME_PRODUCT_LIMIT)
 
     const newArrivalProducts = uniqueProductsById(newArrivalProductsRes.docs.map(mapProductoToCard), HOME_NEW_ARRIVAL_LIMIT)
 

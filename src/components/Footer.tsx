@@ -31,9 +31,9 @@ const fallbackIdentity = {
 }
 
 const trustItems = [
-  'Compra segura',
-  'Enviamos a todo el pais',
-  'Soporte postventa',
+  'Atencion por WhatsApp',
+  'Consulta disponibilidad por talla',
+  'Coordinacion de entrega',
 ]
 
 const normalizeFooterHref = (href: string) => (href === '/ofertas' ? '/productos?oferta=1' : href)
@@ -90,7 +90,7 @@ export default function Footer() {
     <footer className="mt-12 bg-primary text-white">
       <div className="border-b border-white/10 bg-gradient-to-r from-accent/95 to-accent-dark px-4 py-4">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-          <p className="text-sm font-semibold uppercase tracking-[0.12em] text-white/90">Plus-Sport: tienda lista para compra real</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.12em] text-white/90">Catalogo deportivo con atencion por WhatsApp</p>
           <a href="/productos?oferta=1" className="rounded-full border border-white/35 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.11em] text-white transition-colors hover:bg-white/20">
             Ver ofertas destacadas
           </a>

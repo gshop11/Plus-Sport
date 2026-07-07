@@ -1,8 +1,15 @@
+import type { Metadata } from 'next'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import { getCategoriasData } from '@/lib/storefront'
 
 export const revalidate = 60
+
+export const metadata: Metadata = {
+  title: 'Categorias',
+  description: 'Explora el catalogo de Plus Sport por categoria deportiva.',
+  alternates: { canonical: '/categorias' },
+}
 
 export default async function CategoriasPage() {
   const categorias = await getCategoriasData()

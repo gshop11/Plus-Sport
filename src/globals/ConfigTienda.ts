@@ -107,7 +107,7 @@ export const ConfigTienda: GlobalConfig = {
           name: 'anuncioBarra',
           type: 'text',
           label: 'Texto del anuncio',
-          defaultValue: 'ENVIO GRATIS POR COMPRAS MAYORES A S/299',
+          defaultValue: 'CATALOGO DEPORTIVO CON ATENCION POR WHATSAPP',
         },
         {
           name: 'mostrarAnuncio',

@@ -4,8 +4,7 @@ import type { StorefrontConfig } from '@/lib/storefront-types'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useMemo, useState } from 'react'
-import CartDrawer from './CartDrawer'
-import CartCountBadge from './CartCountBadge'
+import { normalizeWhatsappNumber } from '@/lib/availability-inquiry'
 
 type HeaderClientProps = {
   initialConfig?: StorefrontConfig
@@ -19,7 +18,7 @@ const fallbackConfig: StorefrontConfig = {
     logoAlt: 'PlusSport logo',
   },
   header: {
-    anuncioBarra: 'ENVIO GRATIS POR COMPRAS MAYORES A S/299',
+    anuncioBarra: 'CATALOGO DEPORTIVO CON ATENCION POR WHATSAPP',
     mostrarAnuncio: true,
     menuPrincipal: [
       { etiqueta: 'Catalogo', url: '/productos' },
@@ -70,21 +69,10 @@ const itemKey = (url: string, index: number) => `${url}-${index}`
 
 const isDeportesLabel = (etiqueta: string) => etiqueta.toLowerCase().includes('deporte')
 
-function UserIcon() {
+function WhatsAppIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
-    </svg>
-  )
-}
-
-function CartIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[19px] w-[19px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="20" r="1.5" />
-      <circle cx="18" cy="20" r="1.5" />
-      <path d="M3 5h2l2 10h10l2-7H6" />
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor">
+      <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.06-1.33A10 10 0 1 0 12 2Zm0 18.2a8.14 8.14 0 0 1-4.15-1.14l-.3-.18-3 .79.8-2.92-.19-.3A8.2 8.2 0 1 1 12 20.2Zm4.52-6.13c-.25-.12-1.47-.72-1.7-.81-.23-.08-.4-.12-.56.13-.17.25-.65.81-.8.98-.15.17-.29.19-.54.06-.25-.12-1.06-.39-2.02-1.24a7.6 7.6 0 0 1-1.4-1.73c-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.44-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.42h-.48c-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08 0 1.22.89 2.4 1.02 2.57.12.17 1.75 2.68 4.25 3.75.59.26 1.05.41 1.41.53.59.19 1.13.16 1.55.1.47-.07 1.47-.6 1.68-1.19.21-.58.21-1.08.15-1.19-.06-.11-.23-.17-.48-.29Z" />
     </svg>
   )
 }
@@ -96,7 +84,6 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
 
   const [config, setConfig] = useState<StorefrontConfig>(initialConfig ?? fallbackConfig)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [cartOpen, setCartOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
 
   useEffect(() => {
@@ -130,17 +117,11 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
   }, [pathname, searchParams])
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen || cartOpen ? 'hidden' : ''
+    document.body.style.overflow = menuOpen ? 'hidden' : ''
     return () => {
       document.body.style.overflow = ''
     }
-  }, [menuOpen, cartOpen])
-
-  useEffect(() => {
-    const openCart = () => setCartOpen(true)
-    window.addEventListener('carrito:open', openCart)
-    return () => window.removeEventListener('carrito:open', openCart)
-  }, [])
+  }, [menuOpen])
 
   const menuItems = useMemo(() => config.header.menuPrincipal ?? [], [config])
 
@@ -266,32 +247,27 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
             </div>
 
             <div className="hidden items-center justify-end gap-3 lg:flex lg:w-[220px]">
-              <Link href="/checkout" className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-primary hover:text-primary">
-                <UserIcon />
-                <span>Mi cuenta</span>
-              </Link>
-              <button
-                type="button"
-                onClick={() => setCartOpen(true)}
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-gray-900 transition-colors hover:bg-gray-100 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
-                aria-label="Abrir carrito"
+              <a
+                href={`https://wa.me/${normalizeWhatsappNumber(config.whatsapp.numero)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-primary hover:text-primary"
               >
-                <CartIcon />
-                <span className="sr-only">Carrito</span>
-                <CartCountBadge />
-              </button>
+                <WhatsAppIcon />
+                <span>WhatsApp</span>
+              </a>
             </div>
 
             <div className="ml-auto flex items-center gap-4 md:hidden">
-              <button
-                type="button"
-                onClick={() => setCartOpen(true)}
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-gray-900 transition-colors hover:bg-gray-100 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
-                aria-label="Abrir carrito"
+              <a
+                href={`https://wa.me/${normalizeWhatsappNumber(config.whatsapp.numero)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-gray-900 transition-colors hover:bg-gray-100 hover:text-primary"
+                aria-label="Escribir por WhatsApp"
               >
-                <CartIcon />
-                <CartCountBadge />
-              </button>
+                <WhatsAppIcon />
+              </a>
               <button className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-900" onClick={() => setMenuOpen((prev) => !prev)} aria-label="Abrir menu">
                 {menuOpen ? 'Cerrar' : 'Menu'}
               </button>
@@ -372,24 +348,21 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
 
               <div className="mx-5 my-3 border-t border-white/10" />
 
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false)
-                  setCartOpen(true)
-                }}
+              <a
+                href={`https://wa.me/${normalizeWhatsappNumber(config.whatsapp.numero)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
                 className="mx-3 flex w-[calc(100%-1.5rem)] items-center justify-center gap-3 rounded-xl border border-white/15 bg-accent px-6 py-4 text-sm font-black uppercase tracking-widest text-white shadow-lg transition-all hover:bg-orange-600 active:scale-[0.98]"
               >
-                <CartIcon />
-                <span>VER CARRITO</span>
-                <CartCountBadge />
-              </button>
+                <WhatsAppIcon />
+                <span>ESCRIBIR POR WHATSAPP</span>
+              </a>
             </div>
           </div>
         )}
       </header>
 
-      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
       {menuOpen && <div className="animate-overlayIn fixed inset-0 z-40 bg-black/60 sm:hidden" onClick={() => setMenuOpen(false)} aria-hidden="true" />}
     </>
   )

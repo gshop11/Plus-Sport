@@ -1,8 +1,15 @@
+import type { Metadata } from 'next'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
 import { getMarcasData } from '@/lib/storefront'
 
 export const revalidate = 60
+
+export const metadata: Metadata = {
+  title: 'Marcas',
+  description: 'Explora el catalogo de Plus Sport por marca deportiva.',
+  alternates: { canonical: '/marcas' },
+}
 
 export default async function MarcasPage() {
   const marcas = await getMarcasData()

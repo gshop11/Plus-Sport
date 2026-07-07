@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import CatalogFilters, { type CatalogFilterGroup } from '@/components/CatalogFilters'
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
@@ -13,6 +14,12 @@ import {
 } from '@/lib/storefront'
 
 export const revalidate = 60
+
+export const metadata: Metadata = {
+  title: 'Catalogo',
+  description: 'Explora zapatillas, ropa y accesorios deportivos por segmento, marca o categoria. Consulta disponibilidad por talla y coordina tu compra por WhatsApp.',
+  alternates: { canonical: '/productos' },
+}
 
 const segmentMeta = {
   hombre: {
@@ -387,6 +394,14 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
                       )}
                     </div>
                   </>
+                ) : onlyOffers ? (
+                  <div className="store-empty-state">
+                    <h3>No hay ofertas activas por ahora.</h3>
+                    <p>Vuelve pronto o explora el catalogo completo mientras tanto.</p>
+                    <a href="/productos" className="store-button-primary">
+                      Ver catalogo completo
+                    </a>
+                  </div>
                 ) : (
                   <div className="store-empty-state">
                     <h3>No encontramos productos con estos filtros.</h3>
