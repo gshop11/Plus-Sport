@@ -120,25 +120,6 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
       >
         <div className="store-hero__backdrop" aria-hidden="true" />
 
-        <div className="store-home-container store-hero__content-shell">
-          <div className="store-hero__content">
-            <span className="store-hero__eyebrow">Plus Sport</span>
-            <h1 className="store-hero__title">{slide.titulo}</h1>
-            {slide.subtitulo ? <p className="store-hero__subtitle">{slide.subtitulo}</p> : null}
-            {slide.descripcion ? <p className="store-hero__description">{slide.descripcion}</p> : null}
-            <div className="store-hero__actions">
-              <a href={slide.btn1Url} className="store-button-primary store-hero__cta-primary">
-                {slide.btn1Text}
-              </a>
-              {slide.btn2Text && slide.btn2Url ? (
-                <a href={slide.btn2Url} className="store-hero__cta-secondary">
-                  {slide.btn2Text}
-                </a>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
         {data.length > 1 && (
           <div className="store-hero__arrows">
             <button
