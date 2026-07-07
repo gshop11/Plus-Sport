@@ -8,6 +8,7 @@ export type { HeaderMenuItem, HomeBrand, HomeCategory, HomeData, HomeSectionConf
 
 export const PRODUCTS_PER_PAGE = 24
 const HOME_PRODUCT_LIMIT = 8
+const HOME_PROMOTION_FALLBACK_LIMIT = 24
 const HOME_NEW_ARRIVAL_LIMIT = 24
 const HOME_MAIN_CATEGORY_LIMIT = 6
 const HOME_CATEGORY_LIMIT = 24
@@ -133,6 +134,8 @@ const uniqueProductsById = (products: ProductoCard[], limit: number): ProductoCa
 
   return unique
 }
+
+const hasDiscountPrice = (product: ProductoCard) => Number(product.precioAnterior || 0) > Number(product.precio || 0)
 
 const mapBrandToHomeBrand = (brand: HomeBrandDoc): HomeBrand => ({
   id: String(brand.id),
@@ -460,10 +463,21 @@ export const getHomeData = unstable_cache(
 
     const featuredProducts = uniqueProductsById(featuredProductsRes.docs.map(mapProductoToCard), HOME_PRODUCT_LIMIT)
 
-    // Ofertas reales unicamente: etiqueta === 'oferta' explicita en el producto.
-    // No se infieren ofertas por precioAnterior; si hay menos de HOME_PRODUCT_LIMIT
-    // (o cero), la seccion simplemente muestra menos tarjetas o queda vacia.
-    const promotionalProducts = uniqueProductsById(promotionalProductsRes.docs.map(mapProductoToCard), HOME_PRODUCT_LIMIT)
+    let promotionalProducts = uniqueProductsById(promotionalProductsRes.docs.map(mapProductoToCard), HOME_PRODUCT_LIMIT)
+    if (promotionalProducts.length < HOME_PRODUCT_LIMIT) {
+      const discountedProductsRes = await payload
+        .find({
+          collection: 'productos',
+          where: { activo: { equals: true }, precioAnterior: { exists: true } },
+          limit: HOME_PROMOTION_FALLBACK_LIMIT,
+          depth: 1,
+          sort: '-createdAt',
+        })
+        .catch(() => ({ docs: [] as any[] }))
+
+      const discountedProducts = discountedProductsRes.docs.map(mapProductoToCard).filter(hasDiscountPrice)
+      promotionalProducts = uniqueProductsById([...promotionalProducts, ...discountedProducts], HOME_PRODUCT_LIMIT)
+    }
 
     const newArrivalProducts = uniqueProductsById(newArrivalProductsRes.docs.map(mapProductoToCard), HOME_NEW_ARRIVAL_LIMIT)
 

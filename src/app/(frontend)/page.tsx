@@ -102,9 +102,6 @@ export default async function HomePage() {
               >
                 {brands.map(({ nombre, id, slug }) => (
                   <a key={id} href={`/productos?marca=${slug}`} className="store-brand-card">
-                    <span className="store-brand-card__mark" aria-hidden="true">
-                      {nombre.trim().charAt(0).toUpperCase() || '?'}
-                    </span>
                     <span className="store-brand-card__name">{nombre}</span>
                     <span className="store-brand-card__action">Ver coleccion</span>
                   </a>
