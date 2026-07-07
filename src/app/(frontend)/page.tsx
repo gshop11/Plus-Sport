@@ -205,7 +205,7 @@ export default async function HomePage() {
                 mode="cyclic"
                 autoplay
                 autoplayInterval={4200}
-                visibleItems={{ mobile: 1, tablet: 3, desktop: 5 }}
+                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
               >
                 {newArrivalProducts.map((producto, index) => (
                   <TarjetaProducto key={`nuevo-${producto.id}`} producto={producto} index={index} variant="homeNewArrival" />
