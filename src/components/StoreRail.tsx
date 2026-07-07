@@ -47,6 +47,9 @@ type InertElementProps = {
 const SCROLL_TOLERANCE = 2
 const DEFAULT_AUTOPLAY_INTERVAL = 5500
 const MANUAL_PAUSE_DURATION = 8000
+// Commercial direction: rails must feel alive the instant they enter view,
+// not sit frozen for a full interval before the first move.
+const FIRST_AUTOPLAY_DELAY = 700
 const DEFAULT_VISIBLE_ITEMS: StoreRailVisibleItems = {
   mobile: 1,
   tablet: 2,
@@ -126,6 +129,7 @@ export default function StoreRail({
   const scrollSettleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const logicalIndexRef = useRef(0)
   const isAnimatingRef = useRef(false)
+  const hasAutoplayedOnceRef = useRef(false)
   const generatedId = useId()
   const trackId = `store-rail-${generatedId}`
   const items = Children.toArray(children)
@@ -492,11 +496,14 @@ export default function StoreRail({
       return undefined
     }
 
+    const delay = hasAutoplayedOnceRef.current ? autoplayInterval : Math.min(FIRST_AUTOPLAY_DELAY, autoplayInterval)
+
     autoplayTimerRef.current = setTimeout(() => {
       if (!isAnimatingRef.current) {
+        hasAutoplayedOnceRef.current = true
         scrollToLogicalIndex(logicalIndexRef.current + 1)
       }
-    }, autoplayInterval)
+    }, delay)
 
     return () => {
       cancelAutoplayTimer()

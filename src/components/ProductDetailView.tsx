@@ -21,10 +21,16 @@ type CarritoItem = {
 
 const PLACEHOLDER_IMAGE = '/placeholder-product.svg'
 
-const BENEFICIOS = [
+const BENEFICIOS_COMPRA = [
   { titulo: 'Envio nacional', copy: 'Despachos con seguimiento a todo Peru.' },
   { titulo: 'Cambios sencillos', copy: 'Gestion de cambios y devoluciones sin friccion.' },
   { titulo: 'Pago seguro', copy: 'Checkout protegido y confirmacion inmediata.' },
+]
+
+const BENEFICIOS_CONSULTA = [
+  { titulo: 'Envio nacional', copy: 'Despachos con seguimiento a todo Peru.' },
+  { titulo: 'Cambios sencillos', copy: 'Gestion de cambios y devoluciones sin friccion.' },
+  { titulo: 'Atencion directa', copy: 'Coordinamos disponibilidad y compra por WhatsApp.' },
 ]
 
 type ProductDetailViewProps = {
@@ -283,7 +289,7 @@ export default function ProductDetailView({ producto, whatsapp }: ProductDetailV
         )}
 
         <div className="mt-6 space-y-3 rounded-2xl border border-[var(--line-soft)] bg-white p-4">
-          {BENEFICIOS.map((item) => (
+          {(isInquiryOnly ? BENEFICIOS_CONSULTA : BENEFICIOS_COMPRA).map((item) => (
             <div key={item.titulo} className="rounded-xl bg-[var(--surface-soft)] px-3 py-2">
               <p className="text-sm font-bold text-gray-900">{item.titulo}</p>
               <p className="text-xs text-primary-dark/80">{item.copy}</p>

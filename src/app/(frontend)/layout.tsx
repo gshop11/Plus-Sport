@@ -5,9 +5,22 @@ import './globals.css'
 
 export const revalidate = 300
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://plus-sport-mkar.vercel.app'
+
 export const metadata: Metadata = {
-  title: 'Tienda Deportiva',
-  description: 'Equipamiento deportivo de alto rendimiento',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'Plus Sport | Zapatillas y ropa deportiva',
+    template: '%s | Plus Sport',
+  },
+  description: 'Catalogo de zapatillas y ropa deportiva Adidas, Joma, Puma, Skechers y Convert en Peru. Consulta disponibilidad por talla y coordina tu compra por WhatsApp.',
+  openGraph: {
+    type: 'website',
+    locale: 'es_PE',
+    siteName: 'Plus Sport',
+    title: 'Plus Sport | Zapatillas y ropa deportiva',
+    description: 'Catalogo de zapatillas y ropa deportiva de marcas reconocidas en Peru.',
+  },
 }
 
 const manrope = Manrope({

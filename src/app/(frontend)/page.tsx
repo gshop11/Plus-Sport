@@ -98,10 +98,13 @@ export default async function HomePage() {
                 mode="cyclic"
                 autoplay
                 autoplayInterval={3200}
-                visibleItems={{ mobile: 2, tablet: 4, desktop: 6 }}
+                visibleItems={{ mobile: 2, tablet: 3, desktop: 4 }}
               >
                 {brands.map(({ nombre, id, slug }) => (
                   <a key={id} href={`/productos?marca=${slug}`} className="store-brand-card">
+                    <span className="store-brand-card__mark" aria-hidden="true">
+                      {nombre.trim().charAt(0).toUpperCase() || '?'}
+                    </span>
                     <span className="store-brand-card__name">{nombre}</span>
                     <span className="store-brand-card__action">Ver coleccion</span>
                   </a>
@@ -170,7 +173,7 @@ export default async function HomePage() {
                 mode="cyclic"
                 autoplay
                 autoplayInterval={4000}
-                visibleItems={{ mobile: 1, tablet: 3, desktop: 5 }}
+                visibleItems={{ mobile: 1, tablet: 2, desktop: 3 }}
               >
                 {promotionalProducts.map((producto, index) => (
                   <TarjetaProducto key={`promocion-${producto.id}`} producto={producto} index={index} variant="homeOffer" />

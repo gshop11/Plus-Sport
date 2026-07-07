@@ -63,9 +63,6 @@ export default function TarjetaProducto({
                 <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ${etiqueta.className}`}>{etiqueta.texto}</span>
               ) : null}
               {showDiscountBadge ? <span className="rounded-full bg-accent px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-white">-{descuento}%</span> : null}
-              {isInquiryOnly ? (
-                <span className="rounded-full bg-primary-dark px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-white">Consultar disponibilidad</span>
-              ) : null}
             </div>
             <Image
               src={imageSrc}
@@ -84,15 +81,15 @@ export default function TarjetaProducto({
         </Link>
 
         <div className="mt-auto flex items-center justify-between gap-2 px-3 pb-2 pt-1">
-          <div className="flex items-baseline gap-1.5">
-            <span className="whitespace-nowrap text-base font-black text-primary sm:text-lg">{formatMoney(producto.precio, currencySymbol)}</span>
-            {showPreviousPrice ? <span className="whitespace-nowrap text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior!, currencySymbol)}</span> : null}
+          <div className="flex min-w-0 items-baseline gap-1.5">
+            <span className="truncate text-base font-black text-primary sm:text-lg">{formatMoney(producto.precio, currencySymbol)}</span>
+            {showPreviousPrice ? <span className="truncate text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior!, currencySymbol)}</span> : null}
           </div>
           {isInquiryOnly ? (
             <Link
               href={productHref}
               aria-label={`Consultar disponibilidad de ${producto.nombre}`}
-              className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-primary/20 px-3 text-[11px] font-bold uppercase tracking-[0.08em] text-primary-dark transition-colors hover:bg-[var(--surface-soft)] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
+              className="inline-flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-3 text-[11px] font-bold uppercase tracking-[0.08em] text-primary-dark transition-colors hover:bg-[var(--surface-soft)] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
             >
               Consultar
             </Link>
@@ -140,15 +137,15 @@ export default function TarjetaProducto({
       </Link>
 
       <div className="mt-auto flex items-center justify-between gap-2 px-3 pb-2.5 pt-1.5">
-        <div className="flex items-baseline gap-1.5">
-          <span className="whitespace-nowrap text-base font-black text-primary">{formatMoney(producto.precio, currencySymbol)}</span>
-          {producto.precioAnterior ? <span className="whitespace-nowrap text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior, currencySymbol)}</span> : null}
+        <div className="flex min-w-0 items-baseline gap-1.5">
+          <span className="truncate text-base font-black text-primary">{formatMoney(producto.precio, currencySymbol)}</span>
+          {producto.precioAnterior ? <span className="truncate text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior, currencySymbol)}</span> : null}
         </div>
         {isInquiryOnly ? (
           <Link
             href={productHref}
             aria-label={`Consultar disponibilidad de ${producto.nombre}`}
-            className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-primary/20 px-3 text-[11px] font-bold uppercase tracking-[0.08em] text-primary-dark transition-colors hover:bg-[var(--surface-soft)] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
+            className="inline-flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-3 text-[11px] font-bold uppercase tracking-[0.08em] text-primary-dark transition-colors hover:bg-[var(--surface-soft)] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2"
           >
             Consultar
           </Link>

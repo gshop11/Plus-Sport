@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 export type SlideData = {
   id: string
@@ -51,21 +51,42 @@ const SLIDES_DEFAULT: SlideData[] = [
   },
 ]
 
+const ROTATION_INTERVAL = 5200
+// Commercial direction: the hero must feel alive immediately, not sit still
+// for a full interval before the first transition.
+const FIRST_ROTATION_DELAY = 900
+
 export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
   const validSlides = slides?.filter((slide) => slide.titulo && slide.titulo.trim().length > 5) ?? []
   const data = validSlides.length > 0 ? validSlides : SLIDES_DEFAULT
 
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
+  const [hasReducedMotion, setHasReducedMotion] = useState(false)
+  const hasRotatedOnceRef = useRef(false)
   const slide = data[current]
 
   useEffect(() => {
-    if (paused || data.length <= 1) return
-    const timer = setInterval(() => {
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const updateMotionPreference = () => setHasReducedMotion(motionQuery.matches)
+    updateMotionPreference()
+    motionQuery.addEventListener('change', updateMotionPreference)
+    return () => motionQuery.removeEventListener('change', updateMotionPreference)
+  }, [])
+
+  useEffect(() => {
+    if (paused || hasReducedMotion || data.length <= 1) return
+    const delay = hasRotatedOnceRef.current ? ROTATION_INTERVAL : FIRST_ROTATION_DELAY
+    const timer = setTimeout(() => {
+      hasRotatedOnceRef.current = true
       setCurrent((prev) => (prev + 1) % data.length)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [paused, data.length])
+    }, delay)
+    return () => clearTimeout(timer)
+  }, [current, paused, hasReducedMotion, data.length])
+
+  const goTo = (index: number) => setCurrent(((index % data.length) + data.length) % data.length)
+  const goPrevious = () => goTo(current - 1)
+  const goNext = () => goTo(current + 1)
 
   const heroBackground = useMemo(() => {
     if (slide.imagenUrl) {
@@ -82,6 +103,12 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
       aria-label="Carrusel visual de Plus Sport"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setPaused(false)
+        }
+      }}
     >
       <div
         className="store-hero__surface"
@@ -93,6 +120,46 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
       >
         <div className="store-hero__backdrop" aria-hidden="true" />
 
+        <div className="store-home-container store-hero__content-shell">
+          <div className="store-hero__content">
+            <span className="store-hero__eyebrow">Plus Sport</span>
+            <h1 className="store-hero__title">{slide.titulo}</h1>
+            {slide.subtitulo ? <p className="store-hero__subtitle">{slide.subtitulo}</p> : null}
+            {slide.descripcion ? <p className="store-hero__description">{slide.descripcion}</p> : null}
+            <div className="store-hero__actions">
+              <a href={slide.btn1Url} className="store-button-primary store-hero__cta-primary">
+                {slide.btn1Text}
+              </a>
+              {slide.btn2Text && slide.btn2Url ? (
+                <a href={slide.btn2Url} className="store-hero__cta-secondary">
+                  {slide.btn2Text}
+                </a>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        {data.length > 1 && (
+          <div className="store-hero__arrows">
+            <button
+              type="button"
+              className="store-hero__arrow store-hero__arrow--previous"
+              aria-label="Slide anterior"
+              onClick={goPrevious}
+            >
+              <span aria-hidden="true">‹</span>
+            </button>
+            <button
+              type="button"
+              className="store-hero__arrow store-hero__arrow--next"
+              aria-label="Slide siguiente"
+              onClick={goNext}
+            >
+              <span aria-hidden="true">›</span>
+            </button>
+          </div>
+        )}
+
         {data.length > 1 && (
           <div className="store-home-container store-hero__indicator-shell">
             <div className="store-hero__indicators">
@@ -100,7 +167,7 @@ export default function HeroSlider({ slides }: { slides?: SlideData[] }) {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setCurrent(index)}
+                  onClick={() => goTo(index)}
                   aria-label={`Ver slide ${index + 1}`}
                   aria-current={index === current ? 'true' : undefined}
                   className={`store-hero__indicator ${index === current ? 'store-hero__indicator--active' : ''}`}

@@ -90,16 +90,93 @@ a {
 }
 
 .store-hero__surface {
-  @apply relative isolate overflow-hidden bg-primary bg-cover bg-center bg-no-repeat;
-  height: clamp(280px, 48vw, 340px);
+  @apply relative isolate flex items-center overflow-hidden bg-primary bg-cover bg-center bg-no-repeat;
+  /* Tall enough on phones to fit a 3-line title + subtitle + description +
+     two stacked CTAs + indicator row without any overlap. */
+  height: clamp(500px, 60vw, 560px);
   transition: background-image 220ms ease;
 }
 
 .store-hero__backdrop {
   @apply absolute inset-0 z-[1];
   background:
-    linear-gradient(180deg, rgba(4, 8, 28, 0.08) 0%, rgba(4, 8, 28, 0.04) 58%, rgba(4, 8, 28, 0.28) 100%),
-    linear-gradient(90deg, rgba(4, 8, 28, 0.1), rgba(4, 8, 28, 0.02) 48%, rgba(4, 8, 28, 0.1));
+    linear-gradient(90deg, rgba(4, 8, 28, 0.86) 0%, rgba(4, 8, 28, 0.6) 34%, rgba(4, 8, 28, 0.22) 62%, rgba(4, 8, 28, 0.06) 100%),
+    linear-gradient(180deg, rgba(4, 8, 28, 0.06) 0%, rgba(4, 8, 28, 0.02) 55%, rgba(4, 8, 28, 0.4) 100%);
+}
+
+.store-hero__content-shell {
+  @apply relative z-[2] w-full;
+  /* Clears the absolutely-positioned side arrows (inset + diameter) so
+     title/subtitle text never renders underneath them on narrow viewports. */
+  padding-inline: 3.75rem;
+}
+
+@media (min-width: 640px) {
+  .store-hero__content-shell {
+    padding-inline: 4.5rem;
+  }
+}
+
+.store-hero__content {
+  @apply max-w-xl py-8 text-white sm:py-10;
+  /* Small safety margin below the text block so the bottom indicator dots
+     never sit on top of the secondary CTA when the slide copy runs long. */
+  padding-bottom: 3rem;
+}
+
+@media (min-width: 640px) {
+  .store-hero__content {
+    padding-bottom: 2.5rem;
+  }
+}
+
+.store-hero__eyebrow {
+  @apply mb-3 inline-flex items-center rounded-full bg-white/[0.12] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white/85 backdrop-blur-sm;
+}
+
+.store-hero__title {
+  @apply text-3xl font-black uppercase leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-5xl;
+}
+
+.store-hero__subtitle {
+  @apply mt-3 text-base font-bold text-white/90 sm:text-lg;
+}
+
+.store-hero__description {
+  @apply mt-2 max-w-md text-sm text-white/70 sm:text-base;
+}
+
+.store-hero__actions {
+  @apply mt-6 flex flex-wrap items-center gap-3;
+}
+
+.store-hero__cta-primary {
+  @apply px-6 py-3.5 text-sm sm:text-base;
+}
+
+.store-hero__cta-secondary {
+  @apply inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-white/90 transition-colors hover:text-white sm:text-base;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+}
+
+.store-hero__cta-secondary:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.store-hero__arrows {
+  @apply pointer-events-none absolute inset-x-0 top-1/2 z-[3] flex -translate-y-1/2 justify-between px-2 sm:px-4;
+}
+
+.store-hero__arrow {
+  @apply pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full text-2xl font-bold leading-none text-white transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 sm:h-12 sm:w-12;
+  background: rgba(4, 8, 28, 0.32);
+  backdrop-filter: blur(6px);
+}
+
+.store-hero__arrow:hover {
+  background: rgba(4, 8, 28, 0.5);
+  color: var(--color-acento-light);
 }
 
 .store-hero__indicator-shell {
@@ -139,13 +216,13 @@ a {
 
 @media (min-width: 640px) {
   .store-hero__surface {
-    height: clamp(360px, 50vw, 430px);
+    height: clamp(520px, 50vw, 580px);
   }
 }
 
 @media (min-width: 1024px) {
   .store-hero__surface {
-    height: clamp(440px, 36vw, 520px);
+    height: clamp(520px, 38vw, 620px);
   }
 }
 
@@ -430,26 +507,31 @@ a {
 }
 
 .store-brand-card {
-  @apply flex min-h-[4.5rem] w-full flex-col items-center justify-center gap-1 rounded-2xl bg-white p-3 text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+  @apply flex min-h-[8.5rem] w-full flex-col items-center justify-center gap-2 rounded-3xl bg-white p-4 text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 sm:min-h-[9.5rem] sm:gap-2.5 sm:p-5;
   box-shadow:
-    0 14px 30px -22px color-mix(in srgb, var(--color-primario) 46%, transparent),
-    0 2px 8px -4px color-mix(in srgb, var(--color-primario) 24%, transparent);
+    0 18px 38px -24px color-mix(in srgb, var(--color-primario) 50%, transparent),
+    0 3px 10px -4px color-mix(in srgb, var(--color-primario) 26%, transparent);
 }
 
 .store-brand-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px) scale(1.015);
   box-shadow:
-    0 20px 40px -22px color-mix(in srgb, var(--color-primario) 58%, transparent),
-    0 4px 12px -4px color-mix(in srgb, var(--color-acento) 30%, transparent);
+    0 26px 50px -24px color-mix(in srgb, var(--color-primario) 62%, transparent),
+    0 6px 16px -4px color-mix(in srgb, var(--color-acento) 34%, transparent);
+}
+
+.store-brand-card__mark {
+  @apply flex h-11 w-11 items-center justify-center rounded-full text-lg font-black text-white sm:h-12 sm:w-12 sm:text-xl;
+  background: linear-gradient(135deg, var(--color-primario), var(--color-primario-dark));
 }
 
 .store-brand-card__name {
-  @apply max-w-full break-words text-sm font-black uppercase text-gray-900;
-  letter-spacing: 0.08em;
+  @apply max-w-full break-words text-base font-black uppercase text-gray-900 sm:text-lg;
+  letter-spacing: 0.06em;
 }
 
 .store-brand-card__action {
-  @apply text-[11px] font-semibold uppercase text-gray-500;
+  @apply text-[11px] font-semibold uppercase text-gray-500 sm:text-xs;
   letter-spacing: 0.1em;
 }
 
