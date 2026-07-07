@@ -82,8 +82,8 @@ export default function TarjetaProducto({
 
         <div className="mt-auto flex items-center justify-between gap-2 px-3 pb-2 pt-1">
           <div className="flex min-w-0 items-baseline gap-1.5">
-            <span className="truncate text-base font-black text-primary sm:text-lg">{formatMoney(producto.precio, currencySymbol)}</span>
-            {showPreviousPrice ? <span className="truncate text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior!, currencySymbol)}</span> : null}
+            <span className="shrink-0 whitespace-nowrap text-base font-black text-primary sm:text-lg">{formatMoney(producto.precio, currencySymbol)}</span>
+            {showPreviousPrice ? <span className="min-w-0 truncate text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior!, currencySymbol)}</span> : null}
           </div>
           {isInquiryOnly ? (
             <Link
@@ -138,8 +138,8 @@ export default function TarjetaProducto({
 
       <div className="mt-auto flex items-center justify-between gap-2 px-3 pb-2.5 pt-1.5">
         <div className="flex min-w-0 items-baseline gap-1.5">
-          <span className="truncate text-base font-black text-primary">{formatMoney(producto.precio, currencySymbol)}</span>
-          {producto.precioAnterior ? <span className="truncate text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior, currencySymbol)}</span> : null}
+          <span className="shrink-0 whitespace-nowrap text-base font-black text-primary">{formatMoney(producto.precio, currencySymbol)}</span>
+          {producto.precioAnterior ? <span className="min-w-0 truncate text-[11px] text-gray-500 line-through">{formatMoney(producto.precioAnterior, currencySymbol)}</span> : null}
         </div>
         {isInquiryOnly ? (
           <Link
