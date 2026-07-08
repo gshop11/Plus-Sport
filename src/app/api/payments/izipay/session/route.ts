@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
-import { randomUUID } from 'crypto'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import {
-  formatIzipayDateTime,
   getBasicAuthHeader,
-  getIzipaySandboxConfig,
+  getIzipayKryptonConfig,
   mergePaymentPayload,
   pickFirstString,
   safeObject,
-  toIzipayAmount,
+  toIzipayMinorUnits,
 } from '@/lib/izipay'
 
 type SessionRequest = {
@@ -86,29 +84,29 @@ function buildFallbackEmail(order: any) {
   return `${suffix}@local.invalid`
 }
 
-function buildCheckoutConfig({
-  merchantCode,
-  transactionId,
-  externalOrderId,
+/**
+ * Payload de POST /V4/Charge/CreatePayment.
+ * Estructura de customer.billingDetails/shippingDetails basada en documentacion publica
+ * Lyra/Micuentaweb REST V4; verificar nombres exactos de sub-campos contra la doc oficial
+ * vigente en fase 6C antes de la primera prueba sandbox real.
+ */
+function buildCreatePaymentPayload({
+  orderId,
   amount,
   currency,
-  buyerId,
   customer,
 }: {
-  merchantCode: string
-  transactionId: string
-  externalOrderId: string
-  amount: string
+  orderId: string
+  amount: number
   currency: string
-  buyerId: string
   customer: {
+    email: string
+    reference: string
     firstName: string
     lastName: string
-    email: string
     phoneNumber: string
     street: string
     city: string
-    state: string
     country: string
     postalCode: string
     documentType: string
@@ -116,19 +114,33 @@ function buildCheckoutConfig({
   }
 }) {
   return {
-    transactionId,
-    action: 'pay',
-    merchantCode,
-    order: {
-      orderNumber: externalOrderId,
-      currency,
-      amount,
-      processType: 'AT',
-      merchantBuyerId: buyerId,
-      dateTimeTransaction: formatIzipayDateTime(),
+    amount,
+    currency,
+    orderId,
+    formAction: 'PAYMENT',
+    customer: {
+      email: customer.email,
+      reference: customer.reference,
+      billingDetails: {
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        phoneNumber: customer.phoneNumber,
+        address: customer.street,
+        city: customer.city,
+        country: customer.country,
+        zipCode: customer.postalCode,
+        identityCode: customer.document,
+        identityType: customer.documentType,
+      },
+      shippingDetails: {
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        address: customer.street,
+        city: customer.city,
+        country: customer.country,
+        zipCode: customer.postalCode,
+      },
     },
-    billing: customer,
-    shipping: customer,
   }
 }
 
@@ -148,12 +160,12 @@ async function parseJsonSafe(response: Response) {
 }
 
 export async function POST(request: Request) {
-  const { config: izipayConfig, missing } = getIzipaySandboxConfig()
+  const { config: izipayConfig, missing } = getIzipayKryptonConfig()
 
   if (!izipayConfig) {
     return NextResponse.json(
       {
-        error: 'Faltan variables de entorno para Izipay sandbox.',
+        error: 'Faltan variables de entorno para Izipay Krypton (Micuentaweb REST V4).',
         missing,
       },
       { status: 500 },
@@ -203,7 +215,6 @@ export async function POST(request: Request) {
       }
     }
 
-    const transactionId = `IZI-${Date.now()}-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`
     const externalOrderId = asCleanString(order.numeroPedido) || asCleanString(order.codigoCorrelacion) || `PS-${order.id}`
     const paymentReference = asCleanString(order.codigoCorrelacion) || externalOrderId
 
@@ -215,25 +226,23 @@ export async function POST(request: Request) {
     const phoneNumber = asCleanString(order.telefono) || asCleanString(cliente?.telefono) || '999999999'
     const street = asCleanString(order?.direccionEnvio?.calle) || 'Sin direccion'
     const city = asCleanString(order?.direccionEnvio?.ciudad) || 'Lima'
-    const state = city
     const postalCode = '15000'
     const document = asCleanString(cliente?.documento) || '00000000'
 
-    const checkoutConfig = buildCheckoutConfig({
-      merchantCode: izipayConfig.merchantCode,
-      transactionId,
-      externalOrderId,
-      amount: toIzipayAmount(total),
+    const amount = toIzipayMinorUnits(total)
+
+    const createPaymentPayload = buildCreatePaymentPayload({
+      orderId: paymentReference,
+      amount,
       currency: izipayConfig.currency,
-      buyerId: clienteId || asCleanString(order.id),
       customer: {
+        email,
+        reference: clienteId || asCleanString(order.id),
         firstName,
         lastName,
-        email,
         phoneNumber,
         street,
         city,
-        state,
         country: 'PE',
         postalCode,
         documentType: 'DNI',
@@ -243,14 +252,14 @@ export async function POST(request: Request) {
 
     const authHeader = getBasicAuthHeader(izipayConfig.username, izipayConfig.password)
 
-    const izipayResponse = await fetch(izipayConfig.sessionTokenUrl, {
+    const izipayResponse = await fetch(`${izipayConfig.apiBaseUrl}/V4/Charge/CreatePayment`, {
       method: 'POST',
       headers: {
         Authorization: authHeader,
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(checkoutConfig),
+      body: JSON.stringify(createPaymentPayload),
       cache: 'no-store',
       signal: AbortSignal.timeout(25000),
     })
@@ -258,55 +267,37 @@ export async function POST(request: Request) {
     const { data: responseBody, rawText } = await parseJsonSafe(izipayResponse)
     const safeResponse = safeObject(responseBody)
     const answer = safeObject(safeResponse.answer)
-    const nestedResponse = safeObject(safeResponse.response)
 
-    const sessionToken = pickFirstString(
-      safeResponse.token,
-      safeResponse.authorization,
-      safeResponse.sessionToken,
-      answer.token,
-      answer.authorization,
-      answer.sessionToken,
-      nestedResponse.token,
-      nestedResponse.authorization,
+    const status = pickFirstString(safeResponse.status)
+    const formToken = pickFirstString(answer.formToken, safeResponse.formToken)
+    const errorCode = pickFirstString(safeResponse.errorCode, answer.errorCode)
+    const errorMessage = pickFirstString(
+      safeResponse.errorMessage,
+      answer.errorMessage,
+      safeResponse.errorMessageUser,
+      answer.errorMessageUser,
     )
 
-    const visualCode = pickFirstString(
-      safeResponse.code,
-      answer.code,
-      nestedResponse.code,
-    )
-
-    const visualMessage = pickFirstString(
-      safeResponse.message,
-      answer.message,
-      nestedResponse.message,
-      safeResponse.messageUser,
-      answer.messageUser,
-    )
-
-    if (!izipayResponse.ok || !sessionToken) {
+    if (!izipayResponse.ok || status !== 'SUCCESS' || !formToken) {
       await payload.update({
         collection: 'ordenes',
         id: order.id,
         overrideAccess: true,
         data: {
-          paymentProvider: 'izipay_sandbox',
+          paymentProvider: 'izipay_krypton',
           paymentMethod: 'tarjeta',
-          transactionId,
           externalOrderId,
           paymentReference,
           estadoPago: 'pending',
-          paymentErrorCode: visualCode || String(izipayResponse.status),
-          paymentErrorMessage:
-            visualMessage ||
-            'No se pudo generar token de sesion Izipay.',
+          paymentErrorCode: errorCode || String(izipayResponse.status),
+          paymentErrorMessage: errorMessage || 'No se pudo generar formToken Krypton (CreatePayment).',
           paymentPayload: mergePaymentPayload(order.paymentPayload, {
             izipay: {
               lastSessionAttemptAt: new Date().toISOString(),
               sessionHttpStatus: izipayResponse.status,
-              sessionResponseCode: visualCode || null,
-              sessionResponseMessage: visualMessage || null,
+              sessionResponseStatus: status || null,
+              sessionErrorCode: errorCode || null,
+              sessionErrorMessage: errorMessage || null,
             },
           }),
         },
@@ -314,10 +305,10 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error: 'Izipay sandbox no devolvio token de sesion.',
+          error: 'Izipay Krypton (CreatePayment) no devolvio formToken.',
           status: izipayResponse.status,
-          details: visualMessage || 'Revisa credenciales y payload de sesion.',
-          providerCode: visualCode || null,
+          details: errorMessage || 'Revisa credenciales y payload de CreatePayment.',
+          providerCode: errorCode || null,
           providerResponse: rawText.slice(0, 800),
         },
         { status: 502 },
@@ -329,9 +320,8 @@ export async function POST(request: Request) {
       id: order.id,
       overrideAccess: true,
       data: {
-        paymentProvider: 'izipay_sandbox',
+        paymentProvider: 'izipay_krypton',
         paymentMethod: 'tarjeta',
-        transactionId,
         externalOrderId,
         paymentReference,
         estadoPago: 'pending',
@@ -341,8 +331,7 @@ export async function POST(request: Request) {
           izipay: {
             lastSessionAttemptAt: new Date().toISOString(),
             sessionHttpStatus: izipayResponse.status,
-            sessionResponseCode: visualCode || null,
-            sessionResponseMessage: visualMessage || null,
+            sessionResponseStatus: status || null,
           },
         }),
       },
@@ -354,12 +343,13 @@ export async function POST(request: Request) {
         order: sanitizeOrder(updatedOrder),
         session: {
           env: izipayConfig.env,
-          scriptUrl: izipayConfig.scriptUrl,
-          authorization: sessionToken,
-          keyRSA: izipayConfig.keyRSA,
+          formToken,
+          publicKey: izipayConfig.publicKey,
+          krPaymentFormJsUrl: izipayConfig.krPaymentFormJsUrl,
+          krClassicCssUrl: izipayConfig.krClassicCssUrl,
+          krClassicJsUrl: izipayConfig.krClassicJsUrl,
           returnUrl: izipayConfig.returnUrl,
           webhookUrl: izipayConfig.webhookUrl,
-          config: checkoutConfig,
         },
       },
       { status: 200 },
@@ -367,7 +357,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       {
-        error: 'Error preparando sesion Izipay.',
+        error: 'Error preparando sesion Izipay Krypton.',
         details: (error as Error).message,
       },
       { status: 500 },

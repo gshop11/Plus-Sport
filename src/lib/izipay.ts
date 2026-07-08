@@ -1,23 +1,32 @@
-import { createHmac, timingSafeEqual } from 'crypto'
+import { createHash, createHmac, timingSafeEqual } from 'crypto'
 
-const DEFAULT_IZIPAY_SANDBOX_SCRIPT_URL = 'https://sandbox-checkout.izipay.pe/payments/v1/js/index.js'
+const DEFAULT_API_BASE_URL = 'https://api.micuentaweb.pe/api-payment'
+const DEFAULT_KR_PAYMENT_FORM_JS_URL =
+  'https://static.micuentaweb.pe/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js'
+const DEFAULT_KR_CLASSIC_CSS_URL =
+  'https://static.micuentaweb.pe/static/js/krypton-client/V4.0/ext/classic.css'
+const DEFAULT_KR_CLASSIC_JS_URL =
+  'https://static.micuentaweb.pe/static/js/krypton-client/V4.0/ext/classic.js'
 
-export type IzipayVisualStatus = 'success' | 'failed' | 'cancelled' | 'unknown'
+export type IzipayOrderStatus = 'PAID' | 'UNPAID' | 'RUNNING' | 'CANCELLED' | 'UNKNOWN'
+
+type IzipayKryptonConfig = {
+  env: string
+  apiBaseUrl: string
+  username: string
+  password: string
+  publicKey: string
+  hmacKey: string
+  krPaymentFormJsUrl: string
+  krClassicCssUrl: string
+  krClassicJsUrl: string
+  returnUrl: string
+  webhookUrl: string
+  currency: string
+}
 
 type IzipayConfigResult = {
-  config: {
-    env: string
-    sessionTokenUrl: string
-    username: string
-    password: string
-    merchantCode: string
-    keyRSA: string
-    hashKey: string
-    scriptUrl: string
-    returnUrl: string
-    webhookUrl: string
-    currency: string
-  } | null
+  config: IzipayKryptonConfig | null
   missing: string[]
 }
 
@@ -40,10 +49,7 @@ function toIsoCurrency(value: string) {
 }
 
 function getPublicBaseUrl() {
-  return firstDefined(
-    process.env.IZIPAY_PUBLIC_BASE_URL,
-    process.env.NEXT_PUBLIC_SERVER_URL,
-  )
+  return firstDefined(process.env.IZIPAY_PUBLIC_BASE_URL, process.env.NEXT_PUBLIC_SERVER_URL)
 }
 
 function getDefaultReturnUrl() {
@@ -76,55 +82,43 @@ function getDefaultWebhookUrl() {
   }
 }
 
-export function getIzipaySandboxConfig(): IzipayConfigResult {
-  const sessionTokenUrl = firstDefined(
-    process.env.IZIPAY_SESSION_TOKEN_URL,
-    process.env.IZIPAY_SESSION_URL,
-  )
-
-  const config = {
+/**
+ * Lee configuracion Micuentaweb/Krypton REST V4.
+ * IZIPAY_PUBLIC_KEY es la clave publica de test/produccion (no secreta, se envia al cliente
+ * via respuesta del endpoint de sesion, nunca embebida en el bundle build-time).
+ */
+export function getIzipayKryptonConfig(): IzipayConfigResult {
+  const config: IzipayKryptonConfig = {
     env: firstDefined(process.env.IZIPAY_ENV, 'sandbox'),
-    sessionTokenUrl,
-    username: firstDefined(process.env.IZIPAY_API_USERNAME, process.env.IZIPAY_USERNAME),
-    password: firstDefined(process.env.IZIPAY_API_PASSWORD, process.env.IZIPAY_PASSWORD),
-    merchantCode: firstDefined(process.env.IZIPAY_MERCHANT_CODE),
-    keyRSA: firstDefined(process.env.IZIPAY_KEY_RSA, process.env.IZIPAY_PUBLIC_KEY),
-    hashKey: firstDefined(process.env.IZIPAY_HASH_KEY, process.env.IZIPAY_HMAC_KEY),
-    scriptUrl: firstDefined(process.env.IZIPAY_CHECKOUT_JS_URL, DEFAULT_IZIPAY_SANDBOX_SCRIPT_URL),
+    apiBaseUrl: firstDefined(process.env.IZIPAY_API_BASE_URL, DEFAULT_API_BASE_URL),
+    username: firstDefined(process.env.IZIPAY_API_USERNAME),
+    password: firstDefined(process.env.IZIPAY_API_PASSWORD),
+    publicKey: firstDefined(process.env.IZIPAY_PUBLIC_KEY, process.env.NEXT_PUBLIC_IZIPAY_PUBLIC_KEY),
+    hmacKey: firstDefined(process.env.IZIPAY_HMAC_SHA256_KEY),
+    krPaymentFormJsUrl: firstDefined(process.env.IZIPAY_KR_PAYMENT_FORM_JS_URL, DEFAULT_KR_PAYMENT_FORM_JS_URL),
+    krClassicCssUrl: firstDefined(process.env.IZIPAY_KR_CLASSIC_CSS_URL, DEFAULT_KR_CLASSIC_CSS_URL),
+    krClassicJsUrl: firstDefined(process.env.IZIPAY_KR_CLASSIC_JS_URL, DEFAULT_KR_CLASSIC_JS_URL),
     returnUrl: firstDefined(process.env.IZIPAY_RETURN_URL, getDefaultReturnUrl()),
     webhookUrl: firstDefined(process.env.IZIPAY_WEBHOOK_URL, getDefaultWebhookUrl()),
     currency: toIsoCurrency(firstDefined(process.env.IZIPAY_CURRENCY, 'PEN')),
   }
 
   const missing: string[] = []
-
-  if (!config.sessionTokenUrl) missing.push('IZIPAY_SESSION_TOKEN_URL')
+  if (!config.apiBaseUrl) missing.push('IZIPAY_API_BASE_URL')
   if (!config.username) missing.push('IZIPAY_API_USERNAME')
   if (!config.password) missing.push('IZIPAY_API_PASSWORD')
-  if (!config.merchantCode) missing.push('IZIPAY_MERCHANT_CODE')
-  if (!config.keyRSA) missing.push('IZIPAY_KEY_RSA')
+  if (!config.publicKey) missing.push('IZIPAY_PUBLIC_KEY')
+  if (!config.hmacKey) missing.push('IZIPAY_HMAC_SHA256_KEY')
   if (!config.returnUrl) missing.push('IZIPAY_RETURN_URL')
   if (!config.webhookUrl) missing.push('IZIPAY_WEBHOOK_URL')
 
-  return {
-    config: missing.length > 0 ? null : config,
-    missing,
-  }
+  return { config: missing.length > 0 ? null : config, missing }
 }
 
-export function formatIzipayDateTime(date = new Date()) {
-  const yyyy = date.getFullYear().toString()
-  const mm = String(date.getMonth() + 1).padStart(2, '0')
-  const dd = String(date.getDate()).padStart(2, '0')
-  const hh = String(date.getHours()).padStart(2, '0')
-  const mi = String(date.getMinutes()).padStart(2, '0')
-  const ss = String(date.getSeconds()).padStart(2, '0')
-  return `${yyyy}${mm}${dd}${hh}${mi}${ss}`
-}
-
-export function toIzipayAmount(value: number) {
-  if (!Number.isFinite(value)) return '0.00'
-  return Number(value).toFixed(2)
+/** Micuentaweb/Krypton espera el monto en la unidad minima de la moneda (centavos para PEN). */
+export function toIzipayMinorUnits(value: number) {
+  if (!Number.isFinite(value)) return 0
+  return Math.round(value * 100)
 }
 
 export function pickFirstString(...values: unknown[]) {
@@ -141,42 +135,22 @@ export function safeObject(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>
 }
 
-export function mapVisualStatus(rawStatus: unknown): IzipayVisualStatus {
-  const source =
-    typeof rawStatus === 'string'
-      ? rawStatus.toLowerCase()
-      : JSON.stringify(rawStatus || '').toLowerCase()
+export function safeArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : []
+}
 
-  if (
-    source.includes('authorised') ||
-    source.includes('authorized') ||
-    source.includes('captured') ||
-    source.includes('"00"') ||
-    source.includes('operacion exitosa') ||
-    source.includes('successful')
-  ) {
-    return 'success'
-  }
-
-  if (
-    source.includes('cancel') ||
-    source.includes('anulad') ||
-    source.includes('abort')
-  ) {
-    return 'cancelled'
-  }
-
-  if (
-    source.includes('refused') ||
-    source.includes('deneg') ||
-    source.includes('rechaz') ||
-    source.includes('failed') ||
-    source.includes('error')
-  ) {
-    return 'failed'
-  }
-
-  return 'unknown'
+/**
+ * orderStatus es el campo autoritativo de Krypton (kr-answer.orderStatus).
+ * Confirmar contra documentacion oficial en fase 6C el set completo de valores en vivo;
+ * PAID/UNPAID/RUNNING/CANCELLED son los documentados publicamente para la familia Lyra/Micuentaweb V4.
+ */
+export function mapOrderStatus(raw: unknown): IzipayOrderStatus {
+  const value = typeof raw === 'string' ? raw.toUpperCase().trim() : ''
+  if (value === 'PAID') return 'PAID'
+  if (value === 'UNPAID') return 'UNPAID'
+  if (value === 'RUNNING') return 'RUNNING'
+  if (value === 'CANCELLED' || value === 'CANCELED' || value === 'ABANDONED') return 'CANCELLED'
+  return 'UNKNOWN'
 }
 
 export function getBasicAuthHeader(username: string, password: string) {
@@ -184,27 +158,12 @@ export function getBasicAuthHeader(username: string, password: string) {
   return `Basic ${token}`
 }
 
-export function mergePaymentPayload(
-  currentPayload: unknown,
-  patch: Record<string, unknown>,
-) {
+export function mergePaymentPayload(currentPayload: unknown, patch: Record<string, unknown>) {
   const base = safeObject(currentPayload)
   return {
     ...base,
     ...patch,
   }
-}
-
-function normalizeSignatureValue(value: string) {
-  return value
-    .trim()
-    .replace(/^sha256=/i, '')
-    .replace(/^hmacsha256=/i, '')
-    .replace(/\s+/g, '')
-}
-
-function normalizeBase64(value: string) {
-  return value.replace(/-/g, '+').replace(/_/g, '/')
 }
 
 function safeCompareStrings(left: string, right: string) {
@@ -214,33 +173,42 @@ function safeCompareStrings(left: string, right: string) {
   return timingSafeEqual(leftBuffer, rightBuffer)
 }
 
-export function verifyIzipaySignature({
-  payloadHttp,
-  signature,
-  hashKey,
+/**
+ * Valida kr-hash: HMAC-SHA256 del texto literal de kr-answer usando la clave HMAC-SHA-256
+ * (test o produccion) configurada en el Back Office Vendedor.
+ */
+export function verifyKrHash({
+  krAnswer,
+  krHash,
+  hmacKey,
 }: {
-  payloadHttp: string
-  signature: string
-  hashKey: string
+  krAnswer: string
+  krHash: string
+  hmacKey: string
 }) {
-  const normalizedSignature = normalizeSignatureValue(signature)
-  if (!payloadHttp || !normalizedSignature || !hashKey) return false
+  if (!krAnswer || !krHash || !hmacKey) return false
 
-  const expectedHex = createHmac('sha256', hashKey).update(payloadHttp, 'utf8').digest('hex')
-  const expectedHexUpper = expectedHex.toUpperCase()
-  const expectedBase64 = createHmac('sha256', hashKey).update(payloadHttp, 'utf8').digest('base64')
-  const expectedBase64Url = expectedBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+  const expectedHex = createHmac('sha256', hmacKey).update(krAnswer, 'utf8').digest('hex')
+  return safeCompareStrings(krHash.trim().toLowerCase(), expectedHex.toLowerCase())
+}
 
-  const normalizedLower = normalizedSignature.toLowerCase()
-  const normalizedUpper = normalizedSignature.toUpperCase()
-  const normalizedBase64 = normalizeBase64(normalizedSignature)
+/** Idempotencia de IPN: prioriza el uuid de transaccion Krypton; cae a hash del par (kr-hash, kr-answer). */
+export function buildKrEventKey({
+  transactionUuid,
+  krHash,
+  krAnswer,
+}: {
+  transactionUuid: string
+  krHash: string
+  krAnswer: string
+}) {
+  const explicit = clean(transactionUuid)
+  if (explicit) return `izipay-kr:${explicit}`
 
-  return (
-    safeCompareStrings(normalizedLower, expectedHex) ||
-    safeCompareStrings(normalizedUpper, expectedHexUpper) ||
-    safeCompareStrings(normalizedBase64, expectedBase64) ||
-    safeCompareStrings(normalizedSignature, expectedBase64Url)
-  )
+  const hashSource = krHash || krAnswer
+  if (!hashSource) return `izipay-kr:no-signature`
+
+  return `izipay-kr:${createHash('sha256').update(hashSource).digest('hex').slice(0, 24)}`
 }
 
 export function safeJsonParse(value: unknown) {

@@ -40,11 +40,12 @@ type IzipayVisualStatus = 'success' | 'failed' | 'cancelled' | 'unknown'
 type IzipaySessionResponse = {
   success: boolean
   session?: {
-    scriptUrl: string
-    authorization: string
-    keyRSA: string
+    formToken: string
+    publicKey: string
+    krPaymentFormJsUrl: string
+    krClassicCssUrl: string
+    krClassicJsUrl: string
     returnUrl: string
-    config: Record<string, unknown>
   }
 }
 
@@ -61,82 +62,86 @@ const labelCls = 'mb-1 block text-sm font-semibold text-primary-dark'
 
 declare global {
   interface Window {
-    Izipay?: new (input: { config: Record<string, unknown> }) => {
-      LoadForm: (input: {
-        authorization: string
-        keyRSA: string
-        callbackResponse?: (response: unknown) => void
-      }) => void
+    // KR.onSubmit es el unico metodo del cliente Krypton que esta app llama directamente.
+    // La clave publica y el formToken se pasan por atributos HTML (kr-public-key en el
+    // script, kr-form-token en el div.kr-embedded), que es el patron declarativo documentado
+    // para el cliente Krypton y no requiere adivinar nombres de metodos de attach/config.
+    KR?: {
+      onSubmit: (callback: (event: any) => boolean | void) => void
     }
   }
 }
 
-function loadIzipayScript(scriptUrl: string) {
+const IZIPAY_KR_FORM_SELECTOR = '#izipay-kr-form'
+
+function loadKryptonAssets({
+  jsUrl,
+  cssUrl,
+  publicKey,
+}: {
+  jsUrl: string
+  cssUrl: string
+  publicKey: string
+}) {
   if (typeof window === 'undefined') return Promise.resolve()
-  if (window.Izipay) return Promise.resolve()
+
+  if (!document.querySelector('link[data-izipay-kr-css="1"]')) {
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = cssUrl
+    link.dataset.izipayKrCss = '1'
+    document.head.appendChild(link)
+  }
+
+  if (window.KR) return Promise.resolve()
 
   return new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>('script[data-izipay-sdk="1"]')
+    const existing = document.querySelector<HTMLScriptElement>('script[data-izipay-kr-sdk="1"]')
     if (existing) {
       existing.addEventListener('load', () => resolve(), { once: true })
-      existing.addEventListener('error', () => reject(new Error('No se pudo cargar el SDK Izipay.')), { once: true })
+      existing.addEventListener(
+        'error',
+        () => reject(new Error('No se pudo cargar el SDK Krypton de Izipay.')),
+        { once: true },
+      )
       return
     }
 
     const script = document.createElement('script')
-    script.src = scriptUrl
+    script.src = jsUrl
+    script.setAttribute('kr-public-key', publicKey)
+    script.setAttribute('kr-language', 'es-PE')
     script.defer = true
-    script.async = true
-    script.dataset.izipaySdk = '1'
+    script.dataset.izipayKrSdk = '1'
     script.onload = () => resolve()
-    script.onerror = () => reject(new Error('No se pudo cargar el SDK Izipay.'))
+    script.onerror = () => reject(new Error('No se pudo cargar el SDK Krypton de Izipay.'))
     document.head.appendChild(script)
   })
 }
 
-function resolveVisualStatus(response: unknown): IzipayVisualStatus {
-  const source =
-    typeof response === 'string'
-      ? response.toLowerCase()
-      : JSON.stringify(response || '').toLowerCase()
+/**
+ * El cliente Krypton detecta formularios via atributo kr-form-token en un div.kr-embedded
+ * (incluye deteccion de nodos insertados dinamicamente). Se asigna aqui, despues de crear
+ * el pago via CreatePayment, en vez de invocar un metodo JS de attach no verificado.
+ */
+function setKryptonFormToken(formToken: string) {
+  if (typeof document === 'undefined') return
+  const container = document.querySelector(IZIPAY_KR_FORM_SELECTOR)
+  container?.setAttribute('kr-form-token', formToken)
+}
 
-  if (
-    source.includes('authorised') ||
-    source.includes('authorized') ||
-    source.includes('captured') ||
-    source.includes('"00"') ||
-    source.includes('operacion exitosa') ||
-    source.includes('successful')
-  ) {
-    return 'success'
-  }
-
-  if (source.includes('cancel') || source.includes('anulad') || source.includes('abort')) {
-    return 'cancelled'
-  }
-
-  if (
-    source.includes('refused') ||
-    source.includes('deneg') ||
-    source.includes('rechaz') ||
-    source.includes('failed') ||
-    source.includes('error')
-  ) {
-    return 'failed'
-  }
-
+function resolveVisualStatus(orderStatus: unknown): IzipayVisualStatus {
+  const value = typeof orderStatus === 'string' ? orderStatus.toUpperCase().trim() : ''
+  if (value === 'PAID') return 'success'
+  if (value === 'UNPAID') return 'failed'
+  if (value === 'CANCELLED' || value === 'CANCELED') return 'cancelled'
   return 'unknown'
 }
 
-function getResponseTransactionId(response: any) {
-  if (!response || typeof response !== 'object') return ''
-  const fromOrder = response?.response?.order?.[0]?.referenceNumber
-  return String(
-    response?.transactionId ||
-      response?.response?.transactionId ||
-      fromOrder ||
-      '',
-  ).trim()
+function getFirstTransactionUuid(clientAnswer: any) {
+  if (!clientAnswer || typeof clientAnswer !== 'object') return ''
+  const transactions = Array.isArray(clientAnswer.transactions) ? clientAnswer.transactions : []
+  return String(transactions[0]?.uuid || '').trim()
 }
 
 function buildReturnUrl(base: string, query: Record<string, string | undefined>) {
@@ -395,53 +400,58 @@ export default function CheckoutPage() {
         }
 
         const sdkSession = sessionJson.session
-        await loadIzipayScript(sdkSession.scriptUrl)
-        if (!window.Izipay) {
-          throw new Error('El SDK de Izipay no esta disponible en este navegador.')
+        await loadKryptonAssets({
+          jsUrl: sdkSession.krPaymentFormJsUrl,
+          cssUrl: sdkSession.krClassicCssUrl,
+          publicKey: sdkSession.publicKey,
+        })
+        if (!window.KR) {
+          throw new Error('El SDK Krypton de Izipay no esta disponible en este navegador.')
         }
 
-        const checkout = new window.Izipay({ config: sdkSession.config })
+        setKryptonFormToken(sdkSession.formToken)
 
-        checkout.LoadForm({
-          authorization: sdkSession.authorization,
-          keyRSA: sdkSession.keyRSA,
-          callbackResponse: async (response: unknown) => {
-            const visualStatus = resolveVisualStatus(response)
-            const responseTransactionId = getResponseTransactionId(response as any)
+        window.KR.onSubmit((event: any) => {
+          const clientAnswer = event?.clientAnswer
+          const krHash = event?.hash
+          const orderStatus = clientAnswer?.orderStatus
+          const visualStatus = resolveVisualStatus(orderStatus)
+          const transactionUuid = getFirstTransactionUuid(clientAnswer)
 
-            try {
-              await fetch('/api/payments/izipay/visual-result', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  orderRef,
-                  orderId: order?.id,
-                  visualStatus,
-                  transactionId: responseTransactionId,
-                  response,
-                }),
-              })
-            } catch {
-              // The order still exists. Final state will be corrected in webhook phase.
-            }
+          void fetch('/api/payments/izipay/visual-result', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderRef,
+              orderId: order?.id,
+              krAnswer: JSON.stringify(clientAnswer || {}),
+              krHash,
+            }),
+          }).catch(() => {
+            // The order still exists. Final state will be corrected in webhook phase.
+          })
 
-            if (visualStatus === 'success') {
-              localStorage.setItem('carrito', '[]')
-              localStorage.removeItem('carrito_cupon')
-              window.dispatchEvent(new Event('carrito:update'))
-            }
+          if (visualStatus === 'success') {
+            localStorage.setItem('carrito', '[]')
+            localStorage.removeItem('carrito_cupon')
+            window.dispatchEvent(new Event('carrito:update'))
+          }
 
-            allowNavigationRef.current = true
-            const returnUrl = buildReturnUrl(sdkSession.returnUrl || `${window.location.origin}/confirmacion`, {
-              orderRef: String(orderRef || ''),
-              ordenId: String(order?.id || ''),
-              izipayStatus: visualStatus,
-              izipayTx: responseTransactionId || undefined,
-            })
+          allowNavigationRef.current = true
+          const returnUrl = buildReturnUrl(sdkSession.returnUrl || `${window.location.origin}/confirmacion`, {
+            orderRef: String(orderRef || ''),
+            ordenId: String(order?.id || ''),
+            izipayStatus: visualStatus,
+            izipayTx: transactionUuid || undefined,
+          })
 
-            window.location.assign(returnUrl)
-          },
+          window.location.assign(returnUrl)
+
+          // false evita el comportamiento de redireccion/submit por defecto de Krypton;
+          // la navegacion la controla esta app. Verificar en fase 6C contra el SDK real.
+          return false
         })
+
         setLoading(false)
         return
       }
@@ -790,16 +800,17 @@ export default function CheckoutPage() {
                             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--line-soft)] bg-[var(--surface-soft)] px-3 py-1 text-xs font-semibold text-primary-dark">
                               <span className="rounded bg-primary px-1.5 py-0.5 text-[9px] font-black text-white">VISA</span>
                               <span className="rounded bg-accent px-1.5 py-0.5 text-[9px] font-black text-white">MC</span>
-                              Checkout seguro Izipay Sandbox
+                              Checkout seguro Izipay (Micuentaweb / Krypton)
                             </div>
                             <div className="rounded-lg border border-primary/25 bg-[var(--surface-soft)] px-4 py-3 text-sm text-primary-dark">
                               Los datos de tarjeta no se capturan en este formulario. El cobro se procesa en la pasarela oficial de Izipay.
                             </div>
                             <ul className="space-y-2 text-sm text-gray-700">
                               <li>1. Se registra la orden local con estado de pago pendiente.</li>
-                              <li>2. Se solicita el token de sesion de Izipay desde backend.</li>
-                              <li>3. Se abre el checkout Izipay para completar el intento de pago.</li>
+                              <li>2. Se solicita el formToken de Izipay (CreatePayment) desde backend.</li>
+                              <li>3. Se muestra el formulario embebido Krypton para completar el intento de pago.</li>
                             </ul>
+                            <div id="izipay-kr-form" className="kr-embedded" />
                             <p className="text-xs text-gray-500">
                               {pagosConfig.tarjeta.instruccion ?? 'La confirmacion final del pago dependera del webhook backend en la siguiente fase.'}
                             </p>

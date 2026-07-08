@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { mapVisualStatus, mergePaymentPayload, pickFirstString } from '@/lib/izipay'
+import { mapOrderStatus, mergePaymentPayload, pickFirstString, safeArray, safeJsonParse, safeObject } from '@/lib/izipay'
 
 type VisualResultRequest = {
   orderRef?: string
   orderId?: string
-  visualStatus?: string
-  transactionId?: string
-  response?: unknown
+  krAnswer?: string
+  krHash?: string
 }
 
 function asCleanString(value: unknown) {
@@ -57,20 +56,16 @@ async function findOrder(payload: any, refs: { orderRef?: string; orderId?: stri
   return null
 }
 
-function toEstadoPago(visualStatus: ReturnType<typeof mapVisualStatus>) {
-  if (visualStatus === 'success') return 'authorized'
-  if (visualStatus === 'failed') return 'failed'
-  if (visualStatus === 'cancelled') return 'canceled'
+function toEstadoPago(orderStatus: ReturnType<typeof mapOrderStatus>) {
+  if (orderStatus === 'PAID') return 'authorized'
+  if (orderStatus === 'UNPAID') return 'failed'
+  if (orderStatus === 'CANCELLED') return 'canceled'
   return 'pending'
 }
 
-function buildErrorMessage(visualStatus: ReturnType<typeof mapVisualStatus>, fallback: string) {
-  if (visualStatus === 'failed') {
-    return fallback || 'Pago rechazado visualmente en checkout Izipay.'
-  }
-  if (visualStatus === 'cancelled') {
-    return fallback || 'Pago cancelado por el usuario en checkout Izipay.'
-  }
+function buildErrorMessage(orderStatus: ReturnType<typeof mapOrderStatus>) {
+  if (orderStatus === 'UNPAID') return 'Pago rechazado visualmente en checkout Krypton.'
+  if (orderStatus === 'CANCELLED') return 'Pago cancelado por el usuario en checkout Krypton.'
   return ''
 }
 
@@ -97,29 +92,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'orderRef u orderId es requerido.' }, { status: 400 })
   }
 
-  const rawResponse = body.response ?? null
-  const visualStatus = mapVisualStatus(body.visualStatus || rawResponse)
-  const estadoPago = toEstadoPago(visualStatus)
+  const krAnswerRaw = asCleanString(body.krAnswer)
+  const krAnswerObj = safeObject(safeJsonParse(krAnswerRaw))
+  const orderStatus = mapOrderStatus(krAnswerObj.orderStatus)
+  const estadoPago = toEstadoPago(orderStatus)
 
-  const transactionId = pickFirstString(
-    body.transactionId,
-    (rawResponse as any)?.transactionId,
-    (rawResponse as any)?.response?.transactionId,
-    (rawResponse as any)?.response?.order?.[0]?.referenceNumber,
-  )
-
-  const responseCode = pickFirstString(
-    (rawResponse as any)?.code,
-    (rawResponse as any)?.response?.code,
-    (rawResponse as any)?.response?.order?.[0]?.stateMessage,
-  )
-
-  const responseMessage = pickFirstString(
-    (rawResponse as any)?.message,
-    (rawResponse as any)?.messageUser,
-    (rawResponse as any)?.response?.message,
-    (rawResponse as any)?.response?.order?.[0]?.stateMessage,
-  )
+  const firstTransaction = safeObject(safeArray(krAnswerObj.transactions)[0])
+  const transactionUuid = pickFirstString(firstTransaction.uuid)
 
   try {
     const payload = await getPayload({ config })
@@ -137,27 +116,21 @@ export async function POST(request: Request) {
       id: order.id,
       overrideAccess: true,
       data: {
-        paymentProvider: 'izipay_sandbox',
+        paymentProvider: 'izipay_krypton',
         paymentMethod: 'tarjeta',
         estadoPago: nextEstadoPago,
-        transactionId: transactionId || order.transactionId,
-        paymentErrorCode:
-          finalServerResolved
-            ? order.paymentErrorCode
-            : visualStatus === 'success'
-              ? ''
-              : responseCode,
-        paymentErrorMessage:
-          finalServerResolved
-            ? order.paymentErrorMessage
-            : buildErrorMessage(visualStatus, responseMessage),
+        transactionId: transactionUuid || order.transactionId,
+        paymentErrorCode: finalServerResolved
+          ? order.paymentErrorCode
+          : orderStatus === 'PAID'
+            ? ''
+            : orderStatus,
+        paymentErrorMessage: finalServerResolved ? order.paymentErrorMessage : buildErrorMessage(orderStatus),
         paymentPayload: mergePaymentPayload(order.paymentPayload, {
           izipay: {
             lastVisualResultAt: new Date().toISOString(),
-            visualStatus,
-            visualCode: responseCode || null,
-            visualMessage: responseMessage || null,
-            rawResponse,
+            visualOrderStatus: orderStatus,
+            visualTransactionUuid: transactionUuid || null,
             finalValidationPending: finalServerResolved ? false : true,
             visualIgnoredByFinalWebhook: finalServerResolved,
           },
@@ -179,7 +152,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       {
-        error: 'No se pudo registrar resultado visual Izipay.',
+        error: 'No se pudo registrar resultado visual Izipay Krypton.',
         details: (error as Error).message,
       },
       { status: 500 },

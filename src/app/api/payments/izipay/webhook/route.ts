@@ -1,17 +1,23 @@
-import { createHash } from 'crypto'
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { mergePaymentPayload, pickFirstString, safeJsonParse, safeObject, verifyIzipaySignature } from '@/lib/izipay'
+import {
+  buildKrEventKey,
+  mapOrderStatus,
+  mergePaymentPayload,
+  pickFirstString,
+  safeArray,
+  safeJsonParse,
+  safeObject,
+  verifyKrHash,
+} from '@/lib/izipay'
 
 type ParsedWebhookBody = Record<string, unknown>
 type WebhookOutcome = 'paid' | 'failed' | 'canceled' | 'pending'
 
 type CorrelationInput = {
-  transactionId: string
-  externalOrderId: string
-  paymentReference: string
-  codigoCorrelacion: string
+  orderId: string
+  transactionUuid: string
 }
 
 function asCleanString(value: unknown) {
@@ -19,17 +25,11 @@ function asCleanString(value: unknown) {
   return value.trim()
 }
 
-function asLooseString(value: unknown) {
-  if (typeof value === 'string') return value.trim()
-  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
-  return ''
-}
-
-function toObject(value: unknown) {
-  if (typeof value !== 'object' || value === null) return {}
-  return value as Record<string, unknown>
-}
-
+/**
+ * La IPN de Micuentaweb/Krypton llega normalmente como application/x-www-form-urlencoded
+ * con los campos "kr-answer" y "kr-hash". Se soporta tambien JSON por robustez defensiva
+ * (algunos proxies/reenvios re-serializan el body), sin asumir un formato unico.
+ */
 function parseWebhookBody(rawBody: string): ParsedWebhookBody {
   if (!rawBody.trim()) return {}
 
@@ -43,140 +43,23 @@ function parseWebhookBody(rawBody: string): ParsedWebhookBody {
   return Object.fromEntries(params.entries())
 }
 
-function hashEventSource(input: string) {
-  return createHash('sha256').update(input).digest('hex').slice(0, 24)
+function getHmacKey() {
+  return pickFirstString(process.env.IZIPAY_HMAC_SHA256_KEY)
 }
 
-function buildEventKey({
-  transactionId,
-  signature,
-  payloadHttp,
-  body,
-}: {
-  transactionId: string
-  signature: string
-  payloadHttp: string
-  body: ParsedWebhookBody
-}) {
-  const explicit = pickFirstString(
-    body.eventId,
-    body.notificationId,
-    body.webhookEventId,
-    body.id,
-  )
-
-  if (explicit) return explicit
-
-  const signaturePart = signature ? hashEventSource(signature) : ''
-  const payloadPart = payloadHttp ? hashEventSource(payloadHttp) : ''
-  const txPart = transactionId || 'no-tx'
-  return `izipay:${txPart}:${signaturePart || payloadPart || 'no-signature'}`
-}
-
-function getHashKey() {
-  return pickFirstString(process.env.IZIPAY_HASH_KEY, process.env.IZIPAY_HMAC_KEY)
-}
-
-function detectOutcome({
-  code,
-  stateRaw,
-}: {
-  code: string
-  stateRaw: string
-}): WebhookOutcome {
-  const codeNormalized = code.toLowerCase()
-  const state = stateRaw.toLowerCase()
-  const source = `${codeNormalized} ${state}`
-  const numericCode = Number(codeNormalized)
-  const hasNumericCode = Number.isFinite(numericCode) && codeNormalized !== ''
-
-  const isSuccess =
-    ['00', '000', '0', 'success', 'ok', 'authorized', 'authorised', 'paid', 'captured', 'aprobado'].includes(codeNormalized) ||
-    source.includes('authoriz') ||
-    source.includes('captur') ||
-    source.includes('paid') ||
-    source.includes('operacion exitosa') ||
-    source.includes('successful')
-
-  if (isSuccess) return 'paid'
-
-  if (
-    source.includes('cancel') ||
-    source.includes('anulad') ||
-    source.includes('abort') ||
-    source.includes('void')
-  ) {
-    return 'canceled'
-  }
-
-  if (
-    source.includes('fail') ||
-    source.includes('rechaz') ||
-    source.includes('deneg') ||
-    source.includes('error') ||
-    source.includes('refused') ||
-    source.includes('declin')
-  ) {
-    return 'failed'
-  }
-
-  if (hasNumericCode && numericCode !== 0) {
-    return 'failed'
-  }
-
-  return 'pending'
-}
-
-function extractCorrelation(body: ParsedWebhookBody, payloadHttpObject: Record<string, unknown>): CorrelationInput {
-  const payloadResponse = toObject(payloadHttpObject.response)
-  const payloadOrder = Array.isArray(payloadResponse.order) ? toObject(payloadResponse.order[0]) : {}
-  const payloadOrderRoot = toObject(payloadHttpObject.order)
+function extractCorrelation(krAnswerObj: Record<string, unknown>): CorrelationInput {
+  const orderDetails = safeObject(krAnswerObj.orderDetails)
+  const transactions = safeArray(krAnswerObj.transactions)
+  const firstTransaction = safeObject(transactions[0])
 
   return {
-    transactionId: pickFirstString(
-      body.transactionId,
-      payloadHttpObject.transactionId,
-      payloadResponse.transactionId,
-      payloadOrder.transactionId,
-      payloadOrder.referenceNumber,
-    ),
-    externalOrderId: pickFirstString(
-      body.externalOrderId,
-      body.orderNumber,
-      payloadOrder.orderNumber,
-      payloadOrderRoot.orderNumber,
-      payloadOrderRoot.externalOrderId,
-      payloadHttpObject.externalOrderId,
-    ),
-    paymentReference: pickFirstString(
-      body.paymentReference,
-      body.reference,
-      payloadOrder.referenceNumber,
-      payloadHttpObject.paymentReference,
-      payloadResponse.reference,
-    ),
-    codigoCorrelacion: pickFirstString(
-      body.orderRef,
-      body.codigoCorrelacion,
-      payloadHttpObject.codigoCorrelacion,
-      payloadOrder.codigoCorrelacion,
-      payloadResponse.codigoCorrelacion,
-    ),
+    orderId: pickFirstString(orderDetails.orderId, krAnswerObj.orderId),
+    transactionUuid: pickFirstString(firstTransaction.uuid, krAnswerObj.transactionUuid),
   }
 }
 
 async function findOrder(payloadClient: any, correlation: CorrelationInput) {
-  const values = Array.from(
-    new Set(
-      [
-        correlation.transactionId,
-        correlation.externalOrderId,
-        correlation.paymentReference,
-        correlation.codigoCorrelacion,
-      ].filter(Boolean),
-    ),
-  )
-
+  const values = Array.from(new Set([correlation.orderId, correlation.transactionUuid].filter(Boolean)))
   if (values.length === 0) return null
 
   let found: { docs: any[] } = { docs: [] }
@@ -222,13 +105,15 @@ async function findOrder(payloadClient: any, correlation: CorrelationInput) {
   if (!found.docs.length) return null
   if (found.docs.length === 1) return found.docs[0]
 
-  const exactTx = found.docs.find((doc: any) => correlation.transactionId && doc.transactionId === correlation.transactionId)
+  const exactTx = found.docs.find(
+    (doc: any) => correlation.transactionUuid && doc.transactionId === correlation.transactionUuid,
+  )
   if (exactTx) return exactTx
 
   const exactRef = found.docs.find(
     (doc: any) =>
-      (correlation.paymentReference && doc.paymentReference === correlation.paymentReference) ||
-      (correlation.codigoCorrelacion && doc.codigoCorrelacion === correlation.codigoCorrelacion),
+      (correlation.orderId && doc.paymentReference === correlation.orderId) ||
+      (correlation.orderId && doc.codigoCorrelacion === correlation.orderId),
   )
   if (exactRef) return exactRef
 
@@ -239,7 +124,6 @@ function getClienteId(order: any) {
   if (typeof order?.cliente === 'object' && order.cliente) {
     return asCleanString((order.cliente as any).id)
   }
-
   return asCleanString(order?.cliente)
 }
 
@@ -247,16 +131,12 @@ function getCuponId(order: any) {
   if (typeof order?.cupon === 'object' && order.cupon) {
     return asCleanString((order.cupon as any).id)
   }
-
   return asCleanString(order?.cupon)
 }
 
 function normalizeProcessedEvents(source: unknown) {
   if (!Array.isArray(source)) return []
-  const events = source
-    .map((value) => asCleanString(value))
-    .filter(Boolean)
-
+  const events = source.map((value) => asCleanString(value)).filter(Boolean)
   return Array.from(new Set(events)).slice(-40)
 }
 
@@ -278,6 +158,10 @@ function getIzipayState(order: any) {
   }
 }
 
+/**
+ * Efectos de negocio finales, independientes del gateway (solo dependen de order.items/cupon/cliente).
+ * Se mantiene identico al comportamiento previo para no duplicar descuento de stock, cupon ni metricas.
+ */
 async function applyFinalBusinessEffects(payloadClient: any, order: any) {
   const warnings: string[] = []
 
@@ -411,70 +295,47 @@ async function applyFinalBusinessEffects(payloadClient: any, order: any) {
 }
 
 export async function POST(request: Request) {
-  const hashKey = getHashKey()
-  if (!hashKey) {
+  const hmacKey = getHmacKey()
+  if (!hmacKey) {
     return NextResponse.json(
-      { error: 'Falta IZIPAY_HASH_KEY para validar firma de webhook.' },
+      { error: 'Falta IZIPAY_HMAC_SHA256_KEY para validar kr-hash del webhook.' },
       { status: 500 },
     )
   }
 
   const rawBody = await request.text()
   const body = parseWebhookBody(rawBody)
-  const payloadHttp = asCleanString(body.payloadHttp)
-  const signature = pickFirstString(
-    body.signature,
-    body.signatureHash,
-    request.headers.get('x-signature'),
-    request.headers.get('x-izipay-signature'),
+
+  const krAnswer = asCleanString(body['kr-answer'] ?? body.krAnswer)
+  const krHash = pickFirstString(
+    body['kr-hash'],
+    body.krHash,
+    request.headers.get('x-kr-hash'),
   )
 
-  const payloadHttpObject = toObject(safeJsonParse(payloadHttp) ?? body.payload)
-  const payloadResponse = toObject(payloadHttpObject.response)
-  const payloadOrder = Array.isArray(payloadResponse.order) ? toObject(payloadResponse.order[0]) : {}
+  const signatureValid = verifyKrHash({ krAnswer, krHash, hmacKey })
+  const krAnswerObj = safeObject(safeJsonParse(krAnswer))
 
-  const correlation = extractCorrelation(body, payloadHttpObject)
-  const transactionId = correlation.transactionId
-  const eventKey = buildEventKey({ transactionId, signature, payloadHttp, body })
+  // orderStatus es el campo autoritativo: solo se confirma pago si es exactamente 'PAID'.
+  const outcome: WebhookOutcome = (() => {
+    const status = mapOrderStatus(krAnswerObj.orderStatus)
+    if (status === 'PAID') return 'paid'
+    if (status === 'UNPAID') return 'failed'
+    if (status === 'CANCELLED') return 'canceled'
+    return 'pending'
+  })()
 
-  const rawCode = pickFirstString(
-    asLooseString(body.code),
-    body.code,
-    payloadHttpObject.code,
-    payloadResponse.code,
-    payloadOrder.code,
-    payloadOrder.state,
-  )
-  const rawMessage = pickFirstString(
-    body.message,
-    body.messageUser,
-    payloadHttpObject.message,
-    payloadResponse.message,
-    payloadOrder.stateMessage,
-  )
-  const statusRaw = pickFirstString(
-    asLooseString(body.status),
-    body.status,
-    body.transactionStatus,
-    payloadHttpObject.status,
-    payloadResponse.status,
-    payloadOrder.state,
-    rawMessage,
-  )
-  const outcome = detectOutcome({ code: rawCode, stateRaw: statusRaw })
-
-  const signatureValid = verifyIzipaySignature({
-    payloadHttp,
-    signature,
-    hashKey,
+  const correlation = extractCorrelation(krAnswerObj)
+  const eventKey = buildKrEventKey({
+    transactionUuid: correlation.transactionUuid,
+    krHash,
+    krAnswer,
   })
 
+  const firstTransaction = safeObject(safeArray(krAnswerObj.transactions)[0])
   const authorizationCode = pickFirstString(
-    body.authorizationCode,
-    payloadHttpObject.authorizationCode,
-    payloadResponse.authorizationCode,
-    payloadOrder.authorizationCode,
-    payloadOrder.authCode,
+    firstTransaction.authorizationNumber,
+    firstTransaction.authorizationCode,
   )
 
   const payloadClient = await getPayload({ config })
@@ -497,8 +358,7 @@ export async function POST(request: Request) {
 
   if (!signatureValid) {
     const keepSignature = Boolean(
-      order.paymentSignatureValid &&
-      orderState.izipay.finalValidationPending === false,
+      order.paymentSignatureValid && orderState.izipay.finalValidationPending === false,
     )
     await payloadClient.update({
       collection: 'ordenes',
@@ -511,10 +371,8 @@ export async function POST(request: Request) {
             ...orderState.izipay,
             lastWebhookAt: new Date().toISOString(),
             lastWebhookEventKey: eventKey,
-            lastWebhookCode: rawCode || null,
-            lastWebhookMessage: rawMessage || null,
+            lastWebhookOrderStatus: krAnswerObj.orderStatus || null,
             lastWebhookSignatureValid: false,
-            lastWebhookPayload: payloadHttpObject,
           },
         }),
       },
@@ -570,7 +428,7 @@ export async function POST(request: Request) {
     id: order.id,
     overrideAccess: true,
     data: {
-      paymentProvider: 'izipay_sandbox',
+      paymentProvider: 'izipay_krypton',
       paymentMethod: 'tarjeta',
       estadoPago: nextEstadoPago,
       estadoComercial:
@@ -581,19 +439,19 @@ export async function POST(request: Request) {
           : order.estadoComercial,
       paidAt: effectiveOutcome === 'paid' ? order.paidAt || nowIso : order.paidAt,
       paymentSignatureValid: true,
-      transactionId: transactionId || order.transactionId,
-      externalOrderId: correlation.externalOrderId || order.externalOrderId,
-      paymentReference:
-        correlation.paymentReference ||
-        correlation.codigoCorrelacion ||
-        order.paymentReference ||
-        order.codigoCorrelacion,
+      transactionId: correlation.transactionUuid || order.transactionId,
+      externalOrderId: correlation.orderId || order.externalOrderId,
+      paymentReference: correlation.orderId || order.paymentReference || order.codigoCorrelacion,
       authorizationCode: authorizationCode || order.authorizationCode,
-      paymentErrorCode: effectiveOutcome === 'paid' ? '' : rawCode || order.paymentErrorCode,
+      paymentErrorCode: effectiveOutcome === 'paid' ? '' : String(krAnswerObj.orderStatus || order.paymentErrorCode || ''),
       paymentErrorMessage:
         effectiveOutcome === 'paid'
           ? ''
-          : rawMessage || (effectiveOutcome === 'failed' ? 'Pago rechazado por webhook Izipay.' : effectiveOutcome === 'canceled' ? 'Pago cancelado por webhook Izipay.' : order.paymentErrorMessage),
+          : effectiveOutcome === 'failed'
+            ? 'Pago rechazado por webhook Izipay Krypton (orderStatus=UNPAID).'
+            : effectiveOutcome === 'canceled'
+              ? 'Pago cancelado por webhook Izipay Krypton (orderStatus=CANCELLED).'
+              : order.paymentErrorMessage,
       paymentPayload: mergePaymentPayload(order.paymentPayload, {
         izipay: {
           ...orderState.izipay,
@@ -606,10 +464,8 @@ export async function POST(request: Request) {
           processedWebhookEvents: processedEvents,
           lastWebhookAt: nowIso,
           lastWebhookEventKey: eventKey,
-          lastWebhookCode: rawCode || null,
-          lastWebhookMessage: rawMessage || null,
+          lastWebhookOrderStatus: krAnswerObj.orderStatus || null,
           lastWebhookSignatureValid: true,
-          lastWebhookPayload: payloadHttpObject,
           lastWebhookOutcome: effectiveOutcome,
           lastWebhookWarnings: finalEffectsWarnings,
           terminalPaidIgnoredStatus: keepPaidTerminalState ? outcome : null,
