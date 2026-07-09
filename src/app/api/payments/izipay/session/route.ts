@@ -86,9 +86,14 @@ function buildFallbackEmail(order: any) {
 
 /**
  * Payload de POST /V4/Charge/CreatePayment.
- * Estructura de customer.billingDetails/shippingDetails basada en documentacion publica
- * Lyra/Micuentaweb REST V4; verificar nombres exactos de sub-campos contra la doc oficial
- * vigente en fase 6C antes de la primera prueba sandbox real.
+ * Estructura verificada contra el ejemplo oficial izipay-pe/Server-PaymentForm-Nodejs
+ * (github.com/izipay-pe) en fase 6C: amount/currency/orderId + customer.email +
+ * customer.billingDetails.{firstName,lastName,phoneNumber,identityType,identityCode,
+ * address,country,city,state,zipCode}. No incluye reference/shippingDetails/formAction:
+ * no forman parte del ejemplo oficial. Se retiraron para alinear el payload al ejemplo
+ * oficial, pero el rechazo INT_015 ("invalid customer email") persistio identico en
+ * sandbox real incluso con esta estructura — la causa no esta confirmada como resuelta
+ * y probablemente sea de configuracion de cuenta/credenciales, no de forma del payload.
  */
 function buildCreatePaymentPayload({
   orderId,
@@ -101,7 +106,6 @@ function buildCreatePaymentPayload({
   currency: string
   customer: {
     email: string
-    reference: string
     firstName: string
     lastName: string
     phoneNumber: string
@@ -117,27 +121,18 @@ function buildCreatePaymentPayload({
     amount,
     currency,
     orderId,
-    formAction: 'PAYMENT',
     customer: {
       email: customer.email,
-      reference: customer.reference,
       billingDetails: {
         firstName: customer.firstName,
         lastName: customer.lastName,
         phoneNumber: customer.phoneNumber,
-        address: customer.street,
-        city: customer.city,
-        country: customer.country,
-        zipCode: customer.postalCode,
-        identityCode: customer.document,
         identityType: customer.documentType,
-      },
-      shippingDetails: {
-        firstName: customer.firstName,
-        lastName: customer.lastName,
+        identityCode: customer.document,
         address: customer.street,
-        city: customer.city,
         country: customer.country,
+        city: customer.city,
+        state: customer.city,
         zipCode: customer.postalCode,
       },
     },
@@ -237,7 +232,6 @@ export async function POST(request: Request) {
       currency: izipayConfig.currency,
       customer: {
         email,
-        reference: clienteId || asCleanString(order.id),
         firstName,
         lastName,
         phoneNumber,
