@@ -75,8 +75,20 @@ Cuando Izipay lo resuelva, se activa cambiando un interruptor.
 - **Publicar los textos legales** reales; mientras tanto las páginas muestran
   un aviso de "contenido en preparación".
 
+## Cómo se enciende la tienda cuando todo esté listo
+
+La compra online tiene un **interruptor maestro**. Se puede desplegar a
+Producción hoy mismo con el interruptor **apagado**: el catálogo y la consulta
+por WhatsApp funcionan con normalidad, pero **no es posible crear pedidos
+reales por error** — el bloqueo está en el servidor, no solo en los botones.
+
+Cuando el negocio cargue el inventario real, los datos bancarios, las tarifas
+de envío y los textos legales, se **enciende el interruptor** y la compra
+online queda disponible de inmediato, sin necesidad de más desarrollo.
+
 ## Estado técnico
 
 Probado en un entorno de Preview aislado (base de datos separada de la tienda
-en vivo). La tienda en vivo (Producción) **no fue modificada**. La activación
-en Producción requiere una autorización explícita.
+en vivo), tanto con la compra **apagada** como **encendida**. La tienda en
+vivo (Producción) **no fue modificada**. El despliegue a Producción se hará con
+la compra apagada y requiere una autorización explícita.

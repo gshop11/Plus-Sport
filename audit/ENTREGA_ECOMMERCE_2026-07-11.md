@@ -63,6 +63,44 @@ e9c4ca5 test: validate complete ecommerce flow
 - **Migracion en Produccion:** aun NO aplicada. Cuando se aplique, `down()` revierte el esquema; es preferible NO revertir tras recibir pedidos reales (perdida de columnas de snapshot).
 - **Variables:** `IZIPAY_CARD_ENABLED` y `DATABASE_URI` branch-scoped pueden eliminarse desde Vercel.
 
+## Interruptor maestro de compra (hardening preproduccion)
+
+`ECOMMERCE_ENABLED` (default false; solo `true` habilita). Con false, el
+catalogo y la consulta por WhatsApp siguen; la compra online queda apagada de
+extremo a extremo, con validacion de SERVIDOR (no solo UI): sin metodos de
+pago, sin creacion de pedidos (403), sin descuento de stock, sin comprobantes.
+`getStorefrontConfig` recomputa la bandera fuera del Data Cache para que el
+cambio se refleje de inmediato. **Produccion debe iniciar con
+`ECOMMERCE_ENABLED=false` e `IZIPAY_CARD_ENABLED=false`.**
+
+## Plan EXACTO de aplicacion a Produccion (no ejecutado en esta fase)
+
+1. **Respaldo:** snapshot/backup de la base de Produccion (Neon branch o dump
+   `pg_dump` por endpoint directo) ANTES de migrar. Verificar restauracion.
+2. **Variables (Vercel, Production):** `ECOMMERCE_ENABLED=false`,
+   `IZIPAY_CARD_ENABLED=false`; confirmar `DATABASE_URI`, `PAYLOAD_SECRET`,
+   `NEXT_PUBLIC_SERVER_URL`, `BLOB_READ_WRITE_TOKEN` ya presentes; opcional
+   `DATABASE_URI_MIGRATIONS` (endpoint directo) para la migracion.
+3. **Migracion:** `payload migrate` con la conexion DIRECTA (unpooled) contra
+   Produccion; es aditiva y retrocompatible (el codigo desplegado 1b301a9
+   sigue funcionando con el esquema nuevo). Revisar salida.
+4. **Rama estable:** fast-forward o merge de `feat/ecommerce-entrega-2026-07-11`
+   a `stabilize/next16-payload385` (sin tocar `main`).
+5. **Despliegue:** desplegar exactamente el commit validado a Production.
+6. **Smoke tests (Production, compra apagada):** home/catalogo/ficha 200;
+   ficha sin "Añadir al carrito" con WhatsApp; `/api/metodos-pago` = [];
+   POST `/api/checkout/ordenes` => 403; izipay session 403; Payload admin OK;
+   sin 500 en runtime logs.
+7. **Monitoreo:** runtime logs y conexiones Postgres (sin saturacion del
+   pooler) durante las primeras horas.
+8. **Rollback:** reasignar alias al deployment anterior
+   (`dpl_AFgujPtbTFcqCTzFzL9AdcGoXRpY`, commit `1b301a9`) sin rebuild; la
+   migracion es aditiva (no requiere revertir esquema; si se revierte, usar
+   `down()` SOLO si no hay pedidos nuevos). Variables: volver a quitar/one-off.
+
 ## Datos comerciales PENDIENTES (no inventados)
 
 Logo oficial · razon social · RUC · textos legales aprobados · datos bancarios reales (Yape/Plin/transferencia con QR) · tarifas y cobertura de envio reales · inventario real por talla (activar `ventaOnline`/`ventaHabilitada`) · Izipay produccion (INT_015) · politicas de devolucion · pagina "Nosotros".
+
+Para ACTIVAR la compra online (despues de cargar lo anterior): poner
+`ECOMMERCE_ENABLED=true` en Production y redeployar.

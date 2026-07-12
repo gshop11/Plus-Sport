@@ -158,6 +158,20 @@ Documento de progreso por fases. Permite reanudar el trabajo si se pierde el con
 - **Verificacion en Preview real (base aislada):** home 200; `/productos` muestra los 4 productos TEST-ECOMMERCE; ficha `test-runner-azul` "Disponible para compra online" con tallas 40/41 (no 42 sin stock, no 43 deshabilitada), stock+SKU y "Añadir al carrito"; `/api/metodos-pago` solo yape+transferencia (Plin incompleto y tarjeta ocultos); pedido idempotente 201 + segundo POST mismo pedido; tarjeta 400; Izipay session 403; webhook 503; `/terminos` "contenido en preparacion"; carrito vacio correcto. Runtime logs: 0 errores 500 (solo el 503 de webhook y 400/403 esperados de las pruebas).
 - **Build logs:** sin errores. **Base de Produccion:** NO tocada.
 
+## FASE HARDENING — Interruptor maestro ECOMMERCE_ENABLED (preproduccion)
+
+- **Estado:** COMPLETADA y VERIFICADA.
+- **Commits:** `8e7497b` (bandera production-safe) + `8023ae9` (flag fuera del Data Cache).
+- **Bandera `ECOMMERCE_ENABLED`** (default false; solo `true` habilita). Con false: catalogo/fichas/WhatsApp siguen; sin "Añadir al carrito"; header sin carrito; `/checkout` informativo; `/carrito` sin "Ir a checkout" (conserva items); `/api/metodos-pago` = []; `POST /api/checkout/ordenes` => 403 `ECOMMERCE_DISABLED` (no crea pedido ni descuenta stock); `POST .../comprobante` => 403. Validacion en SERVIDOR. Payload/admin accesibles. Izipay sigue off por su propio flag. robots.txt excluye paginas legales en preparacion.
+- **Fix detectado en verificacion:** `ecommerceEnabled` quedaba horneado en el `unstable_cache` (Data Cache persistente entre deployments de Vercel) => activar/desactivar no se reflejaba de inmediato. Corregido: `getStorefrontConfig` recomputa la bandera fresca fuera del cache; `/api/storefront-config` responde no-store.
+- **Preview flag OFF** (`dpl_2jNydU3PDu6n88rb8Ucxc7H6Ea7b`, commit `8e7497b`): verificado en vivo — `/productos` 200, `storefront-config ecommerceEnabled=false`, `metodos-pago=[]`, POST pedido 403 `ECOMMERCE_DISABLED`, comprobante 403, izipay 403, ficha sin "Añadir al carrito" con WhatsApp, `/checkout` "Compra online proximamente", `/carrito` con items conservados + mensaje prudente. Runtime: 0 errores 500 (solo 403 esperados).
+- **Preview flag ON** (redeploy commit `8e7497b` con `ECOMMERCE_ENABLED=true`): P0 intacto — metodos yape+transferencia, pedido idempotente 201, izipay sigue 403, ficha con "Añadir al carrito". (El fix de cache se despliega en el commit `8023ae9`.)
+- **Base de Produccion:** NO tocada. Migracion NO aplicada a Produccion.
+
+## MIGRACION — Revision final (no aplicada a Produccion)
+
+- `20260712_024242_ecommerce_delivery_20260711`: `up()` con 0 DROP/TRUNCATE/DELETE; solo CREATE TABLE y ADD COLUMN (nullable o con DEFAULT => sin perdida de datos, sin bloqueo por NOT NULL). El nuevo enum `estado_comercial` incluye los valores legacy (`pendiente`, `procesando`, `enviado`, `entregado`, `cancelado`) => el re-cast de ordenes existentes en Produccion no falla. Compatible con codigo viejo + esquema nuevo (las columnas/tablas nuevas son ignoradas por el codigo desplegado 1b301a9). Migraciones por endpoint DIRECTO; runtime por POOLER. `down()` concentra los DROP (rollback disponible; no revertir tras recibir pedidos reales).
+
 ## DICTAMEN
 
-GO CON BLOQUEOS COMERCIALES. P0 tecnicamente cerrado y verificado en Preview aislado. Faltan datos comerciales reales (bancarios, tarifas, inventario, legal, Izipay produccion) para operar; ninguno es un defecto tecnico. Detener antes de Produccion; esperar `GO PROD`.
+GO CON BLOQUEOS COMERCIALES / READY FOR SAFE PROD (con `ECOMMERCE_ENABLED=false`). P0 cerrado, hardening verificado con la bandera en false y en true. Produccion debe iniciar con `ECOMMERCE_ENABLED=false` e `IZIPAY_CARD_ENABLED=false`. Faltan datos comerciales reales (bancarios, tarifas, inventario, legal, Izipay produccion) para activar la compra; ninguno es defecto tecnico. Detener antes de Produccion; esperar `GO PROD`.
