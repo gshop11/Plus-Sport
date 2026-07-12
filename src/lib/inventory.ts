@@ -1,4 +1,6 @@
-import 'server-only'
+// NOTA: este modulo se importa desde colecciones de Payload (hooks), que el
+// CLI de Payload carga fuera de Next; por eso NO usa 'server-only'. Nunca debe
+// importarse desde componentes cliente.
 import { sql } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 

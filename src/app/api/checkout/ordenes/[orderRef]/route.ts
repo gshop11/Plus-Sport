@@ -51,36 +51,22 @@ function toPublicOrder(order: any) {
   }
 }
 
+// Solo se acepta el codigoCorrelacion (no adivinable). No hay fallback por
+// numeroPedido ni por ID secuencial: ambos son enumerables y expondrian
+// datos de pedidos de terceros.
 async function findOrderByRef(payload: any, orderRef: string) {
+  if (!orderRef.startsWith('ORD-')) return null
+
   try {
-    const byCodeOrNumber = await payload.find({
+    const byCode = await payload.find({
       collection: 'ordenes',
-      where: {
-        or: [
-          { codigoCorrelacion: { equals: orderRef } },
-          { numeroPedido: { equals: orderRef } },
-        ],
-      },
+      where: { codigoCorrelacion: { equals: orderRef } },
       limit: 1,
       depth: 1,
       overrideAccess: true,
     })
 
-    if (byCodeOrNumber.docs.length > 0) {
-      return byCodeOrNumber.docs[0]
-    }
-  } catch {
-    // Continue with ID fallback if schema is partially updated in local DB.
-  }
-
-  try {
-    const byId = await payload.findByID({
-      collection: 'ordenes',
-      id: orderRef,
-      depth: 1,
-      overrideAccess: true,
-    })
-    return byId
+    return byCode.docs[0] ?? null
   } catch {
     return null
   }

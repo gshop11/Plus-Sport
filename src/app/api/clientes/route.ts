@@ -1,34 +1,11 @@
-import { getPayload } from 'payload'
-import config from '@payload-config'
+import { NextResponse } from 'next/server'
 
-export async function POST(request: Request) {
-  try {
-    const payload = await getPayload({ config })
-    const body = await request.json()
-
-    const cliente = await payload.create({
-      collection: 'clientes',
-      overrideAccess: true,
-      data: {
-        nombre: body.nombre,
-        email: body.email,
-        telefono: body.telefono,
-        documento: body.documento || '',
-        direccion: body.direccion,
-        totalCompras: 0,
-        etiqueta: 'normal',
-      },
-    })
-
-    return Response.json(
-      { success: true, doc: cliente },
-      { status: 201 }
-    )
-  } catch (error) {
-    console.error('Error creando cliente:', error)
-    return Response.json(
-      { error: 'Error creando cliente', details: (error as Error).message },
-      { status: 500 }
-    )
-  }
+// Deprecado: la creacion de clientes ocurre dentro de POST /api/checkout/ordenes
+// (servidor). Mantener un endpoint publico de creacion arbitraria de clientes
+// era un vector de spam y de datos basura en el CRM.
+export async function POST() {
+  return NextResponse.json(
+    { error: 'Endpoint deprecado. El cliente se registra al crear el pedido.' },
+    { status: 410 },
+  )
 }
