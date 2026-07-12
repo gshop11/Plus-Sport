@@ -1,7 +1,22 @@
-﻿const DATABASE_ENV_KEYS = [
+﻿// Prioridad de runtime: primero la variable explicita del proyecto y luego
+// las variantes POOLED del proveedor. Los endpoints directos (unpooled) quedan
+// como ultimo recurso: en serverless cada lambda abre su propio pool y el
+// endpoint directo de Neon se satura ("remaining connection slots are reserved").
+const DATABASE_ENV_KEYS = [
   'DATABASE_URI',
+  'DATABASE_URL',
+  'POSTGRES_URL',
   'DATABASE_URL_UNPOOLED',
   'POSTGRES_URL_NON_POOLING',
+] as const
+
+// Para migraciones se prefiere el endpoint DIRECTO (sin PgBouncer): DDL y
+// advisory locks de drizzle no deben pasar por el pooler en modo transaccion.
+const MIGRATION_DATABASE_ENV_KEYS = [
+  'DATABASE_URI_MIGRATIONS',
+  'POSTGRES_URL_NON_POOLING',
+  'DATABASE_URL_UNPOOLED',
+  'DATABASE_URI',
   'DATABASE_URL',
 ] as const
 
@@ -51,8 +66,64 @@ function assertAbsoluteUrl(value: string, variableName: string, errors: string[]
   }
 }
 
+function isNeonHost(hostname: string) {
+  return hostname.endsWith('.neon.tech')
+}
+
+// Reescribe un endpoint directo de Neon a su endpoint pooler (PgBouncer).
+// Solo se aplica en runtime de Vercel; las migraciones y el uso local
+// conservan el endpoint original. Opt-out: PG_DISABLE_POOLER_REWRITE=true.
+function preferNeonPooler(connectionString: string) {
+  if (process.env.VERCEL !== '1') return connectionString
+  if (process.env.PG_DISABLE_POOLER_REWRITE?.trim().toLowerCase() === 'true') return connectionString
+
+  try {
+    const url = new URL(connectionString)
+    if (!isNeonHost(url.hostname)) return connectionString
+
+    const [endpoint, ...rest] = url.hostname.split('.')
+    if (endpoint.endsWith('-pooler')) return connectionString
+
+    url.hostname = [`${endpoint}-pooler`, ...rest].join('.')
+    return url.toString()
+  } catch {
+    return connectionString
+  }
+}
+
+// Hace explicito el modo SSL seguro. En pg v8 'require' ya se comporta como
+// 'verify-full'; se fija verify-full para no depender de ese alias y para
+// cumplir la politica de SSL del proyecto. Nunca degrada un modo existente.
+function enforceVerifyFullSsl(connectionString: string) {
+  try {
+    const url = new URL(connectionString)
+    if (!isNeonHost(url.hostname)) return connectionString
+
+    const current = url.searchParams.get('sslmode')
+    if (!current || current === 'require' || current === 'prefer' || current === 'verify-ca') {
+      url.searchParams.set('sslmode', 'verify-full')
+      url.searchParams.delete('channel_binding')
+    }
+    return url.toString()
+  } catch {
+    return connectionString
+  }
+}
+
+function normalizeRuntimeConnectionString(value: string) {
+  if (!isPostgresConnectionString(value)) return value
+  return enforceVerifyFullSsl(preferNeonPooler(value))
+}
+
 export function getDatabaseUri() {
-  return getFirstDefinedEnv(DATABASE_ENV_KEYS)
+  const value = getFirstDefinedEnv(DATABASE_ENV_KEYS)
+  return value ? normalizeRuntimeConnectionString(value) : value
+}
+
+export function getMigrationDatabaseUri() {
+  const value = getFirstDefinedEnv(MIGRATION_DATABASE_ENV_KEYS)
+  if (!value) return value
+  return isPostgresConnectionString(value) ? enforceVerifyFullSsl(value) : value
 }
 
 export function getPayloadSecret() {
@@ -67,8 +138,24 @@ export function getPayloadSecret() {
   return 'development-payload-secret-change-before-production'
 }
 
+// Push de esquema (drizzle push) siempre opt-in: puede generar cambios
+// destructivos o prompts interactivos. El flujo oficial son migraciones
+// versionadas (payload migrate).
 export function shouldPushPayloadSchema() {
-  return parseBooleanEnv(process.env.PAYLOAD_DB_PUSH, process.env.NODE_ENV !== 'production')
+  return parseBooleanEnv(process.env.PAYLOAD_DB_PUSH, false)
+}
+
+const DEFAULT_PG_POOL_MAX = 5
+
+export function getPgPoolOptions() {
+  const parsed = Number.parseInt(process.env.PG_POOL_MAX ?? '', 10)
+  const max = Number.isInteger(parsed) && parsed > 0 && parsed <= 20 ? parsed : DEFAULT_PG_POOL_MAX
+
+  return {
+    max,
+    idleTimeoutMillis: 20_000,
+    connectionTimeoutMillis: 15_000,
+  }
 }
 
 export function validateServerEnv() {

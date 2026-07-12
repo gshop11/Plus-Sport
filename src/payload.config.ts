@@ -6,7 +6,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
-import { getDatabaseUri, getPayloadSecret, shouldPushPayloadSchema, validateServerEnv } from './lib/env'
+import { getDatabaseUri, getMigrationDatabaseUri, getPayloadSecret, getPgPoolOptions, shouldPushPayloadSchema, validateServerEnv } from './lib/env'
 
 // Collections (Backoffice)
 import { Usuarios } from './collections/Usuarios'
@@ -32,8 +32,10 @@ const sqlitePath = path.resolve(dirname, '../dev.db').replace(/\\/g, '/')
 
 validateServerEnv()
 
-// Prefer a direct/unpooled PostgreSQL connection for Payload/Drizzle compatibility.
-const databaseUri = getDatabaseUri()
+// Runtime usa el endpoint pooler (serverless); las migraciones (payload migrate)
+// usan el endpoint directo/unpooled para DDL y locks de drizzle.
+const isMigrationRun = process.argv.some((arg) => arg === 'migrate' || arg.startsWith('migrate:'))
+const databaseUri = isMigrationRun ? getMigrationDatabaseUri() : getDatabaseUri()
 const payloadSecret = getPayloadSecret()
 const pushSchema = shouldPushPayloadSchema()
 const sqlitePushSchema = process.env.PAYLOAD_DB_PUSH?.trim().toLowerCase() === 'true'
@@ -75,7 +77,7 @@ export default buildConfig({
   // In local SQLite it must also be opt-in: Drizzle can ask interactive rename
   // questions on schema drift and block storefront navigation requests.
   db: databaseUri
-    ? postgresAdapter({ pool: { connectionString: databaseUri }, push: pushSchema })
+    ? postgresAdapter({ pool: { connectionString: databaseUri, ...getPgPoolOptions() }, push: pushSchema })
     : sqliteAdapter({ client: { url: `file:${sqlitePath}` }, push: sqlitePushSchema }),
 
   secret: payloadSecret,
