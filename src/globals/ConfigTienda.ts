@@ -325,11 +325,15 @@ export const ConfigTienda: GlobalConfig = {
       name: 'pagos',
       type: 'group',
       label: 'Metodos de Pago',
+      admin: {
+        description:
+          'Un metodo solo se muestra a los clientes cuando esta activo Y tiene todos sus datos obligatorios completos (Yape/Plin: numero y titular; transferencia: banco, titular, cuenta y CCI). No inventar datos: dejar incompleto = oculto.',
+      },
       fields: [
         {
           name: 'metodos',
           type: 'array',
-          label: 'Add metodos de pago',
+          label: 'Metodos de pago',
           fields: [
             {
               name: 'nombre',
@@ -353,24 +357,200 @@ export const ConfigTienda: GlobalConfig = {
               ],
             },
             {
-              name: 'activo',
-              type: 'checkbox',
-              label: 'Activar metodo',
-              defaultValue: true,
+              type: 'row',
+              fields: [
+                {
+                  name: 'activo',
+                  type: 'checkbox',
+                  label: 'Activar metodo',
+                  defaultValue: false,
+                  admin: { width: '50%' },
+                },
+                {
+                  name: 'mostrarEnFooter',
+                  type: 'checkbox',
+                  label: 'Mostrar en footer',
+                  defaultValue: true,
+                  admin: { width: '50%' },
+                },
+              ],
             },
             {
-              name: 'mostrarEnFooter',
-              type: 'checkbox',
-              label: 'Mostrar en footer',
-              defaultValue: true,
+              type: 'row',
+              fields: [
+                {
+                  name: 'numero',
+                  type: 'text',
+                  label: 'Numero (Yape/Plin)',
+                  admin: { width: '50%', description: 'Numero de celular asociado. Obligatorio para Yape/Plin.' },
+                },
+                {
+                  name: 'titular',
+                  type: 'text',
+                  label: 'Titular',
+                  admin: { width: '50%', description: 'Nombre del titular de la cuenta o billetera.' },
+                },
+              ],
+            },
+            {
+              name: 'qr',
+              type: 'upload',
+              relationTo: 'media',
+              label: 'QR de pago (opcional)',
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'banco',
+                  type: 'text',
+                  label: 'Banco',
+                  admin: { width: '50%', description: 'Obligatorio para transferencias.' },
+                },
+                {
+                  name: 'monedaCuenta',
+                  type: 'select',
+                  label: 'Moneda de la cuenta',
+                  defaultValue: 'PEN',
+                  options: [
+                    { label: 'Soles (PEN)', value: 'PEN' },
+                    { label: 'Dolares (USD)', value: 'USD' },
+                  ],
+                  admin: { width: '50%' },
+                },
+              ],
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'numeroCuenta',
+                  type: 'text',
+                  label: 'Numero de cuenta',
+                  admin: { width: '50%', description: 'Obligatorio para transferencias.' },
+                },
+                {
+                  name: 'cci',
+                  type: 'text',
+                  label: 'CCI',
+                  admin: { width: '50%', description: 'Codigo de cuenta interbancario. Obligatorio para transferencias.' },
+                },
+              ],
             },
             {
               name: 'instruccion',
-              type: 'text',
-              label: 'Instruccion',
-              defaultValue: 'Te enviaremos los pasos por WhatsApp.',
+              type: 'textarea',
+              label: 'Instrucciones para el cliente',
             },
           ],
+        },
+      ],
+    },
+    {
+      name: 'entrega',
+      type: 'group',
+      label: 'Entrega y Recojo',
+      admin: {
+        description:
+          'Las tarifas de envio por zona/distrito se administran en la coleccion "Zonas de envio". Aqui se configuran los puntos de recojo en tienda.',
+      },
+      fields: [
+        {
+          name: 'puntosRecojo',
+          type: 'array',
+          label: 'Puntos de recojo en tienda',
+          fields: [
+            {
+              name: 'nombre',
+              type: 'text',
+              label: 'Nombre del punto',
+              required: true,
+            },
+            {
+              name: 'direccion',
+              type: 'text',
+              label: 'Direccion',
+              required: true,
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'horario',
+                  type: 'text',
+                  label: 'Horario de atencion',
+                  admin: { width: '50%' },
+                },
+                {
+                  name: 'activo',
+                  type: 'checkbox',
+                  label: 'Activo',
+                  defaultValue: false,
+                  admin: { width: '50%' },
+                },
+              ],
+            },
+            {
+              name: 'instrucciones',
+              type: 'textarea',
+              label: 'Instrucciones de recojo',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'legal',
+      type: 'group',
+      label: 'Contenido Legal',
+      admin: {
+        description:
+          'Textos legales de la tienda. Mientras un texto este vacio, la pagina correspondiente muestra un aviso de contenido pendiente (no se publican afirmaciones legales inventadas).',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'razonSocial',
+              type: 'text',
+              label: 'Razon social',
+              admin: { width: '50%', description: 'PENDIENTE: completar con el dato real del negocio.' },
+            },
+            {
+              name: 'ruc',
+              type: 'text',
+              label: 'RUC',
+              admin: { width: '50%', description: 'PENDIENTE: completar con el dato real del negocio.' },
+            },
+          ],
+        },
+        {
+          name: 'versionTerminos',
+          type: 'text',
+          label: 'Version de terminos vigente',
+          defaultValue: 'sin-version',
+          admin: { description: 'Identificador de la version aceptada por los clientes en cada pedido. Ej: 2026-07-v1' },
+        },
+        {
+          name: 'terminosCondiciones',
+          type: 'richText',
+          label: 'Terminos y condiciones',
+        },
+        {
+          name: 'politicaPrivacidad',
+          type: 'richText',
+          label: 'Politica de privacidad',
+        },
+        {
+          name: 'politicaCambios',
+          type: 'richText',
+          label: 'Cambios y devoluciones',
+        },
+        {
+          name: 'politicaEntregas',
+          type: 'richText',
+          label: 'Politica de entregas',
         },
       ],
     },

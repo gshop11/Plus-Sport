@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from 'react'
 
 type FooterMethod = {
   nombre: string
-  activo: boolean
   mostrarEnFooter: boolean
 }
 
@@ -39,7 +38,8 @@ const trustItems = [
 const normalizeFooterHref = (href: string) => (href === '/ofertas' ? '/productos?oferta=1' : href)
 
 export default function Footer() {
-  const [metodosFooter, setMetodosFooter] = useState<string[]>(['BCP', 'Yape', 'Interbank'])
+  // Sin metodos configurados no se muestra ninguno (nunca inventar metodos).
+  const [metodosFooter, setMetodosFooter] = useState<string[]>([])
   const [footerConfig, setFooterConfig] = useState<StorefrontConfig['footer']>(fallbackFooter)
   const [storeName, setStoreName] = useState(fallbackIdentity.name)
 
@@ -61,11 +61,11 @@ export default function Footer() {
           const data = await metodosRes.json()
           const methods = Array.isArray(data?.metodos) ? (data.metodos as FooterMethod[]) : []
           const names = methods
-            .filter((m) => m?.activo && m?.mostrarEnFooter)
+            .filter((m) => m?.mostrarEnFooter)
             .map((m) => String(m.nombre || '').trim())
             .filter(Boolean)
 
-          if (names.length > 0) setMetodosFooter(names)
+          setMetodosFooter(names)
         }
       } catch {
         // keep fallback
@@ -156,14 +156,18 @@ export default function Footer() {
 
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 sm:flex-row">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-blue-300">
-            <span className="font-semibold uppercase tracking-[0.12em] text-blue-200">Metodos de pago:</span>
-            {metodosFooter.map((m) => (
-              <span key={m} className="rounded-full border border-white/10 bg-white/10 px-2.5 py-1">
-                {m}
-              </span>
-            ))}
-          </div>
+          {metodosFooter.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-blue-300">
+              <span className="font-semibold uppercase tracking-[0.12em] text-blue-200">Metodos de pago:</span>
+              {metodosFooter.map((m) => (
+                <span key={m} className="rounded-full border border-white/10 bg-white/10 px-2.5 py-1">
+                  {m}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <span className="text-xs text-blue-300">Coordina tu compra por WhatsApp</span>
+          )}
           <span className="text-xs text-blue-300">{footerConfig.textoCopyright}</span>
         </div>
       </div>

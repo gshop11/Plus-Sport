@@ -78,6 +78,7 @@ export interface Config {
     envios: Envio;
     suscriptores: Suscriptore;
     banners: Banner;
+    comprobantes: Comprobante;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -96,6 +97,7 @@ export interface Config {
     envios: EnviosSelect<false> | EnviosSelect<true>;
     suscriptores: SuscriptoresSelect<false> | SuscriptoresSelect<true>;
     banners: BannersSelect<false> | BannersSelect<true>;
+    comprobantes: ComprobantesSelect<false> | ComprobantesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -370,39 +372,99 @@ export interface Ordene {
   id: number;
   numeroPedido?: string | null;
   /**
-   * Se usa para correlacion con pasarela de pago
+   * Referencia no adivinable usada por el cliente y la pasarela de pago
    */
   codigoCorrelacion?: string | null;
+  /**
+   * Evita pedidos duplicados por doble envio del formulario
+   */
+  idempotencyKey?: string | null;
   cliente?: (number | null) | Cliente;
   /**
    * Snapshot al momento de crear la orden
    */
   nombreCliente: string;
+  datosCliente?: {
+    nombres?: string | null;
+    apellidos?: string | null;
+    tipoDocumento?: ('dni' | 'ce' | 'pasaporte' | 'ruc') | null;
+    numeroDocumento?: string | null;
+    email?: string | null;
+  };
   telefono: string;
   metodoEntrega: 'delivery' | 'retiro_tienda';
+  puntoRecojo?: {
+    nombre?: string | null;
+    direccion?: string | null;
+    horario?: string | null;
+  };
   items: {
     producto: number | Producto;
     nombreProducto: string;
+    sku?: string | null;
+    skuVariante?: string | null;
+    color?: string | null;
     talla?: string | null;
     cantidad: number;
     precioUnitario: number;
+    precioAnterior?: number | null;
     subtotal: number;
+    imagenUrl?: string | null;
     id?: string | null;
   }[];
   subtotal?: number | null;
   descuento?: number | null;
   costoEnvio?: number | null;
   total?: number | null;
+  moneda?: string | null;
   cupon?: (number | null) | Cupone;
   direccionEnvio: {
     calle: string;
-    distrito: string;
+    departamento?: string | null;
     ciudad?: string | null;
+    distrito: string;
     referencias?: string | null;
   };
   metodoPago?: ('yape' | 'plin' | 'interbank' | 'transferencia' | 'tarjeta' | 'efectivo' | 'whatsapp') | null;
-  estadoComercial: 'pendiente' | 'procesando' | 'enviado' | 'entregado' | 'cancelado';
+  estadoComercial:
+    | 'pendiente_pago'
+    | 'comprobante_recibido'
+    | 'pago_en_revision'
+    | 'pagado'
+    | 'preparando'
+    | 'enviado'
+    | 'entregado'
+    | 'cancelado'
+    | 'pago_fallido'
+    | 'reembolsado'
+    | 'pendiente'
+    | 'procesando';
   estadoPago: 'pending' | 'authorized' | 'paid' | 'failed' | 'canceled' | 'refunded';
+  historialEstados?:
+    | {
+        estadoAnterior?: string | null;
+        estadoNuevo?: string | null;
+        fecha?: string | null;
+        usuario?: string | null;
+        comentario?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Comprobantes subidos por el cliente. Verificar antes de marcar pagado.
+   */
+  comprobantesPago?: (number | Comprobante)[] | null;
+  aceptaciones?: {
+    terminos?: boolean | null;
+    privacidad?: boolean | null;
+    fecha?: string | null;
+    versionTerminos?: string | null;
+  };
+  stockDescontado?: boolean | null;
+  /**
+   * Se marca al cancelar una orden con stock descontado
+   */
+  stockRestaurado?: boolean | null;
   /**
    * manual, izipay, etc.
    */
@@ -461,6 +523,30 @@ export interface Cupone {
   descripcion?: string | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * Comprobantes subidos por clientes. Verificar el pago antes de marcar la orden como pagada.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comprobantes".
+ */
+export interface Comprobante {
+  id: number;
+  orden: number | Ordene;
+  metodoPago?: string | null;
+  notasCliente?: string | null;
+  revisado?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -603,6 +689,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'banners';
         value: number | Banner;
+      } | null)
+    | ({
+        relationTo: 'comprobantes';
+        value: number | Comprobante;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -822,37 +912,82 @@ export interface ClientesSelect<T extends boolean = true> {
 export interface OrdenesSelect<T extends boolean = true> {
   numeroPedido?: T;
   codigoCorrelacion?: T;
+  idempotencyKey?: T;
   cliente?: T;
   nombreCliente?: T;
+  datosCliente?:
+    | T
+    | {
+        nombres?: T;
+        apellidos?: T;
+        tipoDocumento?: T;
+        numeroDocumento?: T;
+        email?: T;
+      };
   telefono?: T;
   metodoEntrega?: T;
+  puntoRecojo?:
+    | T
+    | {
+        nombre?: T;
+        direccion?: T;
+        horario?: T;
+      };
   items?:
     | T
     | {
         producto?: T;
         nombreProducto?: T;
+        sku?: T;
+        skuVariante?: T;
+        color?: T;
         talla?: T;
         cantidad?: T;
         precioUnitario?: T;
+        precioAnterior?: T;
         subtotal?: T;
+        imagenUrl?: T;
         id?: T;
       };
   subtotal?: T;
   descuento?: T;
   costoEnvio?: T;
   total?: T;
+  moneda?: T;
   cupon?: T;
   direccionEnvio?:
     | T
     | {
         calle?: T;
-        distrito?: T;
+        departamento?: T;
         ciudad?: T;
+        distrito?: T;
         referencias?: T;
       };
   metodoPago?: T;
   estadoComercial?: T;
   estadoPago?: T;
+  historialEstados?:
+    | T
+    | {
+        estadoAnterior?: T;
+        estadoNuevo?: T;
+        fecha?: T;
+        usuario?: T;
+        comentario?: T;
+        id?: T;
+      };
+  comprobantesPago?: T;
+  aceptaciones?:
+    | T
+    | {
+        terminos?: T;
+        privacidad?: T;
+        fecha?: T;
+        versionTerminos?: T;
+      };
+  stockDescontado?: T;
+  stockRestaurado?: T;
   paymentProvider?: T;
   paymentMethod?: T;
   transactionId?: T;
@@ -934,6 +1069,27 @@ export interface BannersSelect<T extends boolean = true> {
   activo?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "comprobantes_select".
+ */
+export interface ComprobantesSelect<T extends boolean = true> {
+  orden?: T;
+  metodoPago?: T;
+  notasCliente?: T;
+  revisado?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1048,6 +1204,9 @@ export interface ConfigTienda {
       | null;
     textoCopyright?: string | null;
   };
+  /**
+   * Un metodo solo se muestra a los clientes cuando esta activo Y tiene todos sus datos obligatorios completos (Yape/Plin: numero y titular; transferencia: banco, titular, cuenta y CCI). No inventar datos: dejar incompleto = oculto.
+   */
   pagos?: {
     metodos?:
       | {
@@ -1055,10 +1214,124 @@ export interface ConfigTienda {
           codigo?: ('yape' | 'plin' | 'interbank' | 'transferencia' | 'tarjeta' | 'efectivo' | 'whatsapp') | null;
           activo?: boolean | null;
           mostrarEnFooter?: boolean | null;
+          /**
+           * Numero de celular asociado. Obligatorio para Yape/Plin.
+           */
+          numero?: string | null;
+          /**
+           * Nombre del titular de la cuenta o billetera.
+           */
+          titular?: string | null;
+          qr?: (number | null) | Media;
+          /**
+           * Obligatorio para transferencias.
+           */
+          banco?: string | null;
+          monedaCuenta?: ('PEN' | 'USD') | null;
+          /**
+           * Obligatorio para transferencias.
+           */
+          numeroCuenta?: string | null;
+          /**
+           * Codigo de cuenta interbancario. Obligatorio para transferencias.
+           */
+          cci?: string | null;
           instruccion?: string | null;
           id?: string | null;
         }[]
       | null;
+  };
+  /**
+   * Las tarifas de envio por zona/distrito se administran en la coleccion "Zonas de envio". Aqui se configuran los puntos de recojo en tienda.
+   */
+  entrega?: {
+    puntosRecojo?:
+      | {
+          nombre: string;
+          direccion: string;
+          horario?: string | null;
+          activo?: boolean | null;
+          instrucciones?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Textos legales de la tienda. Mientras un texto este vacio, la pagina correspondiente muestra un aviso de contenido pendiente (no se publican afirmaciones legales inventadas).
+   */
+  legal?: {
+    /**
+     * PENDIENTE: completar con el dato real del negocio.
+     */
+    razonSocial?: string | null;
+    /**
+     * PENDIENTE: completar con el dato real del negocio.
+     */
+    ruc?: string | null;
+    /**
+     * Identificador de la version aceptada por los clientes en cada pedido. Ej: 2026-07-v1
+     */
+    versionTerminos?: string | null;
+    terminosCondiciones?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    politicaPrivacidad?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    politicaCambios?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    politicaEntregas?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
   };
   seo?: {
     metaTitulo?: string | null;
@@ -1161,9 +1434,41 @@ export interface ConfigTiendaSelect<T extends boolean = true> {
               codigo?: T;
               activo?: T;
               mostrarEnFooter?: T;
+              numero?: T;
+              titular?: T;
+              qr?: T;
+              banco?: T;
+              monedaCuenta?: T;
+              numeroCuenta?: T;
+              cci?: T;
               instruccion?: T;
               id?: T;
             };
+      };
+  entrega?:
+    | T
+    | {
+        puntosRecojo?:
+          | T
+          | {
+              nombre?: T;
+              direccion?: T;
+              horario?: T;
+              activo?: T;
+              instrucciones?: T;
+              id?: T;
+            };
+      };
+  legal?:
+    | T
+    | {
+        razonSocial?: T;
+        ruc?: T;
+        versionTerminos?: T;
+        terminosCondiciones?: T;
+        politicaPrivacidad?: T;
+        politicaCambios?: T;
+        politicaEntregas?: T;
       };
   seo?:
     | T

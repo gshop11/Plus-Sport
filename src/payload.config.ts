@@ -19,6 +19,7 @@ import { Ordenes } from './collections/Ordenes'
 import { Cupones } from './collections/Cupones'
 import { Envios } from './collections/Envios'
 import { Suscriptores } from './collections/Suscriptores'
+import { Comprobantes } from './collections/Comprobantes'
 
 // Collections (Frontend)
 import { Banners } from './collections/Banners'
@@ -64,6 +65,7 @@ export default buildConfig({
     Envios,
     Suscriptores,
     Banners,
+    Comprobantes,
   ],
 
   globals: [ConfigTienda],
@@ -93,6 +95,7 @@ export default buildConfig({
             enabled: true,
             collections: {
               media: true,
+              comprobantes: true,
             },
             token: process.env.BLOB_READ_WRITE_TOKEN,
           }),
