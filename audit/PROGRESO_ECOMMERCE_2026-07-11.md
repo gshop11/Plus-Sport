@@ -150,4 +150,14 @@ Documento de progreso por fases. Permite reanudar el trabajo si se pierde el con
 
 ## FASE 15 — Preview
 
-- **Estado:** EN PROGRESO — push de la rama y Preview en Vercel.
+- **Estado:** COMPLETADA y VERIFICADA.
+- **Rama pusheada:** `feat/ecommerce-entrega-2026-07-11` (commit final tras docs).
+- **Variables branch-scoped (Preview):** `DATABASE_URI` = base aislada `plussport_preview_ecom_20260711`; `IZIPAY_CARD_ENABLED` = false.
+- **Deployment valido:** `dpl_6qS7b7H7Ka75tiVLpre4F1Q2guMB` (redeploy que tomo las variables branch-scoped), READY. URL: `plus-sport-mkar-759wch65e-gshop11s-projects.vercel.app` (protegida por SSO de equipo; se accedio con share link temporal de Vercel).
+- **Incidencia y correccion:** el primer deployment del push (`dpl_FnLt1wrdhqJnBZ4Tu99rVxPgfzKb`) se creo antes de que la variable branch-scoped existiera y tomo la base de integracion `neondb` (esquema viejo => catalogo/metodos vacios por catches defensivos; NO es Produccion; verificado por runtime logs sin errores de conexion). Se resolvio con un redeploy.
+- **Verificacion en Preview real (base aislada):** home 200; `/productos` muestra los 4 productos TEST-ECOMMERCE; ficha `test-runner-azul` "Disponible para compra online" con tallas 40/41 (no 42 sin stock, no 43 deshabilitada), stock+SKU y "Añadir al carrito"; `/api/metodos-pago` solo yape+transferencia (Plin incompleto y tarjeta ocultos); pedido idempotente 201 + segundo POST mismo pedido; tarjeta 400; Izipay session 403; webhook 503; `/terminos` "contenido en preparacion"; carrito vacio correcto. Runtime logs: 0 errores 500 (solo el 503 de webhook y 400/403 esperados de las pruebas).
+- **Build logs:** sin errores. **Base de Produccion:** NO tocada.
+
+## DICTAMEN
+
+GO CON BLOQUEOS COMERCIALES. P0 tecnicamente cerrado y verificado en Preview aislado. Faltan datos comerciales reales (bancarios, tarifas, inventario, legal, Izipay produccion) para operar; ninguno es un defecto tecnico. Detener antes de Produccion; esperar `GO PROD`.
