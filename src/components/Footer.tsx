@@ -10,10 +10,10 @@ type FooterMethod = {
 }
 
 const fallbackFooter: StorefrontConfig['footer'] = {
-  descripcion: 'Tu tienda deportiva de confianza en Peru. Las mejores marcas al mejor precio.',
-  telefono: '+51 979 705 255',
+  descripcion: '20 anos caminando contigo.',
+  telefono: '+51 967 438 872',
   email: '',
-  direccion: 'Trujillo, Peru',
+  direccion: 'Av. Espana 2023, C.C. Gold Center, tienda 3, Trujillo',
   horario: 'Lunes a Sabado 9am-8pm',
   redesSociales: { facebook: '', instagram: '', tiktok: '', youtube: '' },
   linksRapidos: [
@@ -21,6 +21,9 @@ const fallbackFooter: StorefrontConfig['footer'] = {
     { etiqueta: 'Todos los productos', url: '/productos' },
     { etiqueta: 'Categorias', url: '/categorias' },
     { etiqueta: 'Ofertas', url: '/ofertas' },
+    { etiqueta: 'Terminos y condiciones', url: '/terminos' },
+    { etiqueta: 'Politica de privacidad', url: '/privacidad' },
+    { etiqueta: 'Cambios y devoluciones', url: '/cambios-devoluciones' },
   ],
   textoCopyright: `© ${new Date().getFullYear()} PlusSport. Todos los derechos reservados.`,
 }

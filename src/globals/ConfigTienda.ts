@@ -251,13 +251,14 @@ export const ConfigTienda: GlobalConfig = {
         {
           name: 'descripcion',
           type: 'textarea',
-          label: 'Descripcion de la tienda',
-          defaultValue: 'Tu tienda deportiva de confianza en Peru.',
+          label: 'Descripcion / frase comercial',
+          defaultValue: '20 anos caminando contigo.',
         },
         {
           name: 'telefono',
           type: 'text',
           label: 'Telefono de contacto',
+          defaultValue: '+51 967 438 872',
         },
         {
           name: 'email',
@@ -268,7 +269,7 @@ export const ConfigTienda: GlobalConfig = {
           name: 'direccion',
           type: 'text',
           label: 'Direccion',
-          defaultValue: 'Lima, Peru',
+          defaultValue: 'Av. Espana 2023, C.C. Gold Center, tienda 3, Trujillo',
         },
         {
           name: 'horario',

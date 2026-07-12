@@ -22,19 +22,19 @@ const fallbackConfig: StorefrontConfig = {
     anuncioBarra: 'CATALOGO DEPORTIVO CON ATENCION POR WHATSAPP',
     mostrarAnuncio: true,
     menuPrincipal: [
-      { etiqueta: 'Catalogo', url: '/productos' },
-      { etiqueta: 'Mujer', url: '/productos?segmento=mujer' },
       { etiqueta: 'Hombre', url: '/productos?segmento=hombre' },
+      { etiqueta: 'Mujer', url: '/productos?segmento=mujer' },
       { etiqueta: 'Ninos', url: '/productos?segmento=ninos' },
+      { etiqueta: 'Colecciones', url: '/categorias' },
       { etiqueta: 'Marcas', url: '/marcas' },
       { etiqueta: 'Ofertas', url: '/ofertas', esDestacado: true },
     ],
   },
   footer: {
-    descripcion: 'Tu tienda deportiva de confianza en Peru.',
-    telefono: '',
+    descripcion: '20 anos caminando contigo.',
+    telefono: '+51 967 438 872',
     email: '',
-    direccion: 'Lima, Peru',
+    direccion: 'Av. Espana 2023, C.C. Gold Center, tienda 3, Trujillo',
     horario: 'Lunes a Sabado 9am-8pm',
     redesSociales: { facebook: '', instagram: '', tiktok: '', youtube: '' },
     linksRapidos: [
@@ -42,6 +42,9 @@ const fallbackConfig: StorefrontConfig = {
       { etiqueta: 'Todos los productos', url: '/productos' },
       { etiqueta: 'Categorias', url: '/categorias' },
       { etiqueta: 'Ofertas', url: '/ofertas' },
+      { etiqueta: 'Terminos y condiciones', url: '/terminos' },
+      { etiqueta: 'Politica de privacidad', url: '/privacidad' },
+      { etiqueta: 'Cambios y devoluciones', url: '/cambios-devoluciones' },
     ],
     textoCopyright: '© 2026 PlusSport. Todos los derechos reservados.',
   },
@@ -248,7 +251,7 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
               <form onSubmit={handleSearch} className="flex w-full max-w-2xl items-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
                 <input
                   type="text"
-                  placeholder="Busca zapatillas, marcas o colecciones..."
+                  placeholder="¿Que estas buscando?"
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
                   className="flex-1 bg-transparent px-6 py-3 text-sm text-gray-800 outline-none"
@@ -306,7 +309,7 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
             <form onSubmit={handleSearch} className="flex min-w-0 items-center overflow-hidden rounded-xl border border-gray-300 bg-white shadow-sm">
               <input
                 type="text"
-                placeholder="Buscar productos..."
+                placeholder="¿Que estas buscando?"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-gray-800 outline-none"

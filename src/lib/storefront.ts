@@ -32,10 +32,10 @@ type HomeCategoryDoc = Record<string, unknown> & {
 }
 
 const defaultMenu: HeaderMenuItem[] = [
-  { etiqueta: 'Catalogo', url: '/productos' },
-  { etiqueta: 'Mujer', url: '/productos?segmento=mujer' },
   { etiqueta: 'Hombre', url: '/productos?segmento=hombre' },
+  { etiqueta: 'Mujer', url: '/productos?segmento=mujer' },
   { etiqueta: 'Ninos', url: '/productos?segmento=ninos' },
+  { etiqueta: 'Colecciones', url: '/categorias' },
   { etiqueta: 'Marcas', url: '/marcas' },
   { etiqueta: 'Ofertas', url: '/ofertas', esDestacado: true },
 ]
@@ -45,6 +45,9 @@ const defaultLinksFooter = [
   { etiqueta: 'Todos los productos', url: '/productos' },
   { etiqueta: 'Categorias', url: '/categorias' },
   { etiqueta: 'Ofertas', url: '/ofertas' },
+  { etiqueta: 'Terminos y condiciones', url: '/terminos' },
+  { etiqueta: 'Politica de privacidad', url: '/privacidad' },
+  { etiqueta: 'Cambios y devoluciones', url: '/cambios-devoluciones' },
 ]
 
 const defaultHomeSections: HomeSectionConfig[] = [
