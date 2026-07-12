@@ -4,6 +4,7 @@
  * Uso: npx tsx src/seed-catalogo.ts
  */
 import { getPayload } from 'payload'
+import type { RequiredDataFromCollectionSlug } from 'payload'
 import config from './payload.config'
 import fs from 'fs'
 import path from 'path'
@@ -125,13 +126,13 @@ async function seedCatalogo() {
     destacado?: boolean
   }) {
     const imgId = await uploadImage(opts.imagePath, opts.nombre)
-    const data: Record<string, unknown> = {
+    const data: RequiredDataFromCollectionSlug<'productos'> = {
       nombre: opts.nombre,
       slug: opts.slug,
       sku: opts.sku,
       precio: opts.precio,
-      categoria: opts.categoriaId,
-      marca: opts.marcaId,
+      categoria: Number(opts.categoriaId),
+      marca: Number(opts.marcaId),
       segmento: opts.segmento,
       tallas: opts.tallas,
       etiqueta: opts.etiqueta ?? '',

@@ -16,6 +16,10 @@ export type ProductoCard = {
 export type ProductoTalla = {
   talla: string
   stock: number
+  ventaHabilitada?: boolean
+  skuVariante?: string
+  precio?: number
+  imagenUrl?: string
 }
 
 export type ProductoDetalle = {
@@ -42,6 +46,9 @@ export type ProductoDetalle = {
   descripcion: string
   etiqueta?: 'nuevo' | 'hot' | 'top' | 'oferta' | ''
   segmento?: 'hombre' | 'mujer' | 'ninos' | 'unisex'
+  color?: string
+  activo?: boolean
+  ventaOnline?: boolean
 }
 
 export type HomeSlide = {

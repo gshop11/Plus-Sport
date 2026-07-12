@@ -237,7 +237,7 @@ const resolveMediaUrl = async (payload: Awaited<ReturnType<typeof getPayloadClie
       id: String(mediaRef),
     })
 
-    return resolveMediaURL(media)
+    return resolveMediaURL(media as unknown as Record<string, unknown>)
   } catch {
     return null
   }
@@ -491,8 +491,8 @@ export const getHomeData = unstable_cache(
       }),
     )
 
-    const brands = marcasRes.docs.map(mapBrandToHomeBrand)
-    const { mainCategories, generalCategories } = splitHomeCategories(categoriasRes.docs)
+    const brands = (marcasRes.docs as HomeBrandDoc[]).map(mapBrandToHomeBrand)
+    const { mainCategories, generalCategories } = splitHomeCategories(categoriasRes.docs as HomeCategoryDoc[])
     const categories = [...mainCategories, ...generalCategories]
 
     return {
@@ -774,6 +774,10 @@ export const getProductoDetalleBySlug = async (slug: string): Promise<{ producto
             .map((item: any) => ({
               talla: String(item?.talla || '').trim(),
               stock: Number(item?.stock || 0),
+              ventaHabilitada: Boolean(item?.ventaHabilitada),
+              skuVariante: item?.skuVariante ? String(item.skuVariante) : undefined,
+              precio: Number.isFinite(Number(item?.precio)) && Number(item?.precio) > 0 ? Number(item.precio) : undefined,
+              imagenUrl: resolveImagenUrl(item?.imagen) ?? undefined,
             }))
             .filter((item: { talla: string }) => item.talla.length > 0)
         : []
@@ -809,6 +813,9 @@ export const getProductoDetalleBySlug = async (slug: string): Promise<{ producto
         descripcion,
         etiqueta: (doc.etiqueta as ProductoDetalle['etiqueta']) ?? '',
         segmento: (doc.segmento as ProductoDetalle['segmento']) ?? 'unisex',
+        color: doc.color ? String(doc.color) : undefined,
+        activo: doc.activo !== false,
+        ventaOnline: Boolean(doc.ventaOnline),
       }
 
       const relacionados: ProductoCard[] = []

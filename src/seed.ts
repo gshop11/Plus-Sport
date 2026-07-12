@@ -278,12 +278,6 @@ async function seed() {
         direccion: 'Lima, Perú',
         horario: 'Lunes a Sábado 9am–8pm',
         textoCopyright: '© 2025 PlusSport. Todos los derechos reservados.',
-        metodosPago: [
-          { nombre: 'Yape' },
-          { nombre: 'Plin' },
-          { nombre: 'Visa' },
-          { nombre: 'Mastercard' },
-        ],
       },
       seo: {
         metaTitulo: 'PlusSport — Tienda Deportiva Online en Perú',

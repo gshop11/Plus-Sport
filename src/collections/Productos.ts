@@ -75,6 +75,14 @@ export const Productos: CollectionConfig = {
       index: true,
     },
     {
+      name: 'color',
+      type: 'text',
+      label: 'Color',
+      admin: {
+        description: 'Color del producto (las variantes de talla heredan este color). Ej: Negro / Blanco',
+      },
+    },
+    {
       name: 'segmento',
       type: 'select',
       label: 'Segmento',
@@ -113,9 +121,24 @@ export const Productos: CollectionConfig = {
     },
 
     {
+      name: 'ventaOnline',
+      type: 'checkbox',
+      label: 'Habilitar compra online',
+      defaultValue: false,
+      index: true,
+      admin: {
+        description:
+          'Interruptor maestro de compra. Si esta apagado, la ficha solo muestra consulta por WhatsApp. Encender unicamente cuando el stock por talla este verificado.',
+      },
+    },
+    {
       name: 'tallas',
       type: 'array',
-      label: 'Tallas disponibles',
+      label: 'Tallas / variantes',
+      admin: {
+        description:
+          'Los rangos historicos (ej: "36 al 40") NO son vendibles online: sirven solo como referencia de consulta. Para vender online, registra tallas individuales con stock real y marca "Vendible online" en cada una.',
+      },
       fields: [
         {
           type: 'row',
@@ -125,7 +148,7 @@ export const Productos: CollectionConfig = {
               type: 'text',
               label: 'Talla',
               required: true,
-              admin: { width: '50%', description: 'Ej: 38, 39, S, M, L' },
+              admin: { width: '25%', description: 'Talla individual. Ej: 38, 39, S, M, L' },
             },
             {
               name: 'stock',
@@ -133,6 +156,42 @@ export const Productos: CollectionConfig = {
               label: 'Stock',
               required: true,
               defaultValue: 0,
+              min: 0,
+              admin: { width: '25%' },
+            },
+            {
+              name: 'ventaHabilitada',
+              type: 'checkbox',
+              label: 'Vendible online',
+              defaultValue: false,
+              admin: {
+                width: '25%',
+                description: 'Solo tallas individuales con stock verificado.',
+              },
+            },
+            {
+              name: 'skuVariante',
+              type: 'text',
+              label: 'SKU variante (opcional)',
+              admin: { width: '25%' },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'precio',
+              type: 'number',
+              label: 'Precio especifico (S/, opcional)',
+              min: 0,
+              admin: { width: '50%', description: 'Dejar vacio para usar el precio del producto.' },
+            },
+            {
+              name: 'imagen',
+              type: 'upload',
+              relationTo: 'media',
+              label: 'Imagen especifica (opcional)',
               admin: { width: '50%' },
             },
           ],
@@ -144,6 +203,7 @@ export const Productos: CollectionConfig = {
       type: 'number',
       label: 'Stock total (sin tallas)',
       defaultValue: 0,
+      min: 0,
       admin: { description: 'Solo si el producto no tiene tallas' },
     },
 
