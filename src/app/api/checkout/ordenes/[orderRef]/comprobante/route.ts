@@ -134,6 +134,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
       { status: 201 },
     )
   } catch (error) {
+    // Payload valida ademas la estructura interna del archivo (p. ej. un PDF
+    // corrupto): eso es culpa del archivo del cliente, no del servidor.
+    const message = (error as Error)?.name === 'ValidationError' || /invalid|corrupt/i.test((error as Error)?.message ?? '')
+      ? 'El archivo no es un comprobante valido. Sube una imagen (JPG/PNG/WEBP) o un PDF correcto.'
+      : null
+
+    if (message) {
+      return NextResponse.json({ error: message }, { status: 415 })
+    }
+
     console.error('Error subiendo comprobante:', error)
     return NextResponse.json({ error: 'No se pudo registrar el comprobante.' }, { status: 500 })
   }
