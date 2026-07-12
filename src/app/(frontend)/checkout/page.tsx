@@ -195,6 +195,8 @@ export default function CheckoutPage() {
   const [aceptaTerminos, setAceptaTerminos] = useState(false)
   const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false)
   const [erroresCampos, setErroresCampos] = useState<string[]>([])
+  // null = aun cargando; false = compra desactivada; true = habilitada.
+  const [ecommerceEnabled, setEcommerceEnabled] = useState<boolean | null>(null)
 
   const validarEnServidor = useCallback(
     async (opts?: { distrito?: string; entrega?: 'delivery' | 'retiro_tienda' }) => {
@@ -249,8 +251,11 @@ export default function CheckoutPage() {
 
     fetch('/api/storefront-config', { cache: 'no-store' })
       .then((r) => r.json())
-      .then((cfg) => setWhatsappNumero(String(cfg?.whatsapp?.numero || '')))
-      .catch(() => {})
+      .then((cfg) => {
+        setWhatsappNumero(String(cfg?.whatsapp?.numero || ''))
+        setEcommerceEnabled(cfg?.ecommerceEnabled === true)
+      })
+      .catch(() => setEcommerceEnabled(false))
   }, [])
 
   const distritosDisponibles = getDistrictsByCity(datosEnvio.ciudad)
@@ -511,6 +516,41 @@ export default function CheckoutPage() {
 
   const metodoSeleccionado = metodos?.find((m) => m.codigo === metodoPago) ?? null
   const totalMostrado = resumen?.total !== null && resumen?.total !== undefined ? resumen.total : null
+
+  // Compra desactivada globalmente: checkout informativo, sin formularios ni
+  // creacion de pedidos. El bloqueo real vive en servidor (POST /ordenes 403).
+  if (ecommerceEnabled === false) {
+    return (
+      <>
+        <HeaderClient />
+        <main className="min-h-screen bg-[var(--surface-soft)] py-16">
+          <div className="mx-auto max-w-xl px-4 text-center">
+            <div className="store-panel p-8">
+              <h1 className="mb-3 text-2xl font-black text-gray-900">Compra online proximamente</h1>
+              <p className="text-sm text-gray-600">
+                La compra online se habilitara proximamente. Consulta disponibilidad por WhatsApp y coordina tu pedido con
+                nosotros.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <a
+                  href={`https://wa.me/${normalizeWhatsappNumber(whatsappNumero)}?text=${encodeURIComponent('Hola, quiero consultar disponibilidad y coordinar una compra.')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="store-button-primary"
+                >
+                  Consultar por WhatsApp
+                </a>
+                <a href="/productos" className="store-button-secondary">
+                  Volver al catalogo
+                </a>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
 
   return (
     <>

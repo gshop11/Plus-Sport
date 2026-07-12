@@ -67,6 +67,7 @@ const fallbackConfig: StorefrontConfig = {
     { key: 'destacados', titulo: 'LO MAS VENDIDO', subtitulo: '- Mas comprados', mostrar: true, orden: 3 },
     { key: 'suscripcion', titulo: 'Ofertas exclusivas para ti', subtitulo: 'Dejanos tu WhatsApp y te avisamos primero.', mostrar: true, orden: 4 },
   ],
+  ecommerceEnabled: false,
 }
 
 const itemKey = (url: string, index: number) => `${url}-${index}`
@@ -270,26 +271,30 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
                 <WhatsAppIcon />
                 <span>WhatsApp</span>
               </a>
-              <Link
-                href="/carrito"
-                aria-label="Ver carrito de compras"
-                className="relative inline-flex items-center gap-2 rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-primary hover:text-primary"
-              >
-                <CartIcon />
-                <span>Carrito</span>
-                <CartCountBadge />
-              </Link>
+              {config.ecommerceEnabled ? (
+                <Link
+                  href="/carrito"
+                  aria-label="Ver carrito de compras"
+                  className="relative inline-flex items-center gap-2 rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-primary hover:text-primary"
+                >
+                  <CartIcon />
+                  <span>Carrito</span>
+                  <CartCountBadge />
+                </Link>
+              ) : null}
             </div>
 
             <div className="ml-auto flex items-center gap-4 md:hidden">
-              <Link
-                href="/carrito"
-                aria-label="Ver carrito de compras"
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-gray-900 transition-colors hover:bg-gray-100 hover:text-primary"
-              >
-                <CartIcon />
-                <CartCountBadge />
-              </Link>
+              {config.ecommerceEnabled ? (
+                <Link
+                  href="/carrito"
+                  aria-label="Ver carrito de compras"
+                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-gray-900 transition-colors hover:bg-gray-100 hover:text-primary"
+                >
+                  <CartIcon />
+                  <CartCountBadge />
+                </Link>
+              ) : null}
               <a
                 href={`https://wa.me/${normalizeWhatsappNumber(config.whatsapp.numero)}`}
                 target="_blank"

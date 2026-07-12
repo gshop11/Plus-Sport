@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
+import { ECOMMERCE_DISABLED_MESSAGE, isEcommerceEnabled } from '@/lib/payment-methods'
 
 // Carga de comprobante de pago manual para una orden.
 // - La referencia (codigoCorrelacion) es no adivinable y actua como capability.
@@ -36,6 +37,13 @@ async function findOrderByCorrelacion(payload: Payload, orderRef: string) {
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ orderRef: string }> }) {
+  if (!isEcommerceEnabled()) {
+    return NextResponse.json(
+      { error: ECOMMERCE_DISABLED_MESSAGE, code: 'ECOMMERCE_DISABLED' },
+      { status: 403 },
+    )
+  }
+
   const { orderRef: rawRef = '' } = await params
   const orderRef = rawRef.trim()
 

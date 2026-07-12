@@ -7,7 +7,19 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin', '/api/', '/checkout', '/carrito', '/confirmacion'],
+      // Se excluyen tambien las paginas legales mientras su contenido este en
+      // preparacion (cada pagina ademas declara robots noindex en su metadata).
+      disallow: [
+        '/admin',
+        '/api/',
+        '/checkout',
+        '/carrito',
+        '/confirmacion',
+        '/terminos',
+        '/privacidad',
+        '/cambios-devoluciones',
+        '/entregas',
+      ],
     },
     sitemap: `${siteUrl}/sitemap.xml`,
   }

@@ -3,7 +3,7 @@ import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 import { construirResumen, getPuntosRecojo, roundMoney, type CheckoutItemInput } from '@/lib/checkout-server'
 import { decrementStock, StockInsuficienteError, type StockLineItem } from '@/lib/inventory'
-import { getMetodosPagoActivos, isMetodoPagoValido } from '@/lib/payment-methods'
+import { ECOMMERCE_DISABLED_MESSAGE, getMetodosPagoActivos, isEcommerceEnabled, isMetodoPagoValido } from '@/lib/payment-methods'
 
 // Creacion de pedidos:
 // - Validacion completa en servidor (datos personales, direccion, metodo).
@@ -212,6 +212,15 @@ async function findOrCreateCliente(payload: Payload, dp: CheckoutRequest['datosP
 }
 
 export async function POST(request: Request) {
+  // Interruptor maestro: sin compra online no se crean pedidos (defensa de
+  // servidor; el bloqueo no depende de ocultar botones en el cliente).
+  if (!isEcommerceEnabled()) {
+    return NextResponse.json(
+      { error: ECOMMERCE_DISABLED_MESSAGE, code: 'ECOMMERCE_DISABLED' },
+      { status: 403 },
+    )
+  }
+
   let rawBody: unknown
   try {
     rawBody = await request.json()

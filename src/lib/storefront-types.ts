@@ -138,6 +138,7 @@ export type StorefrontConfig = {
     codigoISO: string
   }
   homeSections: HomeSectionConfig[]
+  ecommerceEnabled: boolean
 }
 
 export type HomeData = {

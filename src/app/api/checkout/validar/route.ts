@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { construirResumen, getPuntosRecojo, type CheckoutItemInput } from '@/lib/checkout-server'
+import { isEcommerceEnabled } from '@/lib/payment-methods'
 
 // Valida y reconstruye el carrito en servidor. El navegador solo envia
 // referencias (productoId, talla, cantidad); precios, stock, cupon, envio y
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
     const puntosRecojo = await getPuntosRecojo(payload)
 
     return NextResponse.json(
-      { ok: true, resumen, puntosRecojo },
+      { ok: true, resumen, puntosRecojo, ecommerceEnabled: isEcommerceEnabled() },
       { headers: { 'Cache-Control': 'no-store' } },
     )
   } catch (error) {

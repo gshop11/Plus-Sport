@@ -20,9 +20,10 @@ const BENEFICIOS = [
 type ProductDetailViewProps = {
   producto: ProductoDetalle
   whatsapp: StorefrontConfig['whatsapp']
+  ecommerceEnabled?: boolean
 }
 
-export default function ProductDetailView({ producto, whatsapp }: ProductDetailViewProps) {
+export default function ProductDetailView({ producto, whatsapp, ecommerceEnabled = false }: ProductDetailViewProps) {
   const currencySymbol = useCurrencySymbol()
   const images = (() => {
     const gallery = producto.galeriaUrls.length > 0 ? producto.galeriaUrls : []
@@ -49,7 +50,9 @@ export default function ProductDetailView({ producto, whatsapp }: ProductDetailV
     }
   }, [])
 
-  const comprable = useMemo(() => isProductoComprable(producto), [producto])
+  // La compra solo se ofrece si el interruptor global esta activo Y el
+  // producto es comprable (activo, ventaOnline, stock real por talla).
+  const comprable = useMemo(() => ecommerceEnabled && isProductoComprable(producto), [ecommerceEnabled, producto])
   const variantesComprables = useMemo(() => getVariantesComprables(producto), [producto])
 
   useEffect(() => {

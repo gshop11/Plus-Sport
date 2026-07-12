@@ -30,6 +30,19 @@ export function isIzipayCardEnabled() {
   return process.env.IZIPAY_CARD_ENABLED?.trim().toLowerCase() === 'true'
 }
 
+// Interruptor MAESTRO de la compra online. Production-safe: solo se habilita
+// con el valor exacto 'true'. Ausente o cualquier otro valor => desactivada.
+// Con la compra desactivada, el catalogo y la consulta por WhatsApp siguen
+// funcionando; no se pueden crear pedidos, descontar stock ni subir
+// comprobantes, y no se exponen metodos de pago. La validacion vive en
+// servidor: ocultar botones no basta.
+export function isEcommerceEnabled() {
+  return process.env.ECOMMERCE_ENABLED?.trim().toLowerCase() === 'true'
+}
+
+export const ECOMMERCE_DISABLED_MESSAGE =
+  'La compra online se habilitara proximamente. Consulta disponibilidad por WhatsApp.'
+
 type MetodoRaw = Record<string, unknown>
 
 function str(value: unknown): string {
@@ -61,6 +74,9 @@ function esMetodoCompleto(codigo: MetodoPagoCodigo, m: MetodoRaw): boolean {
 }
 
 export async function getMetodosPagoActivos(payload: Payload): Promise<MetodoPagoPublico[]> {
+  // Con la compra online desactivada no se expone ningun metodo de pago.
+  if (!isEcommerceEnabled()) return []
+
   let metodosRaw: MetodoRaw[] = []
   try {
     const ct = (await payload.findGlobal({ slug: 'config-tienda', depth: 1, overrideAccess: true })) as unknown as {

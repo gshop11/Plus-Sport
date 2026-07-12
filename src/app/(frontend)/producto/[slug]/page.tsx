@@ -47,7 +47,7 @@ export default async function ProductoDetallePage({ params }: ProductoDetallePag
 
         <section className="py-8 sm:py-10">
           <div className="section-shell">
-            <ProductDetailView producto={producto} whatsapp={config.whatsapp} />
+            <ProductDetailView producto={producto} whatsapp={config.whatsapp} ecommerceEnabled={config.ecommerceEnabled} />
           </div>
         </section>
 

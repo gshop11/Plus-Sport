@@ -50,6 +50,9 @@ export default function CarritoPage() {
   const [validando, setValidando] = useState(false)
   const [codigoCupon, setCodigoCupon] = useState('')
   const [cuponMensaje, setCuponMensaje] = useState('')
+  // Por defecto asumimos compra desactivada hasta que el servidor confirme lo
+  // contrario (production-safe: nunca ofrecer checkout sin confirmacion).
+  const [ecommerceEnabled, setEcommerceEnabled] = useState(false)
   const validacionSeq = useRef(0)
 
   const validarEnServidor = useCallback(async (cartItems: CartItem[], cupon: string | null) => {
@@ -77,6 +80,7 @@ export default function CarritoPage() {
       }
       const r = data.resumen as Resumen
       setResumen(r)
+      setEcommerceEnabled(data.ecommerceEnabled === true)
       if (cupon && r.cuponError) {
         setCuponMensaje(r.cuponError)
         localStorage.removeItem(CUPON_KEY)
@@ -320,7 +324,11 @@ export default function CarritoPage() {
                     </div>
                   </div>
 
-                  {hayItemsComprables ? (
+                  {!ecommerceEnabled ? (
+                    <div className="rounded-xl border border-accent/25 bg-accent/10 px-4 py-3 text-center text-sm text-accent-dark">
+                      La compra online se habilitara proximamente. Consulta disponibilidad por WhatsApp.
+                    </div>
+                  ) : hayItemsComprables ? (
                     <Link href="/checkout" className="store-button-primary w-full text-center">
                       Ir a checkout
                     </Link>

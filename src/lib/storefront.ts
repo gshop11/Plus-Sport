@@ -3,6 +3,7 @@ import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import { resolveMediaURL } from './media'
+import { isEcommerceEnabled } from './payment-methods'
 import type { HeaderMenuItem, HomeBrand, HomeCategory, HomeData, HomeSectionConfig, ProductoCard, ProductoDetalle, StoreIdentity, StorefrontConfig } from './storefront-types'
 export type { HeaderMenuItem, HomeBrand, HomeCategory, HomeData, HomeSectionConfig, ProductoCard, ProductoDetalle, StoreIdentity, StorefrontConfig } from './storefront-types'
 
@@ -360,6 +361,7 @@ const normalizeStorefrontConfig = (configTienda: any, categorias: any[] = []): S
       codigoISO: configTienda?.moneda?.codigoISO ?? 'PEN',
     },
     homeSections: homeSections.length > 0 ? homeSections : defaultHomeSections,
+    ecommerceEnabled: isEcommerceEnabled(),
   }
 }
 
