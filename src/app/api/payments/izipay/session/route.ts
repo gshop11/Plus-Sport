@@ -9,6 +9,7 @@ import {
   safeObject,
   toIzipayMinorUnits,
 } from '@/lib/izipay'
+import { isIzipayCardEnabled } from '@/lib/payment-methods'
 
 type SessionRequest = {
   orderRef?: string
@@ -35,45 +36,25 @@ function sanitizeOrder(order: any) {
   }
 }
 
+// Solo codigoCorrelacion (no adivinable). Sin fallback por numeroPedido/ID
+// para impedir iniciar sesiones de pago sobre pedidos de terceros.
 async function findOrder(payload: any, input: SessionRequest) {
   const orderRef = asCleanString(input.orderRef)
-  const orderId = asCleanString(input.orderId)
+  if (!orderRef || !orderRef.startsWith('ORD-')) return null
 
-  if (orderRef) {
-    try {
-      const found = await payload.find({
-        collection: 'ordenes',
-        where: {
-          or: [
-            { codigoCorrelacion: { equals: orderRef } },
-            { numeroPedido: { equals: orderRef } },
-          ],
-        },
-        limit: 1,
-        depth: 0,
-        overrideAccess: true,
-      })
+  try {
+    const found = await payload.find({
+      collection: 'ordenes',
+      where: { codigoCorrelacion: { equals: orderRef } },
+      limit: 1,
+      depth: 0,
+      overrideAccess: true,
+    })
 
-      if (found.docs[0]) return found.docs[0]
-    } catch {
-      // If local schema is outdated, continue with ID fallback.
-    }
+    return found.docs[0] ?? null
+  } catch {
+    return null
   }
-
-  if (orderId) {
-    try {
-      return await payload.findByID({
-        collection: 'ordenes',
-        id: orderId,
-        depth: 0,
-        overrideAccess: true,
-      })
-    } catch {
-      return null
-    }
-  }
-
-  return null
 }
 
 function buildFallbackEmail(order: any) {
@@ -155,6 +136,16 @@ async function parseJsonSafe(response: Response) {
 }
 
 export async function POST(request: Request) {
+  // Feature flag: mientras el incidente INT_015 no se resuelva con soporte
+  // Izipay, el pago con tarjeta permanece deshabilitado y este endpoint
+  // devuelve una respuesta controlada sin tocar al proveedor.
+  if (!isIzipayCardEnabled()) {
+    return NextResponse.json(
+      { error: 'El pago con tarjeta esta deshabilitado.', code: 'IZIPAY_CARD_DISABLED' },
+      { status: 403 },
+    )
+  }
+
   const { config: izipayConfig, missing } = getIzipayKryptonConfig()
 
   if (!izipayConfig) {

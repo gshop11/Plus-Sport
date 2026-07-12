@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { mapOrderStatus, mergePaymentPayload, pickFirstString, safeArray, safeJsonParse, safeObject } from '@/lib/izipay'
+import { isIzipayCardEnabled } from '@/lib/payment-methods'
 
 type VisualResultRequest = {
   orderRef?: string
@@ -15,45 +16,24 @@ function asCleanString(value: unknown) {
   return value.trim()
 }
 
+// Solo codigoCorrelacion (no adivinable), sin fallback enumerable.
 async function findOrder(payload: any, refs: { orderRef?: string; orderId?: string }) {
   const orderRef = asCleanString(refs.orderRef)
-  const orderId = asCleanString(refs.orderId)
+  if (!orderRef || !orderRef.startsWith('ORD-')) return null
 
-  if (orderRef) {
-    try {
-      const byRef = await payload.find({
-        collection: 'ordenes',
-        where: {
-          or: [
-            { codigoCorrelacion: { equals: orderRef } },
-            { numeroPedido: { equals: orderRef } },
-          ],
-        },
-        limit: 1,
-        depth: 0,
-        overrideAccess: true,
-      })
+  try {
+    const byRef = await payload.find({
+      collection: 'ordenes',
+      where: { codigoCorrelacion: { equals: orderRef } },
+      limit: 1,
+      depth: 0,
+      overrideAccess: true,
+    })
 
-      if (byRef.docs[0]) return byRef.docs[0]
-    } catch {
-      // Continue with ID fallback when local schema is behind.
-    }
+    return byRef.docs[0] ?? null
+  } catch {
+    return null
   }
-
-  if (orderId) {
-    try {
-      return await payload.findByID({
-        collection: 'ordenes',
-        id: orderId,
-        depth: 0,
-        overrideAccess: true,
-      })
-    } catch {
-      return null
-    }
-  }
-
-  return null
 }
 
 function toEstadoPago(orderStatus: ReturnType<typeof mapOrderStatus>) {
@@ -78,6 +58,13 @@ function isFinalServerResolved(order: any) {
 }
 
 export async function POST(request: Request) {
+  if (!isIzipayCardEnabled()) {
+    return NextResponse.json(
+      { error: 'El pago con tarjeta esta deshabilitado.', code: 'IZIPAY_CARD_DISABLED' },
+      { status: 403 },
+    )
+  }
+
   let body: VisualResultRequest
 
   try {

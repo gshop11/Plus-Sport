@@ -118,3 +118,43 @@ En `UNPAID`/`CANCELLED`: `estadoPago -> failed` o `canceled`, sin efectos de neg
 - [ ] `kr-hash` invalido no confirma pago.
 - [ ] `orderStatus=UNPAID`/`CANCELLED` no aplica efectos de negocio.
 - [ ] stock/cupon/metricas cambian solo una vez en pago confirmado.
+
+## 9. Estado 2026-07-11 — Feature flag IZIPAY_CARD_ENABLED e incidente INT_015
+
+### Incidente pendiente (NO resuelto)
+
+- Codigo: **INT_015 — "Invalid input customer.email"**.
+- Punto exacto del fallo: `POST {IZIPAY_API_BASE_URL}/V4/Charge/CreatePayment`
+  invocado desde `src/app/api/payments/izipay/session/route.ts`
+  (funcion `buildCreatePaymentPayload`). El rechazo persiste incluso con el
+  payload alineado al ejemplo oficial `izipay-pe/Server-PaymentForm-Nodejs`.
+- Hipotesis mas probable (no confirmada): configuracion de la cuenta o de las
+  credenciales de test en Back Office Vendedor, no la forma del payload.
+- Politica del proyecto: NO se intentan combinaciones especulativas de
+  campos/headers/codificaciones. La resolucion depende de soporte Izipay.
+
+### Feature flag
+
+- Variable: `IZIPAY_CARD_ENABLED` (default: false / ausente = deshabilitado).
+- Con el flag apagado:
+  - `tarjeta` NUNCA aparece como metodo de pago (aunque este activa en Payload).
+  - `POST /api/payments/izipay/session` responde 403 `IZIPAY_CARD_DISABLED`.
+  - `POST /api/payments/izipay/visual-result` responde 403.
+  - `POST /api/payments/izipay/webhook` responde 503 controlado (log de aviso).
+  - El SDK Krypton no se carga en el navegador (el checkout solo lo carga al
+    preparar una sesion, que esta bloqueada).
+
+### Proceso para activar tarjeta cuando soporte resuelva INT_015
+
+1. Confirmar con soporte Izipay la causa de INT_015 y validar en sandbox que
+   `CreatePayment` devuelve `formToken` (sin transacciones reales).
+2. Registrar la URL de IPN en Back Office Vendedor (ver seccion 6).
+3. Configurar en Vercel (por entorno): `IZIPAY_API_USERNAME`,
+   `IZIPAY_API_PASSWORD`, `IZIPAY_PUBLIC_KEY`, `IZIPAY_HMAC_SHA256_KEY` y
+   demas variables de la seccion 2.
+4. Ejecutar el checklist QA de la seccion 8 en Preview/sandbox.
+5. Activar el metodo `tarjeta` en Payload (config-tienda > pagos) y recien
+   entonces poner `IZIPAY_CARD_ENABLED=true` en el entorno correspondiente.
+6. El retorno visual del navegador NUNCA marca la orden como pagada: solo el
+   webhook autenticado (kr-hash HMAC valido) o una consulta autenticada al
+   proveedor pueden hacerlo.

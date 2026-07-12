@@ -11,6 +11,7 @@ import {
   safeObject,
   verifyKrHash,
 } from '@/lib/izipay'
+import { isIzipayCardEnabled } from '@/lib/payment-methods'
 
 type ParsedWebhookBody = Record<string, unknown>
 type WebhookOutcome = 'paid' | 'failed' | 'canceled' | 'pending'
@@ -295,6 +296,17 @@ async function applyFinalBusinessEffects(payloadClient: any, order: any) {
 }
 
 export async function POST(request: Request) {
+  // Con el flag apagado no deben existir transacciones en curso; se responde
+  // de forma controlada (503) para que el proveedor reintente si el flag se
+  // activa. No se procesa ni se toca ninguna orden.
+  if (!isIzipayCardEnabled()) {
+    console.warn('Webhook Izipay recibido con IZIPAY_CARD_ENABLED=false. No se procesa.')
+    return NextResponse.json(
+      { error: 'El pago con tarjeta esta deshabilitado.', code: 'IZIPAY_CARD_DISABLED' },
+      { status: 503 },
+    )
+  }
+
   const hmacKey = getHmacKey()
   if (!hmacKey) {
     return NextResponse.json(
