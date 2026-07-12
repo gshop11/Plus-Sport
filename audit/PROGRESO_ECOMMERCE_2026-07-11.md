@@ -175,3 +175,21 @@ Documento de progreso por fases. Permite reanudar el trabajo si se pierde el con
 ## DICTAMEN
 
 GO CON BLOQUEOS COMERCIALES / READY FOR SAFE PROD (con `ECOMMERCE_ENABLED=false`). P0 cerrado, hardening verificado con la bandera en false y en true. Produccion debe iniciar con `ECOMMERCE_ENABLED=false` e `IZIPAY_CARD_ENABLED=false`. Faltan datos comerciales reales (bancarios, tarifas, inventario, legal, Izipay produccion) para activar la compra; ninguno es defecto tecnico. Detener antes de Produccion; esperar `GO PROD`.
+
+## DESPLIEGUE A PRODUCCION (GO PROD recibido 2026-07-12) — DETENIDO: NO-GO
+
+Autorizado el commit `12cdbf8`. Checkpoint previo OK: working tree limpio, HEAD 12cdbf8, `main` intacta (9aae97b), `stabilize` local=remoto (28fe78e) y fast-forward posible, Preview final `dpl_59YesNJoyCv2Jkk4AfJ19aTbdpW1` READY, Produccion aun en `dpl_AFgujPtbTFcqCTzFzL9AdcGoXRpY` (commit 1b301a9).
+
+**BLOQUEO REAL en la etapa de RESPALDO/MIGRACION (gate duro seccion 5):** la cadena de conexion de la base de Produccion (`DATABASE_URI`) esta marcada **Encrypted/sensitive** en Vercel y NO es legible desde este entorno (igual que `PAYLOAD_SECRET`). Ademas Produccion no tiene endpoint directo configurado (`DATABASE_URI_MIGRATIONS`/`POSTGRES_URL_NON_POOLING`/`DATABASE_URL_UNPOOLED` ausentes). Sin la cadena de conexion NO es posible, desde aqui: (a) crear/verificar el respaldo recuperable (pg_dump / snapshot Neon), (b) ejecutar `payload migrate` por endpoint directo contra Produccion, (c) identificar de forma POSITIVA e inequivoca host/base. Las reglas de seguridad prohiben ademas manejar/exponer cadenas de conexion; esta operacion requiere la credencial de Produccion (o acceso al proyecto Neon), que legitimamente no esta expuesta a este agente.
+
+**Identificacion NEGATIVA (solo lectura, segura) — OK:** `https://plussport.pe/productos` muestra 24 productos reales (Convert, Skechers, Puma, Adidas); `https://plussport.pe/api/metodos-pago` responde con la logica del commit 1b301a9 (datos null, sin TEST). => Produccion NO usa la base aislada `plussport_preview_ecom_20260711` y NO contiene datos `TEST-ECOMMERCE-20260711`.
+
+**NO se toco nada de Produccion:** no se configuraron variables, no se migro, no se actualizo `stabilize/next16-payload385`, no se desplego. Produccion permanece en `dpl_AFgujPtbTFcqCTzFzL9AdcGoXRpY` / commit 1b301a9.
+
+**Para completar el despliegue (requiere un humano con acceso a la credencial de Produccion / proyecto Neon):**
+1. Crear respaldo verificado de la base de Produccion (snapshot/branch de Neon, o `pg_dump` por endpoint directo).
+2. En Vercel Production: agregar `ECOMMERCE_ENABLED=false` e `IZIPAY_CARD_ENABLED=false`; opcional `DATABASE_URI_MIGRATIONS` con el endpoint DIRECTO (unpooled) de Produccion.
+3. Ejecutar `payload migrate` (migracion `20260712_024242_ecommerce_delivery_20260711`, aditiva) por el endpoint directo contra Produccion.
+4. `git checkout stabilize/next16-payload385 && git pull --ff-only && git merge --ff-only feat/ecommerce-entrega-2026-07-11` (HEAD debe quedar 12cdbf8) y `git push`.
+5. Confirmar deployment Production READY del commit 12cdbf8 y correr los smoke tests (seccion 10).
+6. Rollback si aplica: reasignar alias a `dpl_AFgujPtbTFcqCTzFzL9AdcGoXRpY`.
