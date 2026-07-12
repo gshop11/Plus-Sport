@@ -1,10 +1,12 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import ProductPurchasePanel from '@/components/ProductPurchasePanel'
 import { useCurrencySymbol } from '@/hooks/useCurrencySymbol'
 import { buildAvailabilityInquiryUrl, getProductoDetalleStock } from '@/lib/availability-inquiry'
 import { formatMoney } from '@/lib/money'
+import { getVariantesComprables, isProductoComprable } from '@/lib/purchase'
 import type { ProductoDetalle, StorefrontConfig } from '@/lib/storefront-types'
 
 const PLACEHOLDER_IMAGE = '/placeholder-product.svg'
@@ -47,7 +49,14 @@ export default function ProductDetailView({ producto, whatsapp }: ProductDetailV
     }
   }, [])
 
+  const comprable = useMemo(() => isProductoComprable(producto), [producto])
+  const variantesComprables = useMemo(() => getVariantesComprables(producto), [producto])
+
   useEffect(() => {
+    if (comprable && variantesComprables.length > 0) {
+      setTallaSeleccionada(variantesComprables[0].talla)
+      return
+    }
     if (producto.tallas.length === 0) return
     const firstAvailable = producto.tallas.find((item) => Number(item.stock || 0) > 0)
     if (firstAvailable) {
@@ -55,11 +64,7 @@ export default function ProductDetailView({ producto, whatsapp }: ProductDetailV
       return
     }
     setTallaSeleccionada(producto.tallas[0].talla)
-  }, [producto.tallas])
-
-  const stockSeleccionado = tallaSeleccionada
-    ? Number(producto.tallas.find((item) => item.talla === tallaSeleccionada)?.stock || 0)
-    : 0
+  }, [comprable, variantesComprables, producto.tallas])
 
   const stockTotal = getProductoDetalleStock(producto.stock, producto.tallas)
   const inquiryTalla = producto.tallas.length > 0 ? tallaSeleccionada || producto.tallas[0]?.talla : undefined
@@ -123,53 +128,73 @@ export default function ProductDetailView({ producto, whatsapp }: ProductDetailV
               <span className="rounded-full bg-accent-dark px-2 py-0.5 text-xs font-bold text-white">-{descuento}%</span>
             ) : null}
           </div>
-          <p className={`mt-2 text-sm font-semibold ${stockTotal > 0 ? 'text-primary-dark' : 'text-accent-dark'}`}>
-            {stockTotal > 0 ? 'Disponible' : 'Consulta disponibilidad por talla'}
+          <p className={`mt-2 text-sm font-semibold ${comprable ? 'text-primary-dark' : 'text-accent-dark'}`}>
+            {comprable ? 'Disponible para compra online' : 'Consulta disponibilidad por talla'}
           </p>
+          {producto.color ? <p className="mt-1 text-sm text-primary-dark/80">Color: {producto.color}</p> : null}
         </div>
 
-        {producto.tallas.length > 0 ? (
-          <div className="mt-5">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-dark/80">Tallas</p>
-            <div className="flex flex-wrap gap-2">
-              {producto.tallas.map((item) => (
-                <button
-                  key={item.talla}
-                  type="button"
-                  onClick={() => setTallaSeleccionada(item.talla)}
-                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
-                    tallaSeleccionada === item.talla
-                      ? 'border-primary bg-[var(--surface-soft)] text-primary-dark'
-                      : 'border-[var(--line-soft)] bg-white text-gray-700 hover:border-primary/50'
-                  }`}
-                  title={Number(item.stock || 0) > 0 ? `${item.stock} disponibles` : 'Consultar disponibilidad'}
-                >
-                  {item.talla}
-                </button>
-              ))}
+        {comprable ? (
+          <>
+            <ProductPurchasePanel
+              producto={producto}
+              currencySymbol={currencySymbol}
+              tallaSeleccionada={tallaSeleccionada}
+              onTallaChange={setTallaSeleccionada}
+            />
+            <div className="mt-3">
+              <a
+                href={inquiryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Consultar por WhatsApp sobre ${producto.nombre}`}
+                className="store-button-secondary w-full text-center"
+              >
+                ¿Dudas? Consultar por WhatsApp
+              </a>
             </div>
-            {tallaSeleccionada ? (
-              <p className="mt-2 text-xs text-primary-dark/80">
-                Stock talla {tallaSeleccionada}: {stockSeleccionado}
-              </p>
+          </>
+        ) : (
+          <>
+            {producto.tallas.length > 0 ? (
+              <div className="mt-5">
+                <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-primary-dark/80">Tallas de referencia</p>
+                <div className="flex flex-wrap gap-2">
+                  {producto.tallas.map((item) => (
+                    <button
+                      key={item.talla}
+                      type="button"
+                      onClick={() => setTallaSeleccionada(item.talla)}
+                      className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+                        tallaSeleccionada === item.talla
+                          ? 'border-primary bg-[var(--surface-soft)] text-primary-dark'
+                          : 'border-[var(--line-soft)] bg-white text-gray-700 hover:border-primary/50'
+                      }`}
+                      title="Consultar disponibilidad"
+                    >
+                      {item.talla}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ) : null}
-          </div>
-        ) : null}
 
-        <div className="mt-5">
-          <a
-            href={inquiryUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Consultar disponibilidad por WhatsApp de ${producto.nombre}`}
-            className="store-button-primary w-full text-center"
-          >
-            Consultar disponibilidad por WhatsApp
-          </a>
-          <p className="mt-2 text-sm font-semibold text-primary-dark/80">
-            Confirma talla y disponibilidad antes de comprar
-          </p>
-        </div>
+            <div className="mt-5">
+              <a
+                href={inquiryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Consultar disponibilidad por WhatsApp de ${producto.nombre}`}
+                className="store-button-primary w-full text-center"
+              >
+                Consultar disponibilidad por WhatsApp
+              </a>
+              <p className="mt-2 text-sm font-semibold text-primary-dark/80">
+                Confirma talla y disponibilidad antes de comprar
+              </p>
+            </div>
+          </>
+        )}
 
         <div className="mt-6 space-y-3 rounded-2xl border border-[var(--line-soft)] bg-white p-4">
           {BENEFICIOS.map((item) => (

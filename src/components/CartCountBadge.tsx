@@ -1,30 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-
-const readCartCount = () => {
-  if (typeof window === 'undefined') return 0
-  try {
-    const carrito = JSON.parse(localStorage.getItem('carrito') || '[]')
-    return Array.isArray(carrito) ? carrito.length : 0
-  } catch {
-    return 0
-  }
-}
+import { CART_EVENT, getCartCount } from '@/lib/cart'
 
 export default function CartCountBadge() {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
-    const update = () => setCount(readCartCount())
+    const update = () => setCount(getCartCount())
 
     update()
     window.addEventListener('storage', update)
-    window.addEventListener('carrito:update', update)
+    window.addEventListener(CART_EVENT, update)
 
     return () => {
       window.removeEventListener('storage', update)
-      window.removeEventListener('carrito:update', update)
+      window.removeEventListener(CART_EVENT, update)
     }
   }, [])
 

@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import CartCountBadge from '@/components/CartCountBadge'
 import type { StorefrontConfig } from '@/lib/storefront-types'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -68,6 +69,16 @@ const fallbackConfig: StorefrontConfig = {
 const itemKey = (url: string, index: number) => `${url}-${index}`
 
 const isDeportesLabel = (etiqueta: string) => etiqueta.toLowerCase().includes('deporte')
+
+function CartIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    </svg>
+  )
+}
 
 function WhatsAppIcon() {
   return (
@@ -256,9 +267,26 @@ function HeaderClientInner({ initialConfig }: HeaderClientProps) {
                 <WhatsAppIcon />
                 <span>WhatsApp</span>
               </a>
+              <Link
+                href="/carrito"
+                aria-label="Ver carrito de compras"
+                className="relative inline-flex items-center gap-2 rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-primary hover:text-primary"
+              >
+                <CartIcon />
+                <span>Carrito</span>
+                <CartCountBadge />
+              </Link>
             </div>
 
             <div className="ml-auto flex items-center gap-4 md:hidden">
+              <Link
+                href="/carrito"
+                aria-label="Ver carrito de compras"
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-gray-900 transition-colors hover:bg-gray-100 hover:text-primary"
+              >
+                <CartIcon />
+                <CartCountBadge />
+              </Link>
               <a
                 href={`https://wa.me/${normalizeWhatsappNumber(config.whatsapp.numero)}`}
                 target="_blank"
