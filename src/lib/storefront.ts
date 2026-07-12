@@ -365,7 +365,7 @@ const normalizeStorefrontConfig = (configTienda: any, categorias: any[] = []): S
   }
 }
 
-export const getStorefrontConfig = unstable_cache(
+const getStorefrontConfigCached = unstable_cache(
   async (): Promise<StorefrontConfig> => {
     const payload = await getPayloadClient()
 
@@ -392,6 +392,15 @@ export const getStorefrontConfig = unstable_cache(
   ['storefront-config'],
   { revalidate: 300 },
 )
+
+// La configuracion de tienda (menu, footer, colores...) se cachea, pero
+// ecommerceEnabled es un interruptor de entorno que NO debe quedar horneado
+// en el Data Cache: se recomputa fresco en cada llamada para que activar o
+// desactivar la compra se refleje de inmediato tras el cambio de la variable.
+export async function getStorefrontConfig(): Promise<StorefrontConfig> {
+  const cached = await getStorefrontConfigCached()
+  return { ...cached, ecommerceEnabled: isEcommerceEnabled() }
+}
 
 export const getHomeData = unstable_cache(
   async (): Promise<HomeData> => {
