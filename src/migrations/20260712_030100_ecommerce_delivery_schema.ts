@@ -1,8 +1,21 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
-export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
+// MIGRACION B (no destructiva en up) — Esquema ecommerce.
+//
+// up() NO contiene DROP TYPE / DROP TABLE / DROP COLUMN / TRUNCATE / DELETE ni
+// conversion de columnas a text. Solo agrega: tipos nuevos, tablas nuevas,
+// columnas nuevas (nullable o con DEFAULT), indices, claves foraneas y cambios
+// de DEFAULT. El estado_comercial NO se recrea: la migracion A ya amplio el
+// enum, aqui solo se cambia el DEFAULT a 'pendiente_pago' (valor ya existente).
+//
+// FK de comprobantes: orden_id es NOT NULL con ON DELETE RESTRICT (no SET NULL),
+// para no dejar evidencia financiera huerfana ni violar la nullability. Eliminar
+// una orden con comprobantes queda impedido a nivel de base de datos (ademas del
+// hook beforeDelete de la coleccion Ordenes).
+
+export async function up({ db }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
-   CREATE TYPE "public"."enum_ordenes_datos_cliente_tipo_documento" AS ENUM('dni', 'ce', 'pasaporte', 'ruc');
+  CREATE TYPE "public"."enum_ordenes_datos_cliente_tipo_documento" AS ENUM('dni', 'ce', 'pasaporte', 'ruc');
   CREATE TYPE "public"."enum_config_tienda_pagos_metodos_moneda_cuenta" AS ENUM('PEN', 'USD');
   CREATE TABLE "ordenes_historial_estados" (
   	"_order" integer NOT NULL,
@@ -14,7 +27,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"usuario" varchar,
   	"comentario" varchar
   );
-  
+
   CREATE TABLE "ordenes_rels" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"order" integer,
@@ -22,7 +35,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"path" varchar NOT NULL,
   	"comprobantes_id" integer
   );
-  
+
   CREATE TABLE "comprobantes" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"orden_id" integer NOT NULL,
@@ -41,7 +54,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"focal_x" numeric,
   	"focal_y" numeric
   );
-  
+
   CREATE TABLE "config_tienda_entrega_puntos_recojo" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
@@ -52,13 +65,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"activo" boolean DEFAULT false,
   	"instrucciones" varchar
   );
-  
-  ALTER TABLE "ordenes" ALTER COLUMN "estado_comercial" SET DATA TYPE text;
-  ALTER TABLE "ordenes" ALTER COLUMN "estado_comercial" SET DEFAULT 'pendiente_pago'::text;
-  DROP TYPE "public"."enum_ordenes_estado_comercial";
-  CREATE TYPE "public"."enum_ordenes_estado_comercial" AS ENUM('pendiente_pago', 'comprobante_recibido', 'pago_en_revision', 'pagado', 'preparando', 'enviado', 'entregado', 'cancelado', 'pago_fallido', 'reembolsado', 'pendiente', 'procesando');
-  ALTER TABLE "ordenes" ALTER COLUMN "estado_comercial" SET DEFAULT 'pendiente_pago'::"public"."enum_ordenes_estado_comercial";
-  ALTER TABLE "ordenes" ALTER COLUMN "estado_comercial" SET DATA TYPE "public"."enum_ordenes_estado_comercial" USING "estado_comercial"::"public"."enum_ordenes_estado_comercial";
+
+  ALTER TABLE "ordenes" ALTER COLUMN "estado_comercial" SET DEFAULT 'pendiente_pago';
   ALTER TABLE "config_tienda_pagos_metodos" ALTER COLUMN "activo" SET DEFAULT false;
   ALTER TABLE "config_tienda_pagos_metodos" ALTER COLUMN "instruccion" DROP DEFAULT;
   ALTER TABLE "config_tienda" ALTER COLUMN "header_anuncio_barra" SET DEFAULT 'CATALOGO DEPORTIVO CON ATENCION POR WHATSAPP';
@@ -111,7 +119,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "ordenes_historial_estados" ADD CONSTRAINT "ordenes_historial_estados_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."ordenes"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "ordenes_rels" ADD CONSTRAINT "ordenes_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."ordenes"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "ordenes_rels" ADD CONSTRAINT "ordenes_rels_comprobantes_fk" FOREIGN KEY ("comprobantes_id") REFERENCES "public"."comprobantes"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "comprobantes" ADD CONSTRAINT "comprobantes_orden_id_ordenes_id_fk" FOREIGN KEY ("orden_id") REFERENCES "public"."ordenes"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "comprobantes" ADD CONSTRAINT "comprobantes_orden_id_ordenes_id_fk" FOREIGN KEY ("orden_id") REFERENCES "public"."ordenes"("id") ON DELETE restrict ON UPDATE no action;
   ALTER TABLE "config_tienda_entrega_puntos_recojo" ADD CONSTRAINT "config_tienda_entrega_puntos_recojo_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."config_tienda"("id") ON DELETE cascade ON UPDATE no action;
   CREATE INDEX "ordenes_historial_estados_order_idx" ON "ordenes_historial_estados" USING btree ("_order");
   CREATE INDEX "ordenes_historial_estados_parent_id_idx" ON "ordenes_historial_estados" USING btree ("_parent_id");
@@ -135,9 +143,13 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "config_tienda_pagos_metodos_qr_idx" ON "config_tienda_pagos_metodos" USING btree ("qr_id");`)
 }
 
-export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({ db }: MigrateDownArgs): Promise<void> {
+  // Reversion del esquema ecommerce. NO recrea el enum estado_comercial: los
+  // valores agregados por la migracion A permanecen (quitar valores de un enum
+  // es destructivo); solo se restaura el DEFAULT legacy 'pendiente'. Las
+  // ordenes y sus datos legacy permanecen intactos.
   await db.execute(sql`
-   ALTER TABLE "ordenes_historial_estados" DISABLE ROW LEVEL SECURITY;
+  ALTER TABLE "ordenes_historial_estados" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "ordenes_rels" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "comprobantes" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "config_tienda_entrega_puntos_recojo" DISABLE ROW LEVEL SECURITY;
@@ -146,17 +158,9 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "comprobantes" CASCADE;
   DROP TABLE "config_tienda_entrega_puntos_recojo" CASCADE;
   ALTER TABLE "productos_tallas" DROP CONSTRAINT "productos_tallas_imagen_id_media_id_fk";
-  
   ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_comprobantes_fk";
-  
   ALTER TABLE "config_tienda_pagos_metodos" DROP CONSTRAINT "config_tienda_pagos_metodos_qr_id_media_id_fk";
-  
-  ALTER TABLE "ordenes" ALTER COLUMN "estado_comercial" SET DATA TYPE text;
-  ALTER TABLE "ordenes" ALTER COLUMN "estado_comercial" SET DEFAULT 'pendiente'::text;
-  DROP TYPE "public"."enum_ordenes_estado_comercial";
-  CREATE TYPE "public"."enum_ordenes_estado_comercial" AS ENUM('pendiente', 'procesando', 'enviado', 'entregado', 'cancelado');
-  ALTER TABLE "ordenes" ALTER COLUMN "estado_comercial" SET DEFAULT 'pendiente'::"public"."enum_ordenes_estado_comercial";
-  ALTER TABLE "ordenes" ALTER COLUMN "estado_comercial" SET DATA TYPE "public"."enum_ordenes_estado_comercial" USING "estado_comercial"::"public"."enum_ordenes_estado_comercial";
+  ALTER TABLE "ordenes" ALTER COLUMN "estado_comercial" SET DEFAULT 'pendiente';
   DROP INDEX "productos_tallas_imagen_idx";
   DROP INDEX "productos_venta_online_idx";
   DROP INDEX "ordenes_idempotency_key_idx";

@@ -1026,31 +1026,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
-        },
-        "venta_habilitada": {
-          "name": "venta_habilitada",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "sku_variante": {
-          "name": "sku_variante",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "precio": {
-          "name": "precio",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "imagen_id": {
-          "name": "imagen_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
@@ -1083,37 +1058,9 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "productos_tallas_imagen_idx": {
-          "name": "productos_tallas_imagen_idx",
-          "columns": [
-            {
-              "expression": "imagen_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
-        "productos_tallas_imagen_id_media_id_fk": {
-          "name": "productos_tallas_imagen_id_media_id_fk",
-          "tableFrom": "productos_tallas",
-          "tableTo": "media",
-          "columnsFrom": [
-            "imagen_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
         "productos_tallas_parent_id_fk": {
           "name": "productos_tallas_parent_id_fk",
           "tableFrom": "productos_tallas",
@@ -1192,12 +1139,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "color": {
-          "name": "color",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
         "segmento": {
           "name": "segmento",
           "type": "enum_productos_segmento",
@@ -1211,13 +1152,6 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
-        },
-        "venta_online": {
-          "name": "venta_online",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
         },
         "stock": {
           "name": "stock",
@@ -1336,21 +1270,6 @@
           "columns": [
             {
               "expression": "imagen_principal_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "productos_venta_online_idx": {
-          "name": "productos_venta_online_idx",
-          "columns": [
-            {
-              "expression": "venta_online",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1652,24 +1571,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "sku": {
-          "name": "sku",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sku_variante": {
-          "name": "sku_variante",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "color": {
-          "name": "color",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
         "talla": {
           "name": "talla",
           "type": "varchar",
@@ -1689,23 +1590,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "precio_anterior": {
-          "name": "precio_anterior",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
-        },
         "subtotal": {
           "name": "subtotal",
           "type": "numeric",
           "primaryKey": false,
           "notNull": true
-        },
-        "imagen_url": {
-          "name": "imagen_url",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
@@ -1789,112 +1678,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.ordenes_historial_estados": {
-      "name": "ordenes_historial_estados",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "estado_anterior": {
-          "name": "estado_anterior",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "estado_nuevo": {
-          "name": "estado_nuevo",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "fecha": {
-          "name": "fecha",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "usuario": {
-          "name": "usuario",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "comentario": {
-          "name": "comentario",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "ordenes_historial_estados_order_idx": {
-          "name": "ordenes_historial_estados_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "ordenes_historial_estados_parent_id_idx": {
-          "name": "ordenes_historial_estados_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "ordenes_historial_estados_parent_id_fk": {
-          "name": "ordenes_historial_estados_parent_id_fk",
-          "tableFrom": "ordenes_historial_estados",
-          "tableTo": "ordenes",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.ordenes": {
       "name": "ordenes",
       "schema": "",
@@ -1917,12 +1700,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "idempotency_key": {
-          "name": "idempotency_key",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
         "cliente_id": {
           "name": "cliente_id",
           "type": "integer",
@@ -1934,37 +1711,6 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
-        },
-        "datos_cliente_nombres": {
-          "name": "datos_cliente_nombres",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "datos_cliente_apellidos": {
-          "name": "datos_cliente_apellidos",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "datos_cliente_tipo_documento": {
-          "name": "datos_cliente_tipo_documento",
-          "type": "enum_ordenes_datos_cliente_tipo_documento",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "datos_cliente_numero_documento": {
-          "name": "datos_cliente_numero_documento",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "datos_cliente_email": {
-          "name": "datos_cliente_email",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
         },
         "telefono": {
           "name": "telefono",
@@ -1979,24 +1725,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'delivery'"
-        },
-        "punto_recojo_nombre": {
-          "name": "punto_recojo_nombre",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "punto_recojo_direccion": {
-          "name": "punto_recojo_direccion",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "punto_recojo_horario": {
-          "name": "punto_recojo_horario",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
         },
         "subtotal": {
           "name": "subtotal",
@@ -2024,13 +1752,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "moneda": {
-          "name": "moneda",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'PEN'"
-        },
         "cupon_id": {
           "name": "cupon_id",
           "type": "integer",
@@ -2043,11 +1764,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "direccion_envio_departamento": {
-          "name": "direccion_envio_departamento",
+        "direccion_envio_distrito": {
+          "name": "direccion_envio_distrito",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "direccion_envio_ciudad": {
           "name": "direccion_envio_ciudad",
@@ -2055,12 +1776,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'Lima'"
-        },
-        "direccion_envio_distrito": {
-          "name": "direccion_envio_distrito",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
         },
         "direccion_envio_referencias": {
           "name": "direccion_envio_referencias",
@@ -2081,7 +1796,7 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'pendiente_pago'"
+          "default": "'pendiente'"
         },
         "estado_pago": {
           "name": "estado_pago",
@@ -2090,46 +1805,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'pending'"
-        },
-        "aceptaciones_terminos": {
-          "name": "aceptaciones_terminos",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "aceptaciones_privacidad": {
-          "name": "aceptaciones_privacidad",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "aceptaciones_fecha": {
-          "name": "aceptaciones_fecha",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "aceptaciones_version_terminos": {
-          "name": "aceptaciones_version_terminos",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stock_descontado": {
-          "name": "stock_descontado",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "stock_restaurado": {
-          "name": "stock_restaurado",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
         },
         "payment_provider": {
           "name": "payment_provider",
@@ -2241,21 +1916,6 @@
           "columns": [
             {
               "expression": "codigo_correlacion",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "ordenes_idempotency_key_idx": {
-          "name": "ordenes_idempotency_key_idx",
-          "columns": [
-            {
-              "expression": "idempotency_key",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2412,137 +2072,6 @@
             "id"
           ],
           "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ordenes_rels": {
-      "name": "ordenes_rels",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "order": {
-          "name": "order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "path": {
-          "name": "path",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "comprobantes_id": {
-          "name": "comprobantes_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "ordenes_rels_order_idx": {
-          "name": "ordenes_rels_order_idx",
-          "columns": [
-            {
-              "expression": "order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "ordenes_rels_parent_idx": {
-          "name": "ordenes_rels_parent_idx",
-          "columns": [
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "ordenes_rels_path_idx": {
-          "name": "ordenes_rels_path_idx",
-          "columns": [
-            {
-              "expression": "path",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "ordenes_rels_comprobantes_id_idx": {
-          "name": "ordenes_rels_comprobantes_id_idx",
-          "columns": [
-            {
-              "expression": "comprobantes_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "ordenes_rels_parent_fk": {
-          "name": "ordenes_rels_parent_fk",
-          "tableFrom": "ordenes_rels",
-          "tableTo": "ordenes",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "ordenes_rels_comprobantes_fk": {
-          "name": "ordenes_rels_comprobantes_fk",
-          "tableFrom": "ordenes_rels",
-          "tableTo": "comprobantes",
-          "columnsFrom": [
-            "comprobantes_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -3136,193 +2665,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.comprobantes": {
-      "name": "comprobantes",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "orden_id": {
-          "name": "orden_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "metodo_pago": {
-          "name": "metodo_pago",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "notas_cliente": {
-          "name": "notas_cliente",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "revisado": {
-          "name": "revisado",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "url": {
-          "name": "url",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "thumbnail_u_r_l": {
-          "name": "thumbnail_u_r_l",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "filename": {
-          "name": "filename",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "mime_type": {
-          "name": "mime_type",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "filesize": {
-          "name": "filesize",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "width": {
-          "name": "width",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "height": {
-          "name": "height",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "focal_x": {
-          "name": "focal_x",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "focal_y": {
-          "name": "focal_y",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "comprobantes_orden_idx": {
-          "name": "comprobantes_orden_idx",
-          "columns": [
-            {
-              "expression": "orden_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "comprobantes_updated_at_idx": {
-          "name": "comprobantes_updated_at_idx",
-          "columns": [
-            {
-              "expression": "updated_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "comprobantes_created_at_idx": {
-          "name": "comprobantes_created_at_idx",
-          "columns": [
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "comprobantes_filename_idx": {
-          "name": "comprobantes_filename_idx",
-          "columns": [
-            {
-              "expression": "filename",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "comprobantes_orden_id_ordenes_id_fk": {
-          "name": "comprobantes_orden_id_ordenes_id_fk",
-          "tableFrom": "comprobantes",
-          "tableTo": "ordenes",
-          "columnsFrom": [
-            "orden_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.payload_kv": {
       "name": "payload_kv",
       "schema": "",
@@ -3548,12 +2890,6 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
-        },
-        "comprobantes_id": {
-          "name": "comprobantes_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
@@ -3766,21 +3102,6 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "payload_locked_documents_rels_comprobantes_id_idx": {
-          "name": "payload_locked_documents_rels_comprobantes_id_idx",
-          "columns": [
-            {
-              "expression": "comprobantes_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
@@ -3933,19 +3254,6 @@
           "tableTo": "banners",
           "columnsFrom": [
             "banners_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "payload_locked_documents_rels_comprobantes_fk": {
-          "name": "payload_locked_documents_rels_comprobantes_fk",
-          "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "comprobantes",
-          "columnsFrom": [
-            "comprobantes_id"
           ],
           "columnsTo": [
             "id"
@@ -4679,7 +3987,7 @@
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,
-          "default": false
+          "default": true
         },
         "mostrar_en_footer": {
           "name": "mostrar_en_footer",
@@ -4688,55 +3996,12 @@
           "notNull": false,
           "default": true
         },
-        "numero": {
-          "name": "numero",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "titular": {
-          "name": "titular",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "qr_id": {
-          "name": "qr_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "banco": {
-          "name": "banco",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "moneda_cuenta": {
-          "name": "moneda_cuenta",
-          "type": "enum_config_tienda_pagos_metodos_moneda_cuenta",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'PEN'"
-        },
-        "numero_cuenta": {
-          "name": "numero_cuenta",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cci": {
-          "name": "cci",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
         "instruccion": {
           "name": "instruccion",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "'Te enviaremos los pasos por WhatsApp.'"
         }
       },
       "indexes": {
@@ -4769,147 +4034,12 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "config_tienda_pagos_metodos_qr_idx": {
-          "name": "config_tienda_pagos_metodos_qr_idx",
-          "columns": [
-            {
-              "expression": "qr_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
-        "config_tienda_pagos_metodos_qr_id_media_id_fk": {
-          "name": "config_tienda_pagos_metodos_qr_id_media_id_fk",
-          "tableFrom": "config_tienda_pagos_metodos",
-          "tableTo": "media",
-          "columnsFrom": [
-            "qr_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
         "config_tienda_pagos_metodos_parent_id_fk": {
           "name": "config_tienda_pagos_metodos_parent_id_fk",
           "tableFrom": "config_tienda_pagos_metodos",
-          "tableTo": "config_tienda",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.config_tienda_entrega_puntos_recojo": {
-      "name": "config_tienda_entrega_puntos_recojo",
-      "schema": "",
-      "columns": {
-        "_order": {
-          "name": "_order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "_parent_id": {
-          "name": "_parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "varchar",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "nombre": {
-          "name": "nombre",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "direccion": {
-          "name": "direccion",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "horario": {
-          "name": "horario",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "activo": {
-          "name": "activo",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "instrucciones": {
-          "name": "instrucciones",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "config_tienda_entrega_puntos_recojo_order_idx": {
-          "name": "config_tienda_entrega_puntos_recojo_order_idx",
-          "columns": [
-            {
-              "expression": "_order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "config_tienda_entrega_puntos_recojo_parent_id_idx": {
-          "name": "config_tienda_entrega_puntos_recojo_parent_id_idx",
-          "columns": [
-            {
-              "expression": "_parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "config_tienda_entrega_puntos_recojo_parent_id_fk": {
-          "name": "config_tienda_entrega_puntos_recojo_parent_id_fk",
-          "tableFrom": "config_tienda_entrega_puntos_recojo",
           "tableTo": "config_tienda",
           "columnsFrom": [
             "_parent_id"
@@ -5003,7 +4133,7 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'CATALOGO DEPORTIVO CON ATENCION POR WHATSAPP'"
+          "default": "'ENVIO GRATIS POR COMPRAS MAYORES A S/299'"
         },
         "header_mostrar_anuncio": {
           "name": "header_mostrar_anuncio",
@@ -5030,14 +4160,13 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'20 anos caminando contigo.'"
+          "default": "'Tu tienda deportiva de confianza en Peru.'"
         },
         "footer_telefono": {
           "name": "footer_telefono",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'+51 967 438 872'"
+          "notNull": false
         },
         "footer_email": {
           "name": "footer_email",
@@ -5050,7 +4179,7 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'Av. Espana 2023, C.C. Gold Center, tienda 3, Trujillo'"
+          "default": "'Lima, Peru'"
         },
         "footer_horario": {
           "name": "footer_horario",
@@ -5089,49 +4218,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'© 2025 PlusSport. Todos los derechos reservados.'"
-        },
-        "legal_razon_social": {
-          "name": "legal_razon_social",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "legal_ruc": {
-          "name": "legal_ruc",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "legal_version_terminos": {
-          "name": "legal_version_terminos",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'sin-version'"
-        },
-        "legal_terminos_condiciones": {
-          "name": "legal_terminos_condiciones",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "legal_politica_privacidad": {
-          "name": "legal_politica_privacidad",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "legal_politica_cambios": {
-          "name": "legal_politica_cambios",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "legal_politica_entregas": {
-          "name": "legal_politica_entregas",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
         },
         "seo_meta_titulo": {
           "name": "seo_meta_titulo",
@@ -5266,16 +4352,6 @@
         "inactivo"
       ]
     },
-    "public.enum_ordenes_datos_cliente_tipo_documento": {
-      "name": "enum_ordenes_datos_cliente_tipo_documento",
-      "schema": "public",
-      "values": [
-        "dni",
-        "ce",
-        "pasaporte",
-        "ruc"
-      ]
-    },
     "public.enum_ordenes_metodo_entrega": {
       "name": "enum_ordenes_metodo_entrega",
       "schema": "public",
@@ -5301,18 +4377,18 @@
       "name": "enum_ordenes_estado_comercial",
       "schema": "public",
       "values": [
+        "pendiente",
+        "procesando",
+        "enviado",
+        "entregado",
+        "cancelado",
         "pendiente_pago",
         "comprobante_recibido",
         "pago_en_revision",
         "pagado",
         "preparando",
-        "enviado",
-        "entregado",
-        "cancelado",
         "pago_fallido",
-        "reembolsado",
-        "pendiente",
-        "procesando"
+        "reembolsado"
       ]
     },
     "public.enum_ordenes_estado_pago": {
@@ -5358,14 +4434,6 @@
         "efectivo",
         "whatsapp"
       ]
-    },
-    "public.enum_config_tienda_pagos_metodos_moneda_cuenta": {
-      "name": "enum_config_tienda_pagos_metodos_moneda_cuenta",
-      "schema": "public",
-      "values": [
-        "PEN",
-        "USD"
-      ]
     }
   },
   "schemas": {},
@@ -5378,6 +4446,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "b1e88432-cb1c-4308-8331-b9119ae8302a",
+  "id": "bba9e7cd-501d-4725-9bd3-b14d57927ff9",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
