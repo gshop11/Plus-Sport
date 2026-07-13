@@ -172,6 +172,23 @@ Documento de progreso por fases. Permite reanudar el trabajo si se pierde el con
 
 - `20260712_024242_ecommerce_delivery_20260711`: `up()` con 0 DROP/TRUNCATE/DELETE; solo CREATE TABLE y ADD COLUMN (nullable o con DEFAULT => sin perdida de datos, sin bloqueo por NOT NULL). El nuevo enum `estado_comercial` incluye los valores legacy (`pendiente`, `procesando`, `enviado`, `entregado`, `cancelado`) => el re-cast de ordenes existentes en Produccion no falla. Compatible con codigo viejo + esquema nuevo (las columnas/tablas nuevas son ignoradas por el codigo desplegado 1b301a9). Migraciones por endpoint DIRECTO; runtime por POOLER. `down()` concentra los DROP (rollback disponible; no revertir tras recibir pedidos reales).
 
+## CORRECCION DE MIGRACIONES (2026-07-12/13) — afirmacion anterior ERRONEA
+
+**La afirmacion previa "`up()` con 0 DROP / 100% aditiva" era INCORRECTA.** La migracion `20260712_024242_ecommerce_delivery_20260711` SI contenia en `up()`:
+`ALTER COLUMN estado_comercial SET DATA TYPE text` -> `DROP TYPE enum_ordenes_estado_comercial` -> `CREATE TYPE` (recreacion) -> `SET DATA TYPE enum USING ...::enum`. El grep de verificacion anterior busco `DROP TABLE|DROP COLUMN|TRUNCATE|DELETE` y omitio `DROP TYPE` y el `SET DATA TYPE`, de ahi el error.
+
+- **Riesgo que introducia:** recrear el tipo obligaba a convertir la columna y re-castear TODOS los datos; el cast `USING ...::enum` sobre valores inesperados podia fallar y abortar la migracion; ademas reescribia la tabla `ordenes`. Causa raiz: el enum en la coleccion estaba ordenado con los valores NUEVOS primero, lo que forzaba a Payload a detectar un cambio de ORDEN (no solo adicion) y recrear el tipo destructivamente.
+- **Segundo defecto:** `comprobantes.orden_id` NOT NULL con FK `ON DELETE SET NULL` (contradiccion generada por el adaptador de Payload, que hardcodea SET NULL): al borrar una orden, PostgreSQL intentaria poner NULL en una columna NOT NULL -> error, y evidencia financiera en riesgo.
+
+- **Correccion (commits `5670b03`, `ef12cbc`):** la migracion defectuosa se ELIMINO (nunca llego a Produccion, solo a una base Preview aislada) y se reemplazo por dos migraciones seguras:
+  - `20260712_030000_add_ecommerce_order_states`: solo `ALTER TYPE ... ADD VALUE IF NOT EXISTS` de los 7 estados nuevos. Conserva los 5 legacy. Sin recrear el tipo.
+  - `20260712_030100_ecommerce_delivery_schema`: resto del esquema. `up()` SIN DROP TYPE/TABLE/COLUMN, sin TRUNCATE/DELETE, sin conversion a text. Solo cambia el DEFAULT a `pendiente_pago` (valor ya existente) y agrega tablas/columnas/indices/FK. FK `comprobantes.orden_id` = NOT NULL + `ON DELETE RESTRICT`.
+  - El enum en la coleccion se reordeno (legacy primero) para que coincida con el resultado de `ADD VALUE` y NO haya drift que reintroduzca la recreacion.
+  - Hook `beforeDelete` en Ordenes: impide borrar una orden con comprobantes.
+- **Transaccionalidad verificada** en el codigo del adaptador (`@payloadcms/drizzle/dist/migrate.js`): Payload ejecuta cada migracion en su propia transaccion con commit (`initTransaction`/`up`/`commitTransaction`), por lo que B usa el valor de enum que A confirmo. Neon = PostgreSQL 17 (soporta `ADD VALUE` en transaccion).
+- **Validacion (base Neon aislada NUEVA, esquema legacy + datos sinteticos):** `payload migrate` aplica A y B sin error; 5 ordenes legacy y sus estados intactos; enum con 12 valores; default `pendiente_pago`; tablas/columnas nuevas presentes; FK comprobantes = RESTRICT + NOT NULL; DELETE de orden con comprobante RECHAZADO (error 23503); cancelacion por estado conserva el comprobante. Instalacion limpia (desde vacio) tambien OK. `migrate:create` no reporta drift salvo la FK de comprobantes (RESTRICT deliberado vs SET NULL que Payload hardcodea — documentado; NO aplicar ese diff).
+- **DROP en up(): NO. DROP TYPE en up(): NO.**
+
 ## DICTAMEN
 
 GO CON BLOQUEOS COMERCIALES / READY FOR SAFE PROD (con `ECOMMERCE_ENABLED=false`). P0 cerrado, hardening verificado con la bandera en false y en true. Produccion debe iniciar con `ECOMMERCE_ENABLED=false` e `IZIPAY_CARD_ENABLED=false`. Faltan datos comerciales reales (bancarios, tarifas, inventario, legal, Izipay produccion) para activar la compra; ninguno es defecto tecnico. Detener antes de Produccion; esperar `GO PROD`.
