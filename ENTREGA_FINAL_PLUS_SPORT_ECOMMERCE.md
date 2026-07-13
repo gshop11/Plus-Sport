@@ -92,3 +92,26 @@ Probado en un entorno de Preview aislado (base de datos separada de la tienda
 en vivo), tanto con la compra **apagada** como **encendida**. La tienda en
 vivo (Producción) **no fue modificada**. El despliegue a Producción se hará con
 la compra apagada y requiere una autorización explícita.
+
+### Actualización 2026-07-12/13 — corrección y revalidación
+
+Antes de pedir autorización a Producción se detectó y corrigió un riesgo en la
+preparación de la base de datos: la actualización de estados de pedido se
+rehízo de forma **no destructiva** (agrega los estados nuevos sin borrar ni
+recrear nada existente) y se reforzó la regla que **impide borrar un pedido que
+ya tiene comprobante** (evidencia de pago); un pedido solo se cancela cambiando
+su estado, nunca eliminándolo.
+
+Se revalidó todo en una base de Preview aislada nueva, desde el esquema
+anterior y con datos de prueba, sin tocar Producción ni el respaldo:
+
+- **Compra apagada** — `dpl_7UYfuXhW9VEeD6M5TW83YF38efWK`: catálogo y WhatsApp
+  funcionan; no aparecen métodos de pago; no se pueden crear pedidos; tarjeta
+  apagada.
+- **Compra encendida** — `dpl_Ga4ArjqBoUUqkTePoR2NwPuKCvio`: se compra con
+  talla y carrito; el pedido no se duplica aunque se reintente; el stock baja
+  una sola vez; tarjeta sigue apagada; un pedido con comprobante no se puede
+  borrar.
+
+Producción sigue intacta y existe un respaldo previo. **Sigue pendiente la
+autorización explícita para desplegar a Producción** (con la compra apagada).

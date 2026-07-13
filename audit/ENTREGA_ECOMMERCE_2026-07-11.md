@@ -39,10 +39,26 @@ e9c4ca5 test: validate complete ecommerce flow
 - **Izipay** (`src/app/api/payments/izipay/*`, `src/lib/payment-methods.ts`): tras `IZIPAY_CARD_ENABLED` (false).
 - **Storefront/legal** (`HeaderClient.tsx`, `Footer.tsx`, `LegalPage.tsx`, rutas `/terminos` etc.).
 
-## Migraciones
+## Migraciones (CORREGIDAS 2026-07-12/13 — ver seccion final)
+
+> La migracion unica anterior `20260712_024242_ecommerce_delivery_20260711`
+> fue ELIMINADA por defectuosa (contenia `DROP TYPE` + recreacion del enum +
+> re-cast en `up()`, y una FK `SET NULL` sobre columna `NOT NULL`). Nunca se
+> aplico a Produccion. Sustituida por dos migraciones no destructivas:
 
 - `20260702_231456_initial_staging_schema` (previa).
-- `20260712_024242_ecommerce_delivery_20260711` (nueva): `up()` solo aditivo (CREATE TABLE / ADD COLUMN), destructivo (DROP) SOLO en `down()`. Retrocompatible.
+- `20260712_030000_add_ecommerce_order_states` (**Migracion A**, no destructiva):
+  amplia el enum `estado_comercial` con 7 estados nuevos via
+  `ALTER TYPE ... ADD VALUE IF NOT EXISTS`. Conserva los 5 estados legacy.
+  SIN `DROP TYPE`, sin conversion a text, sin perdida de datos. `down()` = no-op
+  intencional (PostgreSQL no permite quitar valores de enum sin recrearlo).
+- `20260712_030100_ecommerce_delivery_schema` (**Migracion B**): resto del
+  esquema (CREATE TABLE / ADD COLUMN / indices / FK). Usa el enum ya confirmado
+  por la Migracion A (Payload hace COMMIT entre migraciones). `up()` SIN
+  `DROP TYPE`/`DROP TABLE`/`DROP COLUMN`/`DELETE`/`TRUNCATE`. Solo cambia el
+  DEFAULT a `pendiente_pago` (valor ya existente). FK
+  `comprobantes.orden_id` = **NOT NULL + ON DELETE RESTRICT** (preserva
+  evidencia financiera). `down()` concentra los DROP (rollback disponible).
 
 ## Variables por entorno (solo nombres)
 
@@ -82,8 +98,10 @@ cambio se refleje de inmediato. **Produccion debe iniciar con
    `NEXT_PUBLIC_SERVER_URL`, `BLOB_READ_WRITE_TOKEN` ya presentes; opcional
    `DATABASE_URI_MIGRATIONS` (endpoint directo) para la migracion.
 3. **Migracion:** `payload migrate` con la conexion DIRECTA (unpooled) contra
-   Produccion; es aditiva y retrocompatible (el codigo desplegado 1b301a9
-   sigue funcionando con el esquema nuevo). Revisar salida.
+   Produccion; ejecuta A (enum, `ADD VALUE`) y luego B (esquema) en
+   transacciones independientes con COMMIT entre ambas. No destructiva en
+   `up()` (sin `DROP TYPE`/`DROP TABLE`/`DROP COLUMN`/`DELETE`/`TRUNCATE`); el
+   codigo desplegado 1b301a9 sigue funcionando con el esquema nuevo. Revisar salida.
 4. **Rama estable:** fast-forward o merge de `feat/ecommerce-entrega-2026-07-11`
    a `stabilize/next16-payload385` (sin tocar `main`).
 5. **Despliegue:** desplegar exactamente el commit validado a Production.
@@ -94,9 +112,10 @@ cambio se refleje de inmediato. **Produccion debe iniciar con
 7. **Monitoreo:** runtime logs y conexiones Postgres (sin saturacion del
    pooler) durante las primeras horas.
 8. **Rollback:** reasignar alias al deployment anterior
-   (`dpl_AFgujPtbTFcqCTzFzL9AdcGoXRpY`, commit `1b301a9`) sin rebuild; la
-   migracion es aditiva (no requiere revertir esquema; si se revierte, usar
-   `down()` SOLO si no hay pedidos nuevos). Variables: volver a quitar/one-off.
+   (`dpl_AFgujPtbTFcqCTzFzL9AdcGoXRpY`, commit `1b301a9`) sin rebuild; el `up()`
+   es no destructivo (columnas/tablas nuevas ignoradas por el codigo viejo, no
+   requiere revertir esquema). Si se revierte el esquema, usar `down()` SOLO si
+   no hay pedidos nuevos. Variables: volver a quitar/one-off.
 
 ## Datos comerciales PENDIENTES (no inventados)
 
@@ -104,3 +123,73 @@ Logo oficial · razon social · RUC · textos legales aprobados · datos bancari
 
 Para ACTIVAR la compra online (despues de cargar lo anterior): poner
 `ECOMMERCE_ENABLED=true` en Production y redeployar.
+
+## Correccion y validacion de migraciones (2026-07-12/13)
+
+**Afirmacion previa CORREGIDA:** el analisis inicial declaro "`up()` 100 %
+aditiva / 0 DROP". Era FALSO: la migracion unica original SI hacia `DROP TYPE`
++ recreacion del enum + re-cast en `up()` (causa raiz: orden del enum con los
+valores nuevos primero, que forzaba a Payload a regenerar el tipo de forma
+destructiva) y definia la FK de comprobantes como `ON DELETE SET NULL` sobre
+una columna `NOT NULL` (contradiccion). Esa migracion fue eliminada (nunca
+llego a Produccion) y sustituida por las dos migraciones no destructivas A y B.
+
+**Commits de correccion (sobre la rama):**
+- `5670b03` fix: make ecommerce enum migration non-destructive (Migracion A/B)
+- `ef12cbc` fix: protect payment proof order relationship (FK RESTRICT + hook `beforeDelete`)
+- `90e3d61` docs: correct production migration risk assessment
+
+**Transaccionalidad (verificada en `@payloadcms/drizzle`):** cada migracion
+corre en su propia transaccion (`initTransaction` → `up` → `commitTransaction`)
+con COMMIT independiente. Por eso A (que agrega valores de enum) y B (que usa
+`pendiente_pago` como DEFAULT) van separadas: PostgreSQL no permite usar un
+valor de enum recien agregado dentro de la misma transaccion.
+
+**Politica de eliminacion de ordenes (evidencia financiera):** defensa en
+profundidad — (1) FK `comprobantes_orden_id_ordenes_id_fk` con `ON DELETE
+RESTRICT` a nivel de base; (2) hook `beforeDelete` en `Ordenes.ts` que lanza
+`APIError` 409 si la orden tiene comprobantes. Se cancela cambiando el estado
+a `cancelado`, nunca borrando la orden.
+
+**Drift conocido (deliberado, NO aplicar):** Payload/drizzle hardcodea
+`onDelete: 'set null'` para las FK de relaciones (`traverseFields.js`). Nuestra
+FK usa `RESTRICT` a proposito; `migrate:create` reporta ese unico drift. Es
+intencional y documentado; no se regenera la migracion por eso.
+
+**Base Preview aislada v2:** `plussport_preview_ecom_v2_20260712` (Neon,
+endpoint de la integracion; NO es Produccion ni el respaldo). Datos de prueba
+con prefijo `TEST-ECOMMERCE-2026071x`. Migraciones registradas EN ORDEN
+(batch 1): `initial_staging_schema` → `add_ecommerce_order_states` →
+`ecommerce_delivery_schema`. Verificado en la base: enum legacy-first
+(5 + 7 valores), DEFAULT `pendiente_pago`, `comprobantes.orden_id` NOT NULL,
+FK `confdeltype = r` (RESTRICT).
+
+**Preview FLAG FALSE:** `dpl_7UYfuXhW9VEeD6M5TW83YF38efWK` (commit `90e3d61`)
+`https://plus-sport-mkar-mwb4xr2fi-gshop11s-projects.vercel.app`.
+Verificado: `storefront-config.ecommerceEnabled=false`; `/api/metodos-pago`=[];
+ficha SIN "Añadir al carrito" (modo "Consultar por WhatsApp"); POST
+`/api/checkout/ordenes` → 403 `ECOMMERCE_DISABLED`; carga de comprobante → 403;
+Izipay session → 403 `IZIPAY_CARD_DISABLED`; home/productos/ficha/admin 200;
+sin errores en consola; cero 500.
+
+**Preview FLAG TRUE:** `dpl_Ga4ArjqBoUUqkTePoR2NwPuKCvio` (commit `90e3d61`)
+`https://plus-sport-mkar-94vlly8lo-gshop11s-projects.vercel.app`
+(env `ECOMMERCE_ENABLED=true` branch-scoped, `IZIPAY_CARD_ENABLED=false`).
+Verificado: `ecommerceEnabled=true`; metodos `yape` + `transferencia`
+(Plin incompleto OCULTO, tarjeta OCULTA por flag); ficha CON "Añadir al carrito"
++ selector de talla; pedido idempotente (POST #1 → 201 orden id 1; POST #2 misma
+key → 200 `idempotent:true`, misma orden); stock descontado UNA vez (8→6, el
+segundo POST no vuelve a descontar); eliminacion fisica de orden con comprobante
+RECHAZADA a nivel de base (FK `23503`, probada con `ROLLBACK`, sin cambios
+persistentes); Izipay session sigue 403; ~20 rutas 2xx; cero 500.
+El flag branch-scoped se restauro a `false` tras la prueba (baseline seguro);
+la evidencia flag-true queda inmutable en `dpl_Ga4ArjqBoUUqkTePoR2NwPuKCvio`.
+
+**Validaciones locales:** `npm run typecheck` OK; `npm run build` OK
+(compilacion + TypeScript + recoleccion de rutas, con env presentes).
+
+**Estado invariable:** Produccion intacta (`dpl_AFgujPtbTFcqCTzFzL9AdcGoXRpY`
+/ `1b301a9`); respaldo `backup-pre-ecommerce-20260712`
+(`br-wandering-union-atg5mcjn`) sin tocar; `main` y
+`stabilize/next16-payload385` sin cambios; ninguna migracion aplicada a
+Produccion; ninguna variable de Production modificada.

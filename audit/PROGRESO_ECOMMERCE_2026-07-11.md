@@ -223,3 +223,61 @@ Se intento resolver el bloqueo de forma autonoma con las herramientas autenticad
 - (A, mas autonoma) Autorizar la migracion via el deploy de Vercel usando la `DATABASE_URI` que Vercel inyecta, aceptando como respaldo el PITR automatico de Neon en lugar de un branch/dump explicito (la migracion es 100% aditiva y retrocompatible; riesgo de perdida de datos ~nulo). Relaja el gate de respaldo explicito, por eso requiere autorizacion explicita.
 - (B) Generar una Neon API key (1 clic en el dashboard Neon) y ponerla como `NEON_API_KEY`: permite branch de respaldo + migracion por endpoint directo, todo autonomo.
 - (C) Abrir Chrome en la laptop con la extension Claude-in-Chrome conectada: permite el SSO de Vercel→Neon para respaldo y conexion directa, todo autonomo.
+
+## FASE DE CORRECCION/HARDENING/VALIDACION (2026-07-12/13) — PREVIEW REVALIDADO
+
+> **Supersede los planes de GO PROD anteriores.** El commit `12cdbf8` YA NO es
+> el commit autorizado. La migracion `20260712_024242_ecommerce_delivery_20260711`
+> y el lenguaje "migracion 100 % aditiva" de las secciones previas quedan
+> OBSOLETOS: esa migracion fue eliminada por defectuosa (DROP TYPE + recreacion
+> del enum + re-cast + FK SET NULL sobre columna NOT NULL) y sustituida por las
+> migraciones A/B no destructivas. Commit final nuevo: `90e3d61`.
+
+**Checkpoint de recuperacion (git):** rama `feat/ecommerce-entrega-2026-07-11`;
+working tree limpio; HEAD `90e3d61`; `git diff --check` OK; `main` intacta
+(`9aae97b`); `stabilize/next16-payload385` intacta (`28fe78e`); backup
+`backup-pre-ecommerce-20260712` (`br-wandering-union-atg5mcjn`) sin tocar;
+Produccion `dpl_AFgujPtbTFcqCTzFzL9AdcGoXRpY` / `1b301a9`; ninguna migracion
+aplicada a Produccion; ninguna variable de Production modificada.
+
+**Base Preview aislada v2** `plussport_preview_ecom_v2_20260712` (Neon,
+integracion; NO Produccion, NO respaldo). Migraciones registradas EN ORDEN
+(batch 1): `initial_staging_schema` → `add_ecommerce_order_states` (A) →
+`ecommerce_delivery_schema` (B). Enum verificado legacy-first (5 + 7);
+DEFAULT `pendiente_pago`; `comprobantes.orden_id` NOT NULL; FK
+`confdeltype = r` (RESTRICT).
+
+**Preview FLAG FALSE** — `dpl_7UYfuXhW9VEeD6M5TW83YF38efWK` (commit `90e3d61`,
+`plus-sport-mkar-mwb4xr2fi-...`): READY; `storefront-config.ecommerceEnabled=false`;
+`/api/metodos-pago`=[]; ficha SIN "Añadir al carrito" (modo consulta WhatsApp),
+WhatsApp visible; POST `/api/checkout/ordenes` → 403 `ECOMMERCE_DISABLED`;
+comprobante → 403; Izipay session → 403 `IZIPAY_CARD_DISABLED`;
+home/productos/ficha/admin 200; consola sin errores; cero 500.
+
+**Preview FLAG TRUE** — `dpl_Ga4ArjqBoUUqkTePoR2NwPuKCvio` (commit `90e3d61`,
+`plus-sport-mkar-94vlly8lo-...`; `ECOMMERCE_ENABLED=true` branch-scoped,
+`IZIPAY_CARD_ENABLED=false`): READY; `ecommerceEnabled=true`; metodos `yape`
++ `transferencia` (Plin incompleto OCULTO, tarjeta OCULTA por flag); ficha CON
+"Añadir al carrito" + selector de talla (40/41); pedido idempotente
+(POST #1 → 201 orden id 1 total 79.80; POST #2 misma key → 200 `idempotent:true`
+misma orden); stock descontado UNA vez (producto 3: 8→6, el segundo POST no
+vuelve a descontar); eliminacion fisica de orden con comprobante RECHAZADA a
+nivel de base (FK `23503`, probada con INSERT + DELETE + `ROLLBACK`, sin cambios
+persistentes); Izipay session sigue 403; ~20 rutas 2xx; cero 500. Flag
+branch-scoped restaurado a `false` tras la prueba (baseline seguro); evidencia
+flag-true inmutable en `dpl_Ga4ArjqBoUUqkTePoR2NwPuKCvio`.
+
+**Limpieza de seguridad:** el secret temporal de "Protection Bypass for
+Automation" (usado solo para probar las URLs Preview via curl) se **revoco**
+(0 keys). Ninguna variable de Production modificada.
+
+**Validaciones locales:** `npm run typecheck` OK; `npm run build` OK
+(compilacion + TypeScript + recoleccion de rutas con env presentes; el fallo
+sin env es el guard de produccion esperado, no un defecto de codigo — Vercel
+construyo READY dos veces).
+
+**DICTAMEN:** READY PARA NUEVO INTENTO DE GO PROD, con `ECOMMERCE_ENABLED=false`
+e `IZIPAY_CARD_ENABLED=false` en Production. Commit autorizado nuevo: `90e3d61`.
+Siguiente accion: **detenerse y esperar autorizacion explicita de Produccion**
+(no ejecutar GO PROD en esta fase; el bloqueo real de la credencial `sensitive`
+de Produccion sigue vigente y requiere un humano con acceso).
