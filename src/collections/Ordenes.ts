@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import type { CollectionConfig } from 'payload'
+import { APIError, type CollectionConfig } from 'payload'
 import { restoreStock, type StockLineItem } from '../lib/inventory'
 
 // Estados del pedido (flujo manual + pasarela):
@@ -7,19 +7,27 @@ import { restoreStock, type StockLineItem } from '../lib/inventory'
 //   -> preparando -> enviado -> entregado
 // Estados terminales/laterales: cancelado, pago_fallido, reembolsado.
 // 'pendiente' y 'procesando' se conservan por compatibilidad con ordenes previas.
+//
+// ORDEN: los valores legacy van PRIMERO y los nuevos DESPUES para que el enum
+// de la coleccion coincida exactamente con el enum resultante en Postgres tras
+// aplicar la migracion no destructiva (ALTER TYPE ... ADD VALUE agrega al final,
+// preservando los valores existentes). Asi se evita cualquier drift de esquema
+// que obligaria a recrear el enum de forma destructiva en el futuro.
 const ESTADOS_ORDEN = [
+  // Legacy (ya existentes en Produccion antes de esta entrega)
+  { label: 'Pendiente (legado)', value: 'pendiente' },
+  { label: 'Procesando (legado)', value: 'procesando' },
+  { label: 'Enviado', value: 'enviado' },
+  { label: 'Entregado', value: 'entregado' },
+  { label: 'Cancelado', value: 'cancelado' },
+  // Nuevos estados del flujo ecommerce (agregados por ALTER TYPE ADD VALUE)
   { label: 'Pendiente de pago', value: 'pendiente_pago' },
   { label: 'Comprobante recibido', value: 'comprobante_recibido' },
   { label: 'Pago en revision', value: 'pago_en_revision' },
   { label: 'Pagado', value: 'pagado' },
   { label: 'Preparando', value: 'preparando' },
-  { label: 'Enviado', value: 'enviado' },
-  { label: 'Entregado', value: 'entregado' },
-  { label: 'Cancelado', value: 'cancelado' },
   { label: 'Pago fallido', value: 'pago_fallido' },
   { label: 'Reembolsado', value: 'reembolsado' },
-  { label: 'Pendiente (legado)', value: 'pendiente' },
-  { label: 'Procesando (legado)', value: 'procesando' },
 ]
 
 export const Ordenes: CollectionConfig = {
@@ -432,6 +440,29 @@ export const Ordenes: CollectionConfig = {
     },
   ],
   hooks: {
+    // Un comprobante de pago es evidencia financiera: una orden con
+    // comprobantes NO puede eliminarse fisicamente (defensa de aplicacion,
+    // ademas de la FK RESTRICT a nivel de base de datos). Las ordenes se
+    // cancelan por estado ('cancelado'), no se borran.
+    beforeDelete: [
+      async ({ req, id }) => {
+        const comprobantes = await req.payload.find({
+          collection: 'comprobantes',
+          where: { orden: { equals: id } },
+          limit: 1,
+          depth: 0,
+          overrideAccess: true,
+          req,
+        })
+
+        if (comprobantes.totalDocs > 0) {
+          throw new APIError(
+            'No se puede eliminar una orden con comprobantes de pago (evidencia financiera). Cancela la orden cambiando su estado a "cancelado".',
+            409,
+          )
+        }
+      },
+    ],
     beforeChange: [
       async ({ data, operation, originalDoc, req }) => {
         if (operation === 'create' && !data.numeroPedido) {
