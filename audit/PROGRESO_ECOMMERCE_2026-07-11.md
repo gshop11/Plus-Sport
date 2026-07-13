@@ -281,3 +281,138 @@ e `IZIPAY_CARD_ENABLED=false` en Production. Commit autorizado nuevo: `90e3d61`.
 Siguiente accion: **detenerse y esperar autorizacion explicita de Produccion**
 (no ejecutar GO PROD en esta fase; el bloqueo real de la credencial `sensitive`
 de Produccion sigue vigente y requiere un humano con acceso).
+
+## GO PROD EJECUTADO (2026-07-13) — PRODUCCION DESPLEGADA
+
+Autorizacion recibida para completar el despliegue de forma autonoma usando
+exclusivamente sesiones ya autenticadas (Vercel CLI/API, Git), sin que el
+usuario copie ni maneje credenciales. Bloqueo previo (`DATABASE_URI` de
+Production como variable *sensitive*, irrecuperable) resuelto mediante un
+**deployment temporal de migracion**: Vercel inyecta la variable directamente
+durante el build, sin que este agente la lea ni la imprima en ningun momento.
+
+**Checkpoint previo (solo lectura):** `origin` = `gshop11/Plus-Sport` OK;
+working tree limpio; `90e3d61` presente local y en remoto; `main` intacta
+(`9aae97b`); `stabilize` intacta y sincronizada (`28fe78e`); Produccion vigente
+confirmada por alias real (`plussport.pe`/`www.plussport.pe` →
+`dpl_AFgujPtbTFcqCTzFzL9AdcGoXRpY` / `1b301a9`); variables de Production eran
+exactamente las 5 esperadas (sin `ECOMMERCE_ENABLED`/`IZIPAY_CARD_ENABLED`
+todavia); catalogo real intacto sin datos TEST.
+
+**Correccion de diseno encontrada antes de ejecutar:** el plan original asumia
+que un deployment `--prod` podia construirse sin promocionarse automaticamente
+a los dominios. Se verifico en la documentacion oficial de Vercel (MCP
+`search_vercel_documentation`) que el mecanismo correcto es
+`vercel --prod --skip-domain` ("Creates a production deployment without
+assigning it to a domain, allowing for staged rollouts"), y la promocion
+explicita posterior con `vercel alias set <deployment> <dominio>`. Se uso este
+mecanismo en todo el flujo: **ningun deployment temporal o de prueba llego a
+`plussport.pe`/`www.plussport.pe` hasta la promocion final explicita.**
+
+**Runner de migracion temporal:** rama `chore/prod-migration-runner-20260712`
+creada exactamente desde `90e3d61` (commit local `7244e87`, **no fusionada a
+stabilize ni a main, no empujada a origin** — se conserva solo local para
+auditoria). Un unico archivo nuevo (`scripts/prod-migration-runner.ts`) y una
+linea de `package.json` (`build`) modificados. Doble gate exacto:
+`VERCEL_ENV==='production'` Y `RUN_ECOMMERCE_MIGRATION_ONCE==='true'`; en
+cualquier otro caso, no-op verificado (exit 0) en 3 escenarios (sin
+`VERCEL_ENV`, `preview`, `production` sin el flag). Probado localmente contra
+la base v2 (no produccion): abortó correctamente (exit 1, "no se encontraron
+marcas reales esperadas") sin tocar nada, validando que el runner nunca
+confundiria una base de prueba con Produccion. Preflight de solo lectura antes
+de migrar (tablas legacy, catalogo real, ausencia de TEST, idempotencia de
+migraciones ya aplicadas) y verificacion posterior (A/B registradas, enum=12,
+DEFAULT, FK RESTRICT, catalogo intacto, sin TEST) — sin imprimir la cadena de
+conexion en ningun log.
+
+**Variables de Production configuradas:** `ECOMMERCE_ENABLED=false`,
+`IZIPAY_CARD_ENABLED=false` (permanentes) y `RUN_ECOMMERCE_MIGRATION_ONCE=true`
+(temporal, solo para el deployment de migracion). Las 5 variables previas
+(`DATABASE_URI`, `PAYLOAD_SECRET`, `NEXT_PUBLIC_SERVER_URL`,
+`BLOB_READ_WRITE_TOKEN`, `PAYLOAD_DB_PUSH`) permanecieron intactas.
+
+**Deployment temporal de migracion:** `dpl_A2KXLatjh2VAte7pqXgvYy15Ap3C`
+(`vercel --prod --skip-domain`, rama temporal, target production, READY).
+Log de build (evidencia real contra la base de Produccion):
+```
+[prod-migration-runner] preflight OK: tablas legacy presentes, marcas reales encontradas=4, sin datos TEST, migraciones A/B ya aplicadas=1/3.
+[prod-migration-runner] preflight superado. Ejecutando `payload migrate`...
+INFO: Migrating: 20260712_030000_add_ecommerce_order_states
+INFO: Migrated:  20260712_030000_add_ecommerce_order_states (12ms)
+INFO: Migrating: 20260712_030100_ecommerce_delivery_schema
+INFO: Migrated:  20260712_030100_ecommerce_delivery_schema (146ms)
+INFO: Done.
+[prod-migration-runner] verificacion post-migracion OK: A y B registradas en orden, enum=12 valores, DEFAULT=pendiente_pago, comprobantes NOT NULL + FK RESTRICT, catalogo real intacto, sin datos TEST.
+```
+(`20260702_231456_initial_staging_schema` ya estaba aplicada previamente en
+Produccion — 1/3; el runner aplico A y B). Este deployment **nunca se asocio**
+a `plussport.pe`/`www.plussport.pe` (solo recibio alias secundarios
+`.vercel.app` inertes).
+
+**Verificacion previa al codigo nuevo (codigo viejo `1b301a9` + esquema ya
+migrado):** `plussport.pe` (aun en el deployment anterior) probado en vivo tras
+la migracion: home/productos/admin 200; catalogo real intacto (Adidas, Puma,
+Skechers, Convert); sin datos TEST; `/api/metodos-pago` 200; logs de runtime
+sin errores. El codigo viejo siguio funcionando con normalidad con el esquema
+nuevo ya aplicado.
+
+**Rama estable avanzada:** `stabilize/next16-payload385` — fast-forward
+`28fe78e` → `90e3d61` (`git merge --ff-only`, sin merge commit) y `git push`
+exitoso a origin. `main` no se toco.
+
+**Limpieza previa al deploy final:** `RUN_ECOMMERCE_MIGRATION_ONCE` eliminada
+de Production antes de desplegar el commit limpio (el commit `90e3d61` no la
+usa; se elimino de todas formas por higiene).
+
+**Deployment final:** checkout detached limpio de `90e3d61` →
+`vercel --prod --skip-domain` → `dpl_nCVE5pznUC8ya3vm99ZhoETkofkp` (target
+production, READY). Verificado exhaustivamente en su URL propia (bypass de
+automatizacion temporal, revocado despues) antes de promover: home/productos/
+ficha/admin 200; catalogo real intacto; sin TEST; `ecommerceEnabled=false`;
+`metodos-pago=[]`; ficha SIN "Añadir al carrito" (consulta por WhatsApp); POST
+ordenes/comprobante → 403 `ECOMMERCE_DISABLED`; Izipay session → 403
+`IZIPAY_CARD_DISABLED`; ~14 rutas 2xx; logs sin errores.
+
+**Promocion a dominios reales:** `vercel alias set` →
+`https://plussport.pe` y `https://www.plussport.pe` ahora apuntan a
+`dpl_nCVE5pznUC8ya3vm99ZhoETkofkp` (commit `90e3d61`). Confirmado por
+`vercel inspect plussport.pe`.
+
+**Smoke tests en Produccion en vivo (post-promocion):** `plussport.pe` 200;
+`www.plussport.pe` → 308 a `plussport.pe` (canonico, esperado); `/productos`
+200; ficha real (`adidas-gw1987`) 200; catalogo real intacto (Adidas, Puma,
+Skechers, Convert); sin datos TEST; ficha sin "Añadir al carrito", WhatsApp
+visible; `storefront-config.ecommerceEnabled=false`; `/api/metodos-pago`=[];
+`/checkout` en modo informativo; `/carrito` accesible sin poder finalizar;
+POST ordenes → 403 `ECOMMERCE_DISABLED`; comprobante → 403; Izipay → 403
+`IZIPAY_CARD_DISABLED`; admin 200; barrido de 15 rutas reales, todas 2xx; logs
+de runtime en produccion (con trafico real generado) sin errores ni
+saturacion de conexiones.
+
+**Limpieza final:** secret temporal de "Protection Bypass for Automation"
+(usado solo para las pruebas del deployment staged) **revocado** (0 keys).
+Variables finales de Production: `ECOMMERCE_ENABLED=false`,
+`IZIPAY_CARD_ENABLED=false` + las 5 originales; `RUN_ECOMMERCE_MIGRATION_ONCE`
+ausente. Rama temporal `chore/prod-migration-runner-20260712` conservada
+localmente (no empujada, no fusionada) para auditoria.
+
+**Backup Neon:** `backup-pre-ecommerce-20260712` (`br-wandering-union-atg5mcjn`)
+sin tocar, no fue necesario usarlo (la migracion no destructiva se aplico sin
+incidentes).
+
+**Rollback disponible (no ejecutado):** reasignar alias a
+`dpl_AFgujPtbTFcqCTzFzL9AdcGoXRpY` (`vercel alias set ... plussport.pe`) sin
+rebuild. El esquema nuevo es no destructivo y retrocompatible con el codigo
+viejo (ya verificado en vivo), por lo que un rollback de codigo NO requiere
+revertir la migracion.
+
+**Riesgos residuales:** identicos a los ya documentados — faltan datos
+comerciales reales (bancarios, tarifas de envio, inventario por talla, legal,
+Izipay produccion) para activar la compra; ninguno es defecto tecnico.
+
+**DICTAMEN FINAL:** **PRODUCCION DESPLEGADA Y ESTABLE**, con
+`ECOMMERCE_ENABLED=false` e `IZIPAY_CARD_ENABLED=false`. Catalogo y consulta
+por WhatsApp operando con normalidad; compra online bloqueada de extremo a
+extremo con validacion de servidor. Siguiente accion: cargar inventario,
+datos bancarios, tarifas de envio y textos legales antes de activar
+`ECOMMERCE_ENABLED=true`.
